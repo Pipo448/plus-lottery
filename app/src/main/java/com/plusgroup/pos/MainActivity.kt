@@ -70,10 +70,18 @@ class MainActivity : AppCompatActivity() {
     private fun connectPrinter() {
         printerManager.connect {
             runOnUiThread {
-                binding.tvPrinterStatus.text = if (printerManager.isReady()) {
+                val ready = printerManager.isReady()
+                binding.tvPrinterStatus.text = if (ready) {
                     "Enprimant: konekte ✅"
                 } else {
                     "Enprimant: pa konekte — chwazi youn"
+                }
+                if (!ready && printerManager.printerType == PrinterManager.PrinterType.BLUETOOTH_EXTERNAL) {
+                    Toast.makeText(
+                        this,
+                        "Detay erè: ${printerManager.lastPrinterError ?: "pa gen detay (verifye si yon aparèy te deja anrejistre)"}",
+                        Toast.LENGTH_LONG,
+                    ).show()
                 }
             }
         }

@@ -33,6 +33,9 @@ class PrinterManager(private val context: Context) {
     // sou ekran an (Toast), san bezwen Logcat/kab USB.
     val lastPrinterError: String?
         get() = bluetoothHelper.lastError
+            ?: if (getSavedPrinterAddress() == null) {
+                "Pa gen okenn enprimant chwazi anndan app la. Klike 'Chwazi enprimant Bluetooth' pou chwazi l, menm si li deja pè nan Paramèt Android."
+            } else null
 
     fun connect(onReady: (() -> Unit)? = null) {
         if (isSunmiDevice) {
@@ -48,6 +51,12 @@ class PrinterManager(private val context: Context) {
                     bluetoothHelper.connectByAddress(savedAddress)
                     onReady?.invoke()
                 }.start()
+            } else {
+                // ENPÒTAN: si pa gen okenn enprimant sove, rele callback la
+                // TOUJOU — sinon ekran an rete "ap konekte..." pou tout tan
+                // san rezon, paske pèsonn pa t janm chwazi yon enprimant
+                // anndan app la (menm si l pè nan Paramèt Android).
+                onReady?.invoke()
             }
         }
     }
