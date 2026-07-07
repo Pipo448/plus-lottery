@@ -38,15 +38,41 @@ class BluetoothPrinterHelper {
 
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice): Boolean {
-        return try {
-            disconnect()
+        disconnect()
+
+        // Yon rechèch Bluetooth an kou ka anpeche/ralanti anpil koneksyon RFCOMM.
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        try {
+            if (adapter?.isDiscovering == true) adapter.cancelDiscovery()
+        } catch (_: Exception) {
+        }
+
+        // 1. Eseye metòd "ofisyèl" la (via rechèch SDP sou UUID SPP la).
+        try {
             val socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
             socket.connect()
             this.socket = socket
             this.outputStream = socket.outputStream
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Metòd estanda echwe, m ap eseye fallback (kanal 1)...", e)
+        }
+
+        // 2. Fallback: anpil enprimant bon mache (tankou Gooj PRT) pa
+        //    enplemante SDP kòrèkteman e refize metòd ofisyèl la san
+        //    rezon klè. Yon koneksyon dirèk sou kanal RFCOMM 1 via
+        //    refleksyon regle pwoblèm sa a nan prèske tout ka.
+        return try {
+            val fallbackSocket = device.javaClass
+                .getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                .invoke(device, 1) as BluetoothSocket
+            fallbackSocket.connect()
+            this.socket = fallbackSocket
+            this.outputStream = fallbackSocket.outputStream
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Echèk konekte ak enprimant Bluetooth la", e)
+            Log.e(TAG, "Fallback (kanal 1) echwe tou — enprimant la pa reponn.", e)
+            disconnect()
             false
         }
     }
