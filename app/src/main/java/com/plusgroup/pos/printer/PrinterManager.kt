@@ -29,6 +29,11 @@ class PrinterManager(private val context: Context) {
     val printerType: PrinterType
         get() = if (isSunmiDevice) PrinterType.SUNMI_INTEGRATED else PrinterType.BLUETOOTH_EXTERNAL
 
+    // Dènye mesaj erè Bluetooth la — pèmèt MainActivity montre l dirèkteman
+    // sou ekran an (Toast), san bezwen Logcat/kab USB.
+    val lastPrinterError: String?
+        get() = bluetoothHelper.lastError
+
     fun connect(onReady: (() -> Unit)? = null) {
         if (isSunmiDevice) {
             sunmiHelper = SunmiPrinterHelper(context).also {

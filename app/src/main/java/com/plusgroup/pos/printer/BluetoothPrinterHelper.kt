@@ -22,6 +22,10 @@ class BluetoothPrinterHelper {
     private var socket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
+    // Dènye mesaj erè a — pèmèt UI a montre l dirèkteman san bezwen Logcat/USB.
+    var lastError: String? = null
+        private set
+
     val isConnected: Boolean
         get() = socket?.isConnected == true
 
@@ -39,6 +43,7 @@ class BluetoothPrinterHelper {
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice): Boolean {
         disconnect()
+        lastError = null
 
         // Yon rechèch Bluetooth an kou ka anpeche/ralanti anpil koneksyon RFCOMM.
         val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -56,6 +61,7 @@ class BluetoothPrinterHelper {
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Metòd estanda echwe, m ap eseye fallback (kanal 1)...", e)
+            lastError = "Estanda: ${e.javaClass.simpleName} — ${e.message}"
         }
 
         // 2. Fallback: anpil enprimant bon mache (tankou Gooj PRT) pa
@@ -72,6 +78,7 @@ class BluetoothPrinterHelper {
             true
         } catch (e: Exception) {
             Log.e(TAG, "Fallback (kanal 1) echwe tou — enprimant la pa reponn.", e)
+            lastError = (lastError ?: "") + " | Fallback: ${e.javaClass.simpleName} — ${e.message}"
             disconnect()
             false
         }

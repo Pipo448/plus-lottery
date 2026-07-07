@@ -104,6 +104,13 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             "Enprimant: echèk koneksyon — eseye ankò"
                         }
+                        if (!success) {
+                            Toast.makeText(
+                                this,
+                                "Detay erè: ${printerManager.lastPrinterError ?: "pa gen detay"}",
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        }
                     }
                 }.start()
             }
