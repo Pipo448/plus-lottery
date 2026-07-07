@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <string name="app_name">Plus POS</string>
+    <style name="Theme.PlusPOS" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#1B0E52</item>
+        <item name="colorPrimaryDark">#1B0E52</item>
+        <item name="colorAccent">#3B82F6</item>
+        <item name="android:statusBarColor" ns1:targetApi="l">#EAF2FB</item>
+        <item name="android:windowLightStatusBar" ns1:targetApi="m">true</item>
+    </style>
+</resources>

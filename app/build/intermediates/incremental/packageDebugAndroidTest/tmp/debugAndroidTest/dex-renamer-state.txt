@@ -1,0 +1,4 @@
+#Tue Jul 07 10:17:30 EDT 2026
+base.0=C\:\\Users\\dasne\\Documents\\sunmi-pos\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
+path.0=0/classes.dex
+renamed.0=classes.dex

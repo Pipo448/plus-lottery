@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-debug-33:\\drawable_bg_input.xml.flat",
+        "source": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-main-35:\\drawable\\bg_input.xml"
+    },
+    {
+        "merged": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-debug-33:\\layout_activity_login.xml.flat",
+        "source": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-main-35:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-debug-33:\\drawable_ic_launcher.xml.flat",
+        "source": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-main-35:\\drawable\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-debug-33:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\dasne\\.gradle\\daemon\\9.3.0\\com.plusgroup.pos.app-main-35:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.plusgroup.pos.app-debug-33:/layout_activity_login.xml.flat",
+        "source": "com.plusgroup.pos.app-main-35:/layout/activity_login.xml"
+    }
+]
