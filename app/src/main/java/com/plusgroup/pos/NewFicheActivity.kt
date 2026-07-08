@@ -427,40 +427,71 @@ class NewFicheActivity : AppCompatActivity() {
         }
         val drawName = selectedDraw?.name ?: "—"
         val total = lines.sumOf { it.price }
-        val ficheNumber = "F${System.currentTimeMillis().toString(36).uppercase()}"
 
-        val detailText = buildString {
-            var currentCategory = ""
-            lines.forEach { line ->
-                if (line.category != currentCategory) {
-                    currentCategory = line.category
-                    appendLine(currentCategory)
-                }
-                val optionSuffix = if (!line.optionLabel.isNullOrEmpty()) " (${line.optionLabel})" else ""
-                appendLine("  ${line.numero}$optionSuffix — ${moneyFormat.format(line.price)}")
+        // Nimewo Fich fòma "XXXX-XXXX-XXXX" (12 chif, gwoupe pa 4).
+        val raw = (System.currentTimeMillis() % 1_000_000_000L).toString().padStart(12, '0').takeLast(12)
+        val ficheNumber = "${raw.substring(0, 4)}-${raw.substring(4, 8)}-${raw.substring(8, 12)}"
+
+        val dateFormat = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US)
+        val dateTimeText = dateFormat.format(java.util.Date())
+
+        val printLines: List<Triple<String, String, String>> = lines.map { line ->
+            val code = when (line.category) {
+                "BORLETTE" -> "BO"
+                "LOTO3" -> "LT"
+                "LOTO4" -> "L4"
+                "LOTO5" -> "L5"
+                "MARIAGE" -> "MA"
+                else -> line.category.take(2).uppercase()
             }
+            Triple(code, line.numero, moneyFormat.format(line.price))
         }
 
         Toast.makeText(this, "Ap eseye enprime...", Toast.LENGTH_SHORT).show()
-        printerManager.connect {
-            runOnUiThread {
-                if (!printerManager.isReady()) {
-                    Toast.makeText(
-                        this,
-                        "Enprimant pa konekte. Ale nan Paramèt/MainActivity pou konekte l.",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                    return@runOnUiThread
+
+        lifecycleScope.launch {
+            var companyName = "PLUS GROUP"
+            var vendeur = "—"
+            var footerMessage = "Mèsi pou konfyans ou!"
+            try {
+                val api = ApiClient.getService(applicationContext)
+                val profile = api.getProfile().body()?.data
+                companyName = profile?.tenantName?.uppercase() ?: companyName
+                vendeur = profile?.branchName ?: profile?.fullName ?: vendeur
+
+                val settings = api.getCompanySettings().body()?.data ?: emptyList()
+                val msg = settings.firstOrNull { it.key == "message" }?.value
+                if (!msg.isNullOrBlank()) footerMessage = msg
+            } catch (_: Exception) {
+                // Si sa echwe, kontinye ak valè default yo — pa bloke enprime a.
+            }
+
+            printerManager.connect {
+                runOnUiThread {
+                    if (!printerManager.isReady()) {
+                        Toast.makeText(
+                            this@NewFicheActivity,
+                            "Enprimant pa konekte. Ale nan Paramèt/MainActivity pou konekte l.",
+                            Toast.LENGTH_LONG,
+                        ).show()
+                        return@runOnUiThread
+                    }
+                    printerManager.printFicheReceipt(
+                        companyName = companyName,
+                        promoLine = "",
+                        phone = "",
+                        vendeur = vendeur,
+                        dateTimeText = dateTimeText,
+                        ficheNumber = ficheNumber,
+                        drawName = drawName,
+                        drawTotal = moneyFormat.format(total),
+                        lines = printLines,
+                        grandTotal = moneyFormat.format(total),
+                        footerMessage = footerMessage,
+                        qrData = ficheNumber,
+                    )
+                    Toast.makeText(this@NewFicheActivity, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
                 }
-                printerManager.printTicketReceipt(
-                    companyName = "PLUS GROUP",
-                    drawName = drawName,
-                    ticketNumber = ficheNumber,
-                    numbers = detailText,
-                    betAmount = moneyFormat.format(total),
-                    footerMessage = "Mèsi pou konfyans ou!",
-                )
-                Toast.makeText(this, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -578,6 +609,8 @@ class NewFicheActivity : AppCompatActivity() {
                 ).show()
                 printCurrentFiche()
                 lines.clear()
+                binding.etBoulLa.text?.clear()
+                binding.etMontant.text?.clear()
                 refreshLinesList()
                 refreshTotal()
             } else {

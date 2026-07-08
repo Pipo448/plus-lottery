@@ -63,6 +63,10 @@ interface ApiService {
     @GET("agent/reports/partial")
     suspend fun getPartialReport(@Query("date") date: String? = null): Response<ApiDataResponse<PartialReport>>
 
+    // "Boul Ki Soti" — nimewo ki soti pou tiraj ki gen rezilta deja antre
+    @GET("agent/draws/results")
+    suspend fun getDrawResults(@Query("date") date: String? = null): Response<ApiListResponse<com.plusgroup.pos.network.models.DrawResult>>
+
     // "Paramèt" — Prime pa ajan, boul bloke pa ajan, paramèt tenant antye
     @GET("agent/prime")
     suspend fun getPrime(): Response<ApiDataResponse<AgentPrime>>

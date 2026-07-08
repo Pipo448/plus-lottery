@@ -164,3 +164,11 @@ data class CompanySetting(
     val key: String? = null,
     val value: String? = null,
 )
+
+data class DrawResult(
+    val name: String? = null,
+    val drawDate: String? = null,
+    val winningNumber1: String? = null,
+    val winningNumber2: String? = null,
+    val winningNumber3: String? = null,
+)
