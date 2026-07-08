@@ -137,7 +137,79 @@ class SunmiPrinterHelper(private val context: Context) {
         }
     }
 
+    /**
+     * Enprime yon Fich konplè, nan menm fòma resi bolèt tradisyonèl la
+     * (menm fòma ak `BluetoothPrinterHelper.printFicheReceipt`).
+     */
+    fun printFicheReceipt(
+        companyName: String,
+        promoLine: String,
+        phone: String,
+        vendeur: String,
+        dateTimeText: String,
+        ficheNumber: String,
+        drawName: String,
+        drawTotal: String,
+        lines: List<Triple<String, String, String>>, // (kòd, nimewo, pri fòmate)
+        grandTotal: String,
+        footerMessage: String,
+        qrData: String?,
+    ) {
+        val svc = woyouService ?: run {
+            Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
+            return
+        }
+        try {
+            svc.printerInit(null)
+
+            svc.setAlignment(1, null)
+            svc.printTextWithFont("$companyName\n", null, 32f, null)
+            if (promoLine.isNotBlank()) svc.printText("$promoLine\n", null)
+            svc.setAlignment(0, null)
+            if (phone.isNotBlank()) svc.printText("Tel: $phone\n", null)
+            svc.printText("Vendeur: $vendeur\n", null)
+            svc.printText("Fecha: $dateTimeText\n", null)
+            svc.lineWrap(1, null)
+
+            svc.printText("Fiche: $ficheNumber\n", null)
+            svc.printText("$DASHES\n", null)
+            svc.printText("$drawName: $drawTotal\n", null)
+
+            for ((code, numero, prix) in lines) {
+                svc.printText(twoColumnLine("$code   $numero", prix) + "\n", null)
+            }
+
+            svc.printText("$DASHES\n", null)
+            svc.printText(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null)
+            svc.lineWrap(1, null)
+
+            svc.setAlignment(1, null)
+            if (footerMessage.isNotBlank()) {
+                svc.printText("$footerMessage\n", null)
+                svc.lineWrap(1, null)
+            }
+
+            if (!qrData.isNullOrBlank()) {
+                svc.printQRCode(qrData, 8, 0, null)
+                svc.lineWrap(1, null)
+            }
+
+            svc.lineWrap(3, null)
+            svc.cutpaper(null)
+        } catch (e: RemoteException) {
+            Log.e(TAG, "Echèk enprime Fich la", e)
+        }
+    }
+
+    // Aliyen tèks agoch ak yon valè adwat sou menm liy (menm lojik ak
+    // BluetoothPrinterHelper, sipoze lajè ~32 karaktè).
+    private fun twoColumnLine(left: String, right: String, width: Int = 32): String {
+        val space = width - left.length - right.length
+        return if (space > 0) left + " ".repeat(space) + right else "$left $right"
+    }
+
     companion object {
         private const val TAG = "SunmiPrinterHelper"
+        private const val DASHES = "--------------------------------"
     }
 }

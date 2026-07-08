@@ -91,6 +91,37 @@ class PrinterManager(private val context: Context) {
         }
     }
 
+    /**
+     * Enprime Fich la nan fòma resi bolèt konplè (ak QR).
+     * Sipòte tou de kalite enprimant: SUNMI entegre ak Bluetooth eksitèn.
+     */
+    fun printFicheReceipt(
+        companyName: String,
+        promoLine: String,
+        phone: String,
+        vendeur: String,
+        dateTimeText: String,
+        ficheNumber: String,
+        drawName: String,
+        drawTotal: String,
+        lines: List<Triple<String, String, String>>,
+        grandTotal: String,
+        footerMessage: String,
+        qrData: String?,
+    ) {
+        if (isSunmiDevice) {
+            sunmiHelper?.printFicheReceipt(
+                companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData,
+            )
+        } else {
+            bluetoothHelper.printFicheReceipt(
+                companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData,
+            )
+        }
+    }
+
     // --- Jesyon chwa enprimant Bluetooth (sèlman itilize si pa SUNMI) ---
 
     fun getPairedBluetoothPrinters(): List<BluetoothDevice> = bluetoothHelper.getPairedDevices()
