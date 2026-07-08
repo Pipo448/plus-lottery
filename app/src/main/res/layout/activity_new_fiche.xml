@@ -413,6 +413,36 @@
                 android:background="@android:drawable/edit_text" />
         </LinearLayout>
 
+        <!-- Parèt SÈLMAN lè 4 chif tape nan "Boul la" — chwazi si se Mariage oswa Loto4 -->
+        <LinearLayout
+            android:id="@+id/llMariageLoto4Chooser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/btnChooseMariage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="Mariage"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#F59E0B" />
+
+            <Button
+                android:id="@+id/btnChooseLoto4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="Loto4"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#3B82F6" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/btnAntre"
             android:layout_width="match_parent"

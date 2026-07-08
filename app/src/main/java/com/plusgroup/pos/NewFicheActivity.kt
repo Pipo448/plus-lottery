@@ -44,6 +44,7 @@ class NewFicheActivity : AppCompatActivity() {
         val drawName: String,
         val numero: String,
         var price: Double,
+        val category: String,
         val optionLabel: String? = null,
     )
 
@@ -89,6 +90,20 @@ class NewFicheActivity : AppCompatActivity() {
         binding.btnMariage.setOnClickListener { addMariageLine() }
         binding.btnLoto4.setOnClickListener { showLoto4OptionsDialog() }
         binding.btnLoto5.setOnClickListener { showLoto5OptionsDialog() }
+
+        // Bouton chwazi (Mariage oswa Loto4) ki parèt SÈLMAN lè 4 chif tape.
+        binding.btnChooseMariage.setOnClickListener { addMariageLine() }
+        binding.btnChooseLoto4.setOnClickListener { showLoto4OptionsDialog() }
+
+        binding.etBoulLa.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val len = s?.toString()?.trim()?.length ?: 0
+                binding.llMariageLoto4Chooser.visibility =
+                    if (len == 4) android.view.View.VISIBLE else android.view.View.GONE
+            }
+        })
 
         binding.btnAntre.setOnClickListener { addManualLine() }
         binding.btnSoumet.setOnClickListener { submitFiche() }
@@ -181,7 +196,7 @@ class NewFicheActivity : AppCompatActivity() {
         }
         promptForPrice { price ->
             val drawName = selectedDraw?.name ?: "—"
-            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price)) }
+            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price, "BORLETTE")) }
             refreshLinesList()
             refreshTotal()
         }
@@ -205,7 +220,7 @@ class NewFicheActivity : AppCompatActivity() {
             .show()
     }
 
-    // ==================== ANTRE MANYÈL ====================
+    // ==================== ANTRE MANYÈL (oto-deteksyon selon konbyen chif) ====================
 
     private fun addManualLine() {
         val numero = binding.etBoulLa.text.toString().trim()
@@ -221,24 +236,41 @@ class NewFicheActivity : AppCompatActivity() {
             return
         }
 
+        val category = when (numero.length) {
+            2 -> "BORLETTE"
+            3 -> "LOTO3"
+            4 -> {
+                Toast.makeText(this, "4 chif: chwazi \"Mariage\" oswa \"Loto4\" anba a", Toast.LENGTH_LONG).show()
+                return
+            }
+            5 -> "LOTO5"
+            else -> {
+                Toast.makeText(this, "Nimewo dwe 2, 3, 4, oswa 5 chif", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
         val drawName = selectedDraw?.name ?: "—"
-        lines.add(FicheLine(drawName, numero, montant))
+        lines.add(FicheLine(drawName, numero, montant, category))
         binding.etBoulLa.text?.clear()
         refreshLinesList()
         refreshTotal()
     }
 
     // ==================== MARIAGE ====================
-    // Fòma antre: "XX*YY" (2 boul, 2 chif chak, separe pa yon zetwal).
-    // Peman Mariage a diferan de Loto4 menm si fòm nimewo a sanble — sa
-    // se yon lòt kalkil ki fèt pita, lè rezilta tiraj la soti.
+    // Ajan an ka tape swa 4 chif senp (egzanp "2532", nou split li an "25*32"
+    // otomatikman) oswa dirèkteman fòma "XX*YY" ak zetwal la.
     private fun addMariageLine() {
-        val numero = binding.etBoulLa.text.toString().trim()
+        val rawInput = binding.etBoulLa.text.toString().trim()
         val montant = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
-        if (!numero.matches(Regex("^\\d{2}\\*\\d{2}$"))) {
-            Toast.makeText(this, "Fòma Mariage dwe XX*YY (egzanp: 25*32)", Toast.LENGTH_LONG).show()
-            return
+        val numero = when {
+            rawInput.matches(Regex("^\\d{4}$")) -> rawInput.substring(0, 2) + "*" + rawInput.substring(2, 4)
+            rawInput.matches(Regex("^\\d{2}\\*\\d{2}$")) -> rawInput
+            else -> {
+                Toast.makeText(this, "Antre 4 chif (egzanp 2532) pou Mariage", Toast.LENGTH_LONG).show()
+                return
+            }
         }
         if (montant == null || montant <= 0) {
             Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
@@ -246,7 +278,7 @@ class NewFicheActivity : AppCompatActivity() {
         }
 
         val drawName = selectedDraw?.name ?: "—"
-        lines.add(FicheLine(drawName, numero, montant))
+        lines.add(FicheLine(drawName, numero, montant, "MARIAGE"))
         binding.etBoulLa.text?.clear()
         refreshLinesList()
         refreshTotal()
@@ -280,7 +312,7 @@ class NewFicheActivity : AppCompatActivity() {
             Triple("L4O3", vire, "03"),
         )
 
-        showOptionsCheckboxDialog("OPTIONS LOTO 4", options, price)
+        showOptionsCheckboxDialog("OPTIONS LOTO 4", options, price, "LOTO4")
     }
 
     // ==================== LOTO5 (3 chif + 2 chif = 5 chif, san "vire") ====================
@@ -303,7 +335,7 @@ class NewFicheActivity : AppCompatActivity() {
             Triple("Option 3", numero, "03"),
         )
 
-        showOptionsCheckboxDialog("OPTIONS LOTO 5", options, price)
+        showOptionsCheckboxDialog("OPTIONS LOTO 5", options, price, "LOTO5")
     }
 
     /**
@@ -314,6 +346,7 @@ class NewFicheActivity : AppCompatActivity() {
         title: String,
         options: List<Triple<String, String, String>>, // (label ekran, nimewo, optionLabel done)
         price: Double,
+        category: String,
     ) {
         val container = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
@@ -348,7 +381,7 @@ class NewFicheActivity : AppCompatActivity() {
                 checkBoxes.forEachIndexed { i, cb ->
                     if (cb.isChecked) {
                         val (_, numero, optionLabel) = options[i]
-                        lines.add(FicheLine(drawName, numero, price, optionLabel))
+                        lines.add(FicheLine(drawName, numero, price, category, optionLabel))
                         addedCount++
                     }
                 }
@@ -370,27 +403,45 @@ class NewFicheActivity : AppCompatActivity() {
         binding.llLinesContainer.removeAllViews()
         val inflater = LayoutInflater.from(this)
 
-        lines.forEachIndexed { index, line ->
-            val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
-            rowBinding.tvLineTiraj.text = line.drawName
-            rowBinding.tvLineBoul.text = line.numero
-            rowBinding.tvLineOption.text = line.optionLabel ?: ""
-            rowBinding.tvLineKob.text = moneyFormat.format(line.price)
+        // Gwoupe liy yo pa kategori (BORLETTE, LOTO3, MARIAGE, LOTO4, LOTO5),
+        // nan lòd yo te premye parèt la — chak gwoup gen pwòp antèt.
+        val categoriesInOrder = LinkedHashSet<String>()
+        lines.forEach { categoriesInOrder.add(it.category) }
 
-            rowBinding.btnDeleteLine.setOnClickListener {
-                lines.removeAt(index)
-                refreshLinesList()
-                refreshTotal()
+        for (category in categoriesInOrder) {
+            val headerText = TextView(this).apply {
+                text = category
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                textSize = 14f
+                setTextColor(android.graphics.Color.BLACK)
+                setPadding(0, 16, 0, 4)
             }
-            rowBinding.btnEditLinePrice.setOnClickListener {
-                promptForPrice { newPrice ->
-                    line.price = newPrice
+            binding.llLinesContainer.addView(headerText)
+
+            lines.forEachIndexed { index, line ->
+                if (line.category != category) return@forEachIndexed
+
+                val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
+                rowBinding.tvLineTiraj.text = line.drawName
+                rowBinding.tvLineBoul.text = line.numero
+                rowBinding.tvLineOption.text = line.optionLabel ?: ""
+                rowBinding.tvLineKob.text = moneyFormat.format(line.price)
+
+                rowBinding.btnDeleteLine.setOnClickListener {
+                    lines.removeAt(index)
                     refreshLinesList()
                     refreshTotal()
                 }
-            }
+                rowBinding.btnEditLinePrice.setOnClickListener {
+                    promptForPrice { newPrice ->
+                        line.price = newPrice
+                        refreshLinesList()
+                        refreshTotal()
+                    }
+                }
 
-            binding.llLinesContainer.addView(rowBinding.root)
+                binding.llLinesContainer.addView(rowBinding.root)
+            }
         }
     }
 
