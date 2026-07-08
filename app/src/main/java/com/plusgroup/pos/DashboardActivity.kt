@@ -44,13 +44,13 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, NewFicheActivity::class.java))
         }
         binding.btnChacheFich.setOnClickListener {
-            Toast.makeText(this, "Chache Fich — byento", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SearchFicheActivity::class.java))
         }
         binding.btnFichMwenYo.setOnClickListener {
-            Toast.makeText(this, "Fich Mwen Yo — byento", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, MyFichesActivity::class.java))
         }
         binding.btnRapo.setOnClickListener {
-            Toast.makeText(this, "Rapò — byento", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, ReportActivity::class.java))
         }
 
         binding.tabBolet.setOnClickListener { /* Nou deja la */ }

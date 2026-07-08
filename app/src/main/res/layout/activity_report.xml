@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Retounen"
+                android:src="@android:drawable/ic_menu_revert" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Rapport"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Bouton kategori rapò -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button android:id="@+id/btnPartiel"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginEnd="4dp"
+                        android:text="PARTIEL" android:textColor="@android:color/white"
+                        android:backgroundTint="#22C55E" android:textSize="11sp" />
+
+                    <Button android:id="@+id/btnFTirage"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginEnd="4dp"
+                        android:text="F.TIRAGE" android:textColor="@android:color/white"
+                        android:backgroundTint="#F59E0B" android:textSize="11sp" />
+
+                    <Button android:id="@+id/btnFGagnant"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="F.GAGNANT" android:textColor="@android:color/white"
+                        android:backgroundTint="#3B82F6" android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button android:id="@+id/btnTrasact"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginEnd="4dp"
+                        android:text="TRASACT.." android:textColor="@android:color/white"
+                        android:backgroundTint="#3B82F6" android:textSize="11sp" />
+
+                    <Button android:id="@+id/btnFEliminer"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="F.ELIMINER" android:textColor="@android:color/white"
+                        android:backgroundTint="#F59E0B" android:textSize="11sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:tint="#3B82F6"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:contentDescription="Enprime" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Rapport partiel"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date :"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDate"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="#808080"
+                        android:textColor="@android:color/white"
+                        android:padding="12dp" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="12dp"
+                    android:background="@android:color/transparent"
+                    android:tint="#DC2626"
+                    android:contentDescription="Chèche"
+                    android:src="@android:drawable/ic_menu_search" />
+
+                <!-- Rezilta Rapò Pasyèl -->
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp">
+
+                    <TableRow>
+                        <TextView android:text="Tirage" android:textStyle="bold" android:padding="4dp" android:layout_width="140dp" />
+                        <TextView android:id="@+id/tvTirageValue" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:text="Date" android:textStyle="bold" android:padding="4dp" />
+                        <TextView android:id="@+id/tvDateValue" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:text="Fiche vendu" android:textStyle="bold" android:padding="4dp" />
+                        <TextView android:id="@+id/tvFicheVenduValue" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:text="Vente" android:textStyle="bold" android:padding="4dp" />
+                        <TextView android:id="@+id/tvVenteValue" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:text="Commission" android:textStyle="bold" android:padding="4dp" />
+                        <TextView android:id="@+id/tvCommissionValue" android:padding="4dp" />
+                    </TableRow>
+                </TableLayout>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Ba anba a: Bolèt / Paramèt (menm ak Dashboard la) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        android:background="#3B82F6">
+
+        <LinearLayout
+            android:id="@+id/tabBolet"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bolèt"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tabParamet"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Paramèt"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

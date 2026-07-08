@@ -9,13 +9,17 @@ import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.LoginRequest
 import com.plusgroup.pos.network.models.LoginResponse
+import com.plusgroup.pos.network.models.PartialReport
 import com.plusgroup.pos.network.models.RegisterDeviceRequest
 import com.plusgroup.pos.network.models.SellTicketRequest
 import com.plusgroup.pos.network.models.SellTicketResponse
+import com.plusgroup.pos.network.models.Ticket
+import com.plusgroup.pos.network.models.VerifyTicketResult
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -26,11 +30,9 @@ interface ApiService {
     @POST("agent/register-device")
     suspend fun registerDevice(@Body body: RegisterDeviceRequest): Response<ApiMessageResponse>
 
-    // Pwofil ajan konekte a (non konplè, elatriye) — pou tèt Dashboard la.
     @GET("agent/profile")
     suspend fun getProfile(): Response<ApiDataResponse<AgentProfile>>
 
-    // Balans/kredi/limit ajan an — pou kat Dashboard la.
     @GET("agent/balance")
     suspend fun getBalance(): Response<ApiDataResponse<AgentBalance>>
 
@@ -42,4 +44,19 @@ interface ApiService {
 
     @POST("agent/tickets")
     suspend fun sellTicket(@Body body: SellTicketRequest): Response<SellTicketResponse>
+
+    // "Chache Fich" — chèche yon tikè pa nimewo (via SCAN oswa antre manyèl)
+    @GET("agent/tickets/verify/{ticketNumber}")
+    suspend fun verifyTicket(@Path("ticketNumber") ticketNumber: String): Response<ApiDataResponse<VerifyTicketResult>>
+
+    // "Fich Mwen Yo" — tikè ajan an, ak filtè dat opsyonèl (yyyy-MM-dd)
+    @GET("agent/tickets")
+    suspend fun getMyTickets(
+        @Query("start") start: String? = null,
+        @Query("end") end: String? = null,
+    ): Response<ApiListResponse<Ticket>>
+
+    // "Rapò" — Rapò Pasyèl pou yon jou
+    @GET("agent/reports/partial")
+    suspend fun getPartialReport(@Query("date") date: String? = null): Response<ApiDataResponse<PartialReport>>
 }

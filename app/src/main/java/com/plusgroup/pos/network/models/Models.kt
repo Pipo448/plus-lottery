@@ -100,3 +100,36 @@ data class AgentBalance(
     @com.google.gson.annotations.SerializedName("lifetime_sales")
     val lifetimeSales: Double? = null,
 )
+data class Ticket(
+    val id: String? = null,
+    @com.google.gson.annotations.SerializedName("ticket_number")
+    val ticketNumber: String? = null,
+    val status: String? = null,
+    @com.google.gson.annotations.SerializedName("bet_amount")
+    val betAmount: Double? = null,
+    val numbers: String? = null,
+    @com.google.gson.annotations.SerializedName("sold_at")
+    val soldAt: String? = null,
+    @com.google.gson.annotations.SerializedName("is_winner")
+    val isWinner: Boolean? = null,
+    @com.google.gson.annotations.SerializedName("prize_amount")
+    val prizeAmount: Double? = null,
+)
+
+data class VerifyTicketResult(
+    val ticketNumber: String? = null,
+    val status: String? = null,
+    val isWinner: Boolean? = null,
+    val prizeAmount: Double? = null,
+    val numbers: String? = null,
+    val betAmount: Double? = null,
+    val soldAt: String? = null,
+)
+
+data class PartialReport(
+    val tirage: String? = null,
+    val date: String? = null,
+    val ficheVendu: Int? = null,
+    val vente: Double? = null,
+    val commission: Double? = null,
+)
