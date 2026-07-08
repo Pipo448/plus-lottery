@@ -123,7 +123,8 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.text = if (loading) "Ap konekte..." else "KONEKTE"
     }
 
-   private fun goToMain() {
-    startActivity(Intent(this, DashboardActivity::class.java))
-    finish()
+  private fun goToMain() {
+        startActivity(Intent(this, DashboardActivity::class.java))
+        finish()
+    }
 }
