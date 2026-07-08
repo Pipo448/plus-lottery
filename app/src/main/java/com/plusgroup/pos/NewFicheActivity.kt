@@ -3,6 +3,7 @@ package com.plusgroup.pos
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -43,6 +44,7 @@ class NewFicheActivity : AppCompatActivity() {
         val drawName: String,
         val numero: String,
         var price: Double,
+        val optionLabel: String? = null,
     )
 
     private val lines = mutableListOf<FicheLine>()
@@ -79,6 +81,14 @@ class NewFicheActivity : AppCompatActivity() {
         binding.btnP2.setOnClickListener { addQuickCategory(QuickCategory.pick(2)) }
         binding.btnP3.setOnClickListener { addQuickCategory(QuickCategory.pick(3)) }
         binding.btnP4.setOnClickListener { addQuickCategory(QuickCategory.pick(4)) }
+        binding.btnP5.setOnClickListener { addQuickCategory(QuickCategory.pick(5)) }
+        binding.btnP6.setOnClickListener { addQuickCategory(QuickCategory.pick(6)) }
+        binding.btnP7.setOnClickListener { addQuickCategory(QuickCategory.pick(7)) }
+        binding.btnP8.setOnClickListener { addQuickCategory(QuickCategory.pick(8)) }
+        binding.btnP9.setOnClickListener { addQuickCategory(QuickCategory.pick(9)) }
+        binding.btnMariage.setOnClickListener { addMariageLine() }
+        binding.btnLoto4.setOnClickListener { showLoto4OptionsDialog() }
+        binding.btnLoto5.setOnClickListener { showLoto5OptionsDialog() }
 
         binding.btnAntre.setOnClickListener { addManualLine() }
         binding.btnSoumet.setOnClickListener { submitFiche() }
@@ -218,6 +228,142 @@ class NewFicheActivity : AppCompatActivity() {
         refreshTotal()
     }
 
+    // ==================== MARIAGE ====================
+    // Fòma antre: "XX*YY" (2 boul, 2 chif chak, separe pa yon zetwal).
+    // Peman Mariage a diferan de Loto4 menm si fòm nimewo a sanble — sa
+    // se yon lòt kalkil ki fèt pita, lè rezilta tiraj la soti.
+    private fun addMariageLine() {
+        val numero = binding.etBoulLa.text.toString().trim()
+        val montant = binding.etMontant.text.toString().trim().toDoubleOrNull()
+
+        if (!numero.matches(Regex("^\\d{2}\\*\\d{2}$"))) {
+            Toast.makeText(this, "Fòma Mariage dwe XX*YY (egzanp: 25*32)", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (montant == null || montant <= 0) {
+            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val drawName = selectedDraw?.name ?: "—"
+        lines.add(FicheLine(drawName, numero, montant))
+        binding.etBoulLa.text?.clear()
+        refreshLinesList()
+        refreshTotal()
+    }
+
+    // ==================== LOTO4 (2 chif + 2 chif = 4 chif, ak "vire") ====================
+    // "Vire" = chanje pozisyon 2 mwatye yo: 2532 -> 3225 (25|32 vin 32|25).
+    // Chak Opsyon (L4O1/O2/O3) reprezante yon kalkil peman diferan ki fèt
+    // pita — antre a menm nimewo pou tout 3 opsyon yo.
+    private fun showLoto4OptionsDialog() {
+        val numero = binding.etBoulLa.text.toString().trim()
+        val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
+
+        if (!numero.matches(Regex("^\\d{4}$"))) {
+            Toast.makeText(this, "Antre yon nimewo 4 chif pou Loto4", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (price == null || price <= 0) {
+            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val vire = numero.substring(2, 4) + numero.substring(0, 2)
+
+        val options = listOf(
+            Triple("L4O1", numero, "01"),
+            Triple("L4O1", vire, "01"),
+            Triple("L4O2", numero, "02"),
+            Triple("L4O2", vire, "02"),
+            Triple("L4O3", numero, "03"),
+            Triple("L4O3", vire, "03"),
+        )
+
+        showOptionsCheckboxDialog("OPTIONS LOTO 4", options, price)
+    }
+
+    // ==================== LOTO5 (3 chif + 2 chif = 5 chif, san "vire") ====================
+    private fun showLoto5OptionsDialog() {
+        val numero = binding.etBoulLa.text.toString().trim()
+        val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
+
+        if (!numero.matches(Regex("^\\d{5}$"))) {
+            Toast.makeText(this, "Antre yon nimewo 5 chif pou Loto5", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (price == null || price <= 0) {
+            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val options = listOf(
+            Triple("Option 1", numero, "01"),
+            Triple("Option 2", numero, "02"),
+            Triple("Option 3", numero, "03"),
+        )
+
+        showOptionsCheckboxDialog("OPTIONS LOTO 5", options, price)
+    }
+
+    /**
+     * Dyalòg jenerik ak checkbox: chak liy montre "Label -> Nimewo" ak pri
+     * a. Lè ajan an klike VALIDER, sèlman liy ki koche yo ajoute nan Fich la.
+     */
+    private fun showOptionsCheckboxDialog(
+        title: String,
+        options: List<Triple<String, String, String>>, // (label ekran, nimewo, optionLabel done)
+        price: Double,
+    ) {
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(32, 16, 32, 16)
+        }
+        val checkBoxes = mutableListOf<android.widget.CheckBox>()
+
+        for ((label, numero, _) in options) {
+            val row = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            val checkBox = android.widget.CheckBox(this).apply {
+                text = "$label -> $numero"
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val priceLabel = TextView(this).apply {
+                text = moneyFormat.format(price)
+            }
+            checkBoxes.add(checkBox)
+            row.addView(checkBox)
+            row.addView(priceLabel)
+            container.addView(row)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setView(container)
+            .setPositiveButton("VALIDER") { _, _ ->
+                val drawName = selectedDraw?.name ?: "—"
+                var addedCount = 0
+                checkBoxes.forEachIndexed { i, cb ->
+                    if (cb.isChecked) {
+                        val (_, numero, optionLabel) = options[i]
+                        lines.add(FicheLine(drawName, numero, price, optionLabel))
+                        addedCount++
+                    }
+                }
+                if (addedCount == 0) {
+                    Toast.makeText(this, "Ou pa koche okenn opsyon", Toast.LENGTH_SHORT).show()
+                } else {
+                    binding.etBoulLa.text?.clear()
+                    refreshLinesList()
+                    refreshTotal()
+                }
+            }
+            .setNegativeButton("ANNULER", null)
+            .show()
+    }
+
     // ==================== LIS LIY (chak liy: kòbèy + kreyon apa) ====================
 
     private fun refreshLinesList() {
@@ -228,6 +374,7 @@ class NewFicheActivity : AppCompatActivity() {
             val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
             rowBinding.tvLineTiraj.text = line.drawName
             rowBinding.tvLineBoul.text = line.numero
+            rowBinding.tvLineOption.text = line.optionLabel ?: ""
             rowBinding.tvLineKob.text = moneyFormat.format(line.price)
 
             rowBinding.btnDeleteLine.setOnClickListener {

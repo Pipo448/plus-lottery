@@ -281,12 +281,108 @@
                     android:id="@+id/btnP4"
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
                     android:minWidth="0dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="P4"
                     android:textColor="@android:color/white"
                     android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnP5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="P5"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnP6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="P6"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnP7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="P7"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnP8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="P8"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnP9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="P9"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#22C55E" />
+
+                <Button
+                    android:id="@+id/btnMariage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="MARIAGE"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#F59E0B" />
+
+                <Button
+                    android:id="@+id/btnLoto4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="LOTO4"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#3B82F6" />
+
+                <Button
+                    android:id="@+id/btnLoto5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="LOTO5"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="#3B82F6" />
             </LinearLayout>
         </HorizontalScrollView>
 
