@@ -13,6 +13,7 @@ import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.SellTicketRequest
+import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.DeviceIdHelper
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
@@ -51,6 +52,7 @@ class NewFicheActivity : AppCompatActivity() {
     private val lines = mutableListOf<FicheLine>()
 
     private val moneyFormat = DecimalFormat("#,##0.00")
+    private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,9 +69,7 @@ class NewFicheActivity : AppCompatActivity() {
         binding.btnShare.setOnClickListener {
             Toast.makeText(this, "Pataje — byento", Toast.LENGTH_SHORT).show()
         }
-        binding.btnPrint.setOnClickListener {
-            Toast.makeText(this, "Enprime — byento", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnPrint.setOnClickListener { printCurrentFiche() }
         binding.btnEditGameLabel.setOnClickListener { showGamePicker() }
 
         binding.tvChwaziTiraj.setOnClickListener { showDrawPicker() }
@@ -189,6 +189,8 @@ class NewFicheActivity : AppCompatActivity() {
      * 10 liy (menm pri chak) nan Fich la.
      */
     private fun addQuickCategory(category: QuickCategory) {
+        if (!requireDrawSelected()) return
+
         val numbers: List<String> = when (category) {
             is QuickCategory.BPaire -> (0..9).map { "$it$it" }
             is QuickCategory.Grap -> (0..9).map { "$it$it$it" }
@@ -223,6 +225,8 @@ class NewFicheActivity : AppCompatActivity() {
     // ==================== ANTRE MANYÈL (oto-deteksyon selon konbyen chif) ====================
 
     private fun addManualLine() {
+        if (!requireDrawSelected()) return
+
         val numero = binding.etBoulLa.text.toString().trim()
         val montantText = binding.etMontant.text.toString().trim()
 
@@ -261,6 +265,8 @@ class NewFicheActivity : AppCompatActivity() {
     // Ajan an ka tape swa 4 chif senp (egzanp "2532", nou split li an "25*32"
     // otomatikman) oswa dirèkteman fòma "XX*YY" ak zetwal la.
     private fun addMariageLine() {
+        if (!requireDrawSelected()) return
+
         val rawInput = binding.etBoulLa.text.toString().trim()
         val montant = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
@@ -289,6 +295,8 @@ class NewFicheActivity : AppCompatActivity() {
     // Chak Opsyon (L4O1/O2/O3) reprezante yon kalkil peman diferan ki fèt
     // pita — antre a menm nimewo pou tout 3 opsyon yo.
     private fun showLoto4OptionsDialog() {
+        if (!requireDrawSelected()) return
+
         val numero = binding.etBoulLa.text.toString().trim()
         val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
@@ -317,6 +325,8 @@ class NewFicheActivity : AppCompatActivity() {
 
     // ==================== LOTO5 (3 chif + 2 chif = 5 chif, san "vire") ====================
     private fun showLoto5OptionsDialog() {
+        if (!requireDrawSelected()) return
+
         val numero = binding.etBoulLa.text.toString().trim()
         val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
@@ -395,6 +405,64 @@ class NewFicheActivity : AppCompatActivity() {
             }
             .setNegativeButton("ANNULER", null)
             .show()
+    }
+
+    // ==================== GADYEN: bloke vant si pa gen tiraj chwazi ====================
+    private fun requireDrawSelected(): Boolean {
+        if (selectedDraw == null) {
+            Toast.makeText(this, "Chwazi yon Tiraj anvan ou ka vann", Toast.LENGTH_LONG).show()
+            return false
+        }
+        return true
+    }
+
+    // ==================== ENPRIME FICH LA ====================
+    // Itilize menm PrinterManager ki deja konfigire (SUNMI oswa Bluetooth
+    // eksitèn) — reyitilize `printTicketReceipt()` ki deja egziste, ak lis
+    // liy yo mete ansanm nan chan "numbers" olye yon sèl nimewo.
+    private fun printCurrentFiche() {
+        if (lines.isEmpty()) {
+            Toast.makeText(this, "Pa gen liy pou enprime", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val drawName = selectedDraw?.name ?: "—"
+        val total = lines.sumOf { it.price }
+        val ficheNumber = "F${System.currentTimeMillis().toString(36).uppercase()}"
+
+        val detailText = buildString {
+            var currentCategory = ""
+            lines.forEach { line ->
+                if (line.category != currentCategory) {
+                    currentCategory = line.category
+                    appendLine(currentCategory)
+                }
+                val optionSuffix = if (!line.optionLabel.isNullOrEmpty()) " (${line.optionLabel})" else ""
+                appendLine("  ${line.numero}$optionSuffix — ${moneyFormat.format(line.price)}")
+            }
+        }
+
+        Toast.makeText(this, "Ap eseye enprime...", Toast.LENGTH_SHORT).show()
+        printerManager.connect {
+            runOnUiThread {
+                if (!printerManager.isReady()) {
+                    Toast.makeText(
+                        this,
+                        "Enprimant pa konekte. Ale nan Paramèt/MainActivity pou konekte l.",
+                        Toast.LENGTH_LONG,
+                    ).show()
+                    return@runOnUiThread
+                }
+                printerManager.printTicketReceipt(
+                    companyName = "PLUS GROUP",
+                    drawName = drawName,
+                    ticketNumber = ficheNumber,
+                    numbers = detailText,
+                    betAmount = moneyFormat.format(total),
+                    footerMessage = "Mèsi pou konfyans ou!",
+                )
+                Toast.makeText(this, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // ==================== LIS LIY (chak liy: kòbèy + kreyon apa) ====================
@@ -508,6 +576,7 @@ class NewFicheActivity : AppCompatActivity() {
                     "Fich soumèt avèk siksè ($successCount liy)",
                     Toast.LENGTH_LONG,
                 ).show()
+                printCurrentFiche()
                 lines.clear()
                 refreshLinesList()
                 refreshTotal()
