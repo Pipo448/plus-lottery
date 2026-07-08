@@ -2,11 +2,12 @@ package com.plusgroup.pos
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.widget.ArrayAdapter
+import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.plusgroup.pos.databinding.ActivityNewFicheBinding
+import com.plusgroup.pos.databinding.ItemFicheLineBinding
 import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
@@ -18,9 +19,12 @@ import java.text.DecimalFormat
 /**
  * Ekran "Nouvèl Fich" — vann tikè.
  *
- * Chak "liy" se yon (nimewo + pri). Bouton rapid yo (BPaire, Grap, P0-P9)
- * jenere otomatikman 10 liy ak MENM pri a chak fwa, olye ajan an antre
- * chak nimewo yon pa yon.
+ * Chak "liy" se yon (tiraj + nimewo + pri). Bouton rapid yo (BPaire, Grap,
+ * P0-P9) jenere otomatikman 10 liy ak MENM pri a chak fwa, olye ajan an
+ * antre chak nimewo yon pa yon.
+ *
+ * Chak liy ka EFASE (kòbèy) oswa MODIFYE pri li (kreyon) apa, san l pa
+ * afekte lòt liy yo.
  *
  * Soumèt final la rele `POST agent/tickets` YON FWA POU CHAK LIY, youn
  * apre lòt (pa gen wout "batch" nan backend la kounye a).
@@ -35,8 +39,13 @@ class NewFicheActivity : AppCompatActivity() {
     private var activeGames: List<LotteryGame> = emptyList()
     private var selectedGame: LotteryGame? = null
 
-    // Chak liy: Pair(nimewo, pri)
-    private val lines = mutableListOf<Pair<String, Double>>()
+    private data class FicheLine(
+        val drawName: String,
+        val numero: String,
+        var price: Double,
+    )
+
+    private val lines = mutableListOf<FicheLine>()
 
     private val moneyFormat = DecimalFormat("#,##0.00")
 
@@ -58,6 +67,7 @@ class NewFicheActivity : AppCompatActivity() {
         binding.btnPrint.setOnClickListener {
             Toast.makeText(this, "Enprime — byento", Toast.LENGTH_SHORT).show()
         }
+        binding.btnEditGameLabel.setOnClickListener { showGamePicker() }
 
         binding.tvChwaziTiraj.setOnClickListener { showDrawPicker() }
 
@@ -89,9 +99,8 @@ class NewFicheActivity : AppCompatActivity() {
 
                 val gamesRes = api.getGames()
                 activeGames = gamesRes.body()?.data ?: emptyList()
-                // Pa default, chwazi premye jwèt aktif la (adapte si w bezwen
-                // yon seleksyon eksplisit pito).
                 selectedGame = activeGames.firstOrNull()
+                binding.tvFicheLabel.text = (selectedGame?.name ?: "BORLETTE").uppercase()
             } catch (e: Exception) {
                 Toast.makeText(
                     this@NewFicheActivity,
@@ -113,6 +122,23 @@ class NewFicheActivity : AppCompatActivity() {
             .setSingleChoiceItems(names, -1) { dialog, which ->
                 selectedDraw = openDraws[which]
                 binding.tvChwaziTiraj.text = selectedDraw?.name ?: "CHWAZI TIRAJ"
+                dialog.dismiss()
+            }
+            .setNegativeButton("Anile", null)
+            .show()
+    }
+
+    private fun showGamePicker() {
+        if (activeGames.isEmpty()) {
+            Toast.makeText(this, "Pa gen kategori jwèt disponib", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val names = activeGames.map { it.name ?: it.id }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("CHWAZI KATEGORI")
+            .setSingleChoiceItems(names, -1) { dialog, which ->
+                selectedGame = activeGames[which]
+                binding.tvFicheLabel.text = (selectedGame?.name ?: "BORLETTE").uppercase()
                 dialog.dismiss()
             }
             .setNegativeButton("Anile", null)
@@ -144,7 +170,8 @@ class NewFicheActivity : AppCompatActivity() {
             is QuickCategory.Pick -> (0..9).map { d -> "$d${category.digit}" }
         }
         promptForPrice { price ->
-            numbers.forEach { num -> lines.add(num to price) }
+            val drawName = selectedDraw?.name ?: "—"
+            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price)) }
             refreshLinesList()
             refreshTotal()
         }
@@ -184,23 +211,44 @@ class NewFicheActivity : AppCompatActivity() {
             return
         }
 
-        lines.add(numero to montant)
+        val drawName = selectedDraw?.name ?: "—"
+        lines.add(FicheLine(drawName, numero, montant))
         binding.etBoulLa.text?.clear()
         refreshLinesList()
         refreshTotal()
     }
 
-    // ==================== LIS LIY + TOTAL ====================
+    // ==================== LIS LIY (chak liy: kòbèy + kreyon apa) ====================
 
     private fun refreshLinesList() {
-        // Senp rezime tèks — ranplase ak yon RecyclerView si w vle yon lis
-        // ki ka efase chak liy endividyèlman pita.
-        val summary = lines.joinToString("\n") { (num, price) -> "$num — ${moneyFormat.format(price)} HTG" }
-        binding.tvLinesSummary.text = summary
+        binding.llLinesContainer.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+
+        lines.forEachIndexed { index, line ->
+            val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
+            rowBinding.tvLineTiraj.text = line.drawName
+            rowBinding.tvLineBoul.text = line.numero
+            rowBinding.tvLineKob.text = moneyFormat.format(line.price)
+
+            rowBinding.btnDeleteLine.setOnClickListener {
+                lines.removeAt(index)
+                refreshLinesList()
+                refreshTotal()
+            }
+            rowBinding.btnEditLinePrice.setOnClickListener {
+                promptForPrice { newPrice ->
+                    line.price = newPrice
+                    refreshLinesList()
+                    refreshTotal()
+                }
+            }
+
+            binding.llLinesContainer.addView(rowBinding.root)
+        }
     }
 
     private fun refreshTotal() {
-        val total = lines.sumOf { it.second }
+        val total = lines.sumOf { it.price }
         binding.tvTotal.text = "Total: ${moneyFormat.format(total)}"
     }
 
@@ -231,28 +279,26 @@ class NewFicheActivity : AppCompatActivity() {
             var successCount = 0
             var lastErrorMsg: String? = null
 
-            // Kopi lokal — nou vide `lines` sèlman apre tout soumèt fini,
-            // pou pa pèdi done si gen yon erè nan mitan.
             val linesToSubmit = lines.toList()
 
-            for ((numero, montant) in linesToSubmit) {
+            for (line in linesToSubmit) {
                 try {
                     val res = api.sellTicket(
                         SellTicketRequest(
                             drawId = draw.id,
                             gameId = game.id,
-                            numbers = listOf(numero),
-                            betAmount = montant,
+                            numbers = listOf(line.numero),
+                            betAmount = line.price,
                             posDeviceId = deviceId,
                         )
                     )
                     if (res.isSuccessful) {
                         successCount++
                     } else {
-                        lastErrorMsg = "Liy '$numero': ${res.errorBody()?.string() ?: "erè enkoni"}"
+                        lastErrorMsg = "Liy '${line.numero}': ${res.errorBody()?.string() ?: "erè enkoni"}"
                     }
                 } catch (e: Exception) {
-                    lastErrorMsg = "Liy '$numero': ${e.message}"
+                    lastErrorMsg = "Liy '${line.numero}': ${e.message}"
                 }
             }
 
@@ -273,10 +319,6 @@ class NewFicheActivity : AppCompatActivity() {
                     "$successCount/${linesToSubmit.size} liy pase. Dènye erè: $lastErrorMsg",
                     Toast.LENGTH_LONG,
                 ).show()
-                // NOTE: liy ki echwe yo rete nan `lines` — ajan an ka re-eseye
-                // soumèt ankò san l pa retape tout bagay. Pou fè sa byen,
-                // ta bezwen mache tras kilès liy ki reyisi deja; vèsyon sa a
-                // se yon premye pa — ka amelyore pita si sa nesesè.
             }
         }
     }

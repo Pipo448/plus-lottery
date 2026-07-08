@@ -69,6 +69,10 @@
         android:orientation="horizontal"
         android:background="#808080">
 
+        <View
+            android:layout_width="36dp"
+            android:layout_height="match_parent" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -112,6 +116,12 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
                 <TextView
                     android:id="@+id/tvFicheLabel"
                     android:layout_width="wrap_content"
@@ -121,14 +131,23 @@
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
 
-                <TextView
-                    android:id="@+id/tvLinesSummary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="monospace"
-                    android:textColor="@android:color/black"
-                    android:textSize="15sp" />
+                <ImageButton
+                    android:id="@+id/btnEditGameLabel"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="4dp"
+                    android:background="@android:color/transparent"
+                    android:tint="#DC2626"
+                    android:contentDescription="Chanje kategori"
+                    android:src="@android:drawable/ic_menu_edit" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llLinesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>
