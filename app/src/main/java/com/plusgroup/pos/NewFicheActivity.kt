@@ -69,7 +69,7 @@ class NewFicheActivity : AppCompatActivity() {
         binding.btnShare.setOnClickListener {
             Toast.makeText(this, "Pataje — byento", Toast.LENGTH_SHORT).show()
         }
-        binding.btnPrint.setOnClickListener { printCurrentFiche() }
+        binding.btnPrint.setOnClickListener { submitFiche() }
         binding.btnEditGameLabel.setOnClickListener { showGamePicker() }
 
         binding.tvChwaziTiraj.setOnClickListener { showDrawPicker() }
