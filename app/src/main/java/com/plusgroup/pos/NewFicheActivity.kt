@@ -47,6 +47,18 @@ class NewFicheActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
 
+        binding.btnClearAll.setOnClickListener {
+            lines.clear()
+            refreshLinesList()
+            refreshTotal()
+        }
+        binding.btnShare.setOnClickListener {
+            Toast.makeText(this, "Pataje — byento", Toast.LENGTH_SHORT).show()
+        }
+        binding.btnPrint.setOnClickListener {
+            Toast.makeText(this, "Enprime — byento", Toast.LENGTH_SHORT).show()
+        }
+
         binding.tvChwaziTiraj.setOnClickListener { showDrawPicker() }
 
         // Bouton rapid pou chak kategori pari
