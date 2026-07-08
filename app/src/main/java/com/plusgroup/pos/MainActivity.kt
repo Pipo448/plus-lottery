@@ -73,15 +73,10 @@ class MainActivity : AppCompatActivity() {
                 val ready = printerManager.isReady()
                 binding.tvPrinterStatus.text = if (ready) {
                     "Enprimant: konekte ✅"
+                } else if (printerManager.printerType == PrinterManager.PrinterType.BLUETOOTH_EXTERNAL) {
+                    "Enprimant: pa konekte.\n${printerManager.lastPrinterError ?: "chwazi youn pi ba a"}"
                 } else {
                     "Enprimant: pa konekte — chwazi youn"
-                }
-                if (!ready && printerManager.printerType == PrinterManager.PrinterType.BLUETOOTH_EXTERNAL) {
-                    Toast.makeText(
-                        this,
-                        "Detay erè: ${printerManager.lastPrinterError ?: "pa gen detay (verifye si yon aparèy te deja anrejistre)"}",
-                        Toast.LENGTH_LONG,
-                    ).show()
                 }
             }
         }
@@ -110,14 +105,7 @@ class MainActivity : AppCompatActivity() {
                         binding.tvPrinterStatus.text = if (success) {
                             "Enprimant: konekte ✅ (${selected.name})"
                         } else {
-                            "Enprimant: echèk koneksyon — eseye ankò"
-                        }
-                        if (!success) {
-                            Toast.makeText(
-                                this,
-                                "Detay erè: ${printerManager.lastPrinterError ?: "pa gen detay"}",
-                                Toast.LENGTH_LONG,
-                            ).show()
+                            "Enprimant: echèk koneksyon.\n${printerManager.lastPrinterError ?: "pa gen detay"}"
                         }
                     }
                 }.start()

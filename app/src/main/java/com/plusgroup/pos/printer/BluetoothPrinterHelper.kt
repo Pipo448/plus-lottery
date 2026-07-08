@@ -52,7 +52,7 @@ class BluetoothPrinterHelper {
         } catch (_: Exception) {
         }
 
-        // 1. Eseye metòd "ofisyèl" la (via rechèch SDP sou UUID SPP la).
+        // 1. Eseye metòd "ofisyèl" SEGURIZE a (via rechèch SDP sou UUID SPP la).
         try {
             val socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
             socket.connect()
@@ -60,14 +60,25 @@ class BluetoothPrinterHelper {
             this.outputStream = socket.outputStream
             return true
         } catch (e: Exception) {
-            Log.e(TAG, "Metòd estanda echwe, m ap eseye fallback (kanal 1)...", e)
-            lastError = "Estanda: ${e.javaClass.simpleName} — ${e.message}"
+            Log.e(TAG, "Metòd segurize echwe, m ap eseye ensekirize...", e)
+            lastError = "Segurize: ${e.javaClass.simpleName} — ${e.message}"
         }
 
-        // 2. Fallback: anpil enprimant bon mache (tankou Gooj PRT) pa
-        //    enplemante SDP kòrèkteman e refize metòd ofisyèl la san
-        //    rezon klè. Yon koneksyon dirèk sou kanal RFCOMM 1 via
-        //    refleksyon regle pwoblèm sa a nan prèske tout ka.
+        // 2. Eseye vèsyon ENSEKIRIZE UUID SPP la — sa rezoud pifò erè
+        //    "read failed, socket might closed or timeout" ak enprimant
+        //    bon mache ki pa konplete koupláj (bonding) Android la kòrèkteman.
+        try {
+            val insecureSocket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID)
+            insecureSocket.connect()
+            this.socket = insecureSocket
+            this.outputStream = insecureSocket.outputStream
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Metòd ensekirize echwe tou, m ap eseye fallback (kanal 1)...", e)
+            lastError = (lastError ?: "") + " | Ensekirize: ${e.javaClass.simpleName} — ${e.message}"
+        }
+
+        // 3. Fallback final: koneksyon dirèk sou kanal RFCOMM 1 via refleksyon.
         return try {
             val fallbackSocket = device.javaClass
                 .getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
@@ -78,7 +89,7 @@ class BluetoothPrinterHelper {
             true
         } catch (e: Exception) {
             Log.e(TAG, "Fallback (kanal 1) echwe tou — enprimant la pa reponn.", e)
-            lastError = (lastError ?: "") + " | Fallback: ${e.javaClass.simpleName} — ${e.message}"
+            lastError = (lastError ?: "") + " | Kanal1: ${e.javaClass.simpleName} — ${e.message}"
             disconnect()
             false
         }
