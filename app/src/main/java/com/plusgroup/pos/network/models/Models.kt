@@ -93,6 +93,15 @@ data class AgentProfile(
     val creditVente: Double? = null,
     @com.google.gson.annotations.SerializedName("limite_gain")
     val limiteGain: Double? = null,
+    val status: String? = null,
+    val deviceId: String? = null,
+    val branchName: String? = null,
+    val branchStatus: String? = null,
+    val tenantName: String? = null,
+    @com.google.gson.annotations.SerializedName("zone_address")
+    val zoneAddress: String? = null,
+    @com.google.gson.annotations.SerializedName("commission_rate")
+    val commissionRate: Double? = null,
 )
 
 data class AgentBalance(
@@ -132,4 +141,26 @@ data class PartialReport(
     val ficheVendu: Int? = null,
     val vente: Double? = null,
     val commission: Double? = null,
+)
+
+data class AgentPrime(
+    val borlette: String? = null,
+    val loto3: String? = null,
+    val mariage: String? = null,
+    val l4o1: String? = null,
+    val l4o2: String? = null,
+    val l4o3: String? = null,
+    val l5o1: String? = null,
+    val l5o2: String? = null,
+    val l5o3: String? = null,
+)
+
+data class BlockedNumber(
+    val id: String? = null,
+    val numero: String? = null,
+)
+
+data class CompanySetting(
+    val key: String? = null,
+    val value: String? = null,
 )

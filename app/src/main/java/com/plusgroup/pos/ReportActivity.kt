@@ -58,7 +58,7 @@ class ReportActivity : AppCompatActivity() {
             finish()
         }
         binding.tabParamet.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         loadPartialReport()

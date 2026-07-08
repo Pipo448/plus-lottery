@@ -1,10 +1,13 @@
 package com.plusgroup.pos.network
 
 import com.plusgroup.pos.network.models.AgentBalance
+import com.plusgroup.pos.network.models.AgentPrime
 import com.plusgroup.pos.network.models.AgentProfile
 import com.plusgroup.pos.network.models.ApiDataResponse
 import com.plusgroup.pos.network.models.ApiListResponse
 import com.plusgroup.pos.network.models.ApiMessageResponse
+import com.plusgroup.pos.network.models.BlockedNumber
+import com.plusgroup.pos.network.models.CompanySetting
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.LoginRequest
@@ -59,4 +62,14 @@ interface ApiService {
     // "Rapò" — Rapò Pasyèl pou yon jou
     @GET("agent/reports/partial")
     suspend fun getPartialReport(@Query("date") date: String? = null): Response<ApiDataResponse<PartialReport>>
+
+    // "Paramèt" — Prime pa ajan, boul bloke pa ajan, paramèt tenant antye
+    @GET("agent/prime")
+    suspend fun getPrime(): Response<ApiDataResponse<AgentPrime>>
+
+    @GET("agent/blocked-numbers")
+    suspend fun getBlockedNumbers(): Response<ApiListResponse<BlockedNumber>>
+
+    @GET("agent/settings")
+    suspend fun getCompanySettings(): Response<ApiListResponse<CompanySetting>>
 }

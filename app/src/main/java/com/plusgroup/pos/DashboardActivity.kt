@@ -55,7 +55,7 @@ class DashboardActivity : AppCompatActivity() {
 
         binding.tabBolet.setOnClickListener { /* Nou deja la */ }
         binding.tabParamet.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         loadProfileAndBalance()
