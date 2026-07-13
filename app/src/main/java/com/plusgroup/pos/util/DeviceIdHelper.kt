@@ -41,7 +41,7 @@ object DeviceIdHelper {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         val existing = prefs.getString(KEY_DEVICE_ID, null)
-        if (!existing.isNullOrEmpty()) return existing
+        if (!existing.isNullOrEmpty() && isValidFormat(existing)) return existing
 
         val androidId = try {
             Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
@@ -57,5 +57,22 @@ object DeviceIdHelper {
 
         prefs.edit().putString(KEY_DEVICE_ID, newId).apply()
         return newId
+    }
+
+    /**
+     * Valide ke yon device_id ki deja sove a gen yon fòma nou rekonèt kòm
+     * "sen" — swa 16 karaktè hex san tiray (nouvo fòma), swa yon UUID
+     * konplè 36 karaktè ak tiray nan bon plas yo (ansyen fòma valab).
+     *
+     * Sa detekte ansyen valè KRAZE (egzanp: "9ba34604-72a7f331" — yon
+     * tiray nan move plas, ki fè backend voye erè "invalid input syntax
+     * for type uuid") pou nou ka jenere yon nouvo ID kòrèk pou ranplase l.
+     */
+    private fun isValidFormat(id: String): Boolean {
+        val hex16 = Regex("^[a-fA-F0-9]{16}$")
+        val uuid36 = Regex(
+            "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        )
+        return hex16.matches(id) || uuid36.matches(id)
     }
 }
