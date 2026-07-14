@@ -85,20 +85,20 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            // TÈS: KENBE MENM ALINMAN pou tout sekans lan — pa gen okenn
-            // chanjman setAlignment() ant liy yo. Ipotèz: se chanjman
-            // alinman (1 -> 0) ant 2 kòmand printText ki kraze rès sekans
-            // lan sou vèsyon sèvis SUNMI sa a.
+            // TÈS: RANVÈSE LÒD 2 liy yo — "Test enprimant" (senp, san gwo
+            // font) PREMYE, "PLUS GROUP" (gwo font) DEZYÈM. Ipotèz: se
+            // POZISYON kòmand lan nan sekans lan (2yèm kòmand enprime)
+            // ki pwoblèm nan, pa kontni/fòma liy lan.
             svc.printerInit(null)
             Thread.sleep(50)
 
             svc.setAlignment(1, null)
             Thread.sleep(50)
 
-            svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
+            svc.printText("Test enprimant - tout bon\n", null)
             Thread.sleep(50)
 
-            svc.printText("Test enprimant - tout bon\n", null)
+            svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
             Thread.sleep(50)
 
             svc.lineWrap(5, null)
@@ -106,7 +106,7 @@ class SunmiPrinterHelper(private val context: Context) {
 
             svc.cutpaper(null)
 
-            Log.i(TAG, "Sekans tès fini san chanjman alinman ant liy yo")
+            Log.i(TAG, "Sekans tès fini ak lòd ranvèse")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         } catch (e: InterruptedException) {
