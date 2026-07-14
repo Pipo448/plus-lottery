@@ -28,6 +28,10 @@ import java.text.DecimalFormat
  * Chak liy ka EFASE (kòbèy) oswa MODIFYE pri li (kreyon) apa, san l pa
  * afekte lòt liy yo.
  *
+ * Yon SÈL bouton (ikòn enprime anlè a) fè tout bagay: soumèt chak liy bay
+ * backend la, epi si tout liy yo pase, enprime resi a otomatikman —
+ * san popup/konfimasyon anplis.
+ *
  * Soumèt final la rele `POST agent/tickets` YON FWA POU CHAK LIY, youn
  * apre lòt (pa gen wout "batch" nan backend la kounye a).
  */
@@ -106,7 +110,6 @@ class NewFicheActivity : AppCompatActivity() {
         })
 
         binding.btnAntre.setOnClickListener { addManualLine() }
-        binding.btnSoumet.setOnClickListener { submitFiche() }
 
         loadDrawsAndGames()
         refreshTotal()
@@ -447,8 +450,6 @@ class NewFicheActivity : AppCompatActivity() {
             Triple(code, line.numero, moneyFormat.format(line.price))
         }
 
-        Toast.makeText(this, "Ap eseye enprime...", Toast.LENGTH_SHORT).show()
-
         lifecycleScope.launch {
             var companyName = "PLUS GROUP"
             var vendeur = "—"
@@ -490,7 +491,7 @@ class NewFicheActivity : AppCompatActivity() {
                         footerMessage = footerMessage,
                         qrData = ficheNumber,
                     )
-                    Toast.makeText(this@NewFicheActivity, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@NewFicheActivity, "Fich enprime avèk siksè!", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -549,7 +550,10 @@ class NewFicheActivity : AppCompatActivity() {
         binding.tvTotal.text = "Total: ${moneyFormat.format(total)}"
     }
 
-    // ==================== SOUMÈT FICH LA (yon apèl pou chak liy) ====================
+    // ==================== SOUMÈT + ENPRIME (yon apèl pou chak liy) ====================
+    // Yon SÈL aksyon: bouton enprime a rele fonksyon sa a dirèkteman.
+    // Si tout liy yo soumèt avèk siksè, enprime a fèt otomatikman, san
+    // popup/konfimasyon anplis. Si gen erè, yon sèl mesaj Toast montre l.
 
     private fun submitFiche() {
         val draw = selectedDraw
@@ -564,12 +568,12 @@ class NewFicheActivity : AppCompatActivity() {
             return
         }
         if (lines.isEmpty()) {
-            Toast.makeText(this, "Ajoute omwen yon liy anvan w soumèt", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Ajoute omwen yon liy anvan w enprime", Toast.LENGTH_SHORT).show()
             return
         }
 
         val deviceId = DeviceIdHelper.getDeviceId(this)
-        binding.btnSoumet.isEnabled = false
+        binding.btnPrint.isEnabled = false
 
         lifecycleScope.launch {
             val api = ApiClient.getService(applicationContext)
@@ -599,14 +603,9 @@ class NewFicheActivity : AppCompatActivity() {
                 }
             }
 
-            binding.btnSoumet.isEnabled = true
+            binding.btnPrint.isEnabled = true
 
             if (successCount == linesToSubmit.size) {
-                Toast.makeText(
-                    this@NewFicheActivity,
-                    "Fich soumèt avèk siksè ($successCount liy)",
-                    Toast.LENGTH_LONG,
-                ).show()
                 printCurrentFiche()
                 lines.clear()
                 binding.etBoulLa.text?.clear()

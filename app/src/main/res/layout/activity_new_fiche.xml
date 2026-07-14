@@ -451,14 +451,5 @@
             android:text="ANTRE"
             android:backgroundTint="#3B82F6"
             android:textColor="@android:color/white" />
-
-        <Button
-            android:id="@+id/btnSoumet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="SOUMÈT FICH LA"
-            android:backgroundTint="#DC2626"
-            android:textColor="@android:color/white" />
     </LinearLayout>
 </LinearLayout>
