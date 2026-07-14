@@ -85,29 +85,24 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            val r1 = svc.printerInit(null)
-            Log.i(TAG, "printerInit -> $r1")
+            // TÈS: pa itilize printTextWithFont() ditou — sèvi ak setFontSize()
+            // + printText() separe pito. Ipotèz: printTextWithFont() gen yon
+            // bug sou vèsyon sèvis SUNMI ansyen sa a (API 25) ki "kraze" eta
+            // entèn enprimant lan san jete erè, sa ki bloke kòmand ki vin apre.
+            svc.printerInit(null)
 
-            val r2 = svc.setAlignment(1, null)
-            Log.i(TAG, "setAlignment(1) -> $r2")
+            svc.setAlignment(1, null)
+            svc.setFontSize(32f, null)
+            svc.printText("PLUS GROUP\n", null)
+            svc.setFontSize(24f, null) // remèt gwosè nòmal apre
+            svc.lineWrap(1, null)
 
-            val r3 = svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
-            Log.i(TAG, "printTextWithFont -> $r3")
+            svc.setAlignment(0, null)
+            svc.printText("Test enprimant - tout bon\n", null)
+            svc.lineWrap(5, null)
+            svc.cutpaper(null)
 
-            val r4 = svc.lineWrap(1, null)
-            Log.i(TAG, "lineWrap(1) -> $r4")
-
-            val r5 = svc.setAlignment(0, null)
-            Log.i(TAG, "setAlignment(0) -> $r5")
-
-            val r6 = svc.printText("Test enprimant - tout bon\n", null)
-            Log.i(TAG, "printText -> $r6")
-
-            val r7 = svc.lineWrap(5, null)
-            Log.i(TAG, "lineWrap(5) -> $r7")
-
-            val r8 = svc.cutpaper(null)
-            Log.i(TAG, "cutpaper -> $r8")
+            Log.i(TAG, "Sekans tès fini san setFontSize/printText separe")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         }
