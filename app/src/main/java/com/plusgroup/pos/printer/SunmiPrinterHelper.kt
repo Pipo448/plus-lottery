@@ -108,9 +108,12 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            // TÈS: pase yon VRÈ callback (pa null) pou chak kòmand, pou nou
-            // ka wè si sèvis SUNMI a rapòte yon erè an silans via
-            // onRaiseException/onPrintResult.
+            // DYAGNOSTIK MATERYÈL: verifye eta enprimant lan anvan/apre.
+            // Kòd komen: 1=ap prepare, 2=nòmal, 3=pa gen papye, 4=tèt
+            // enprimant twò cho, 5=kouvèti ouvè, 8=batri fèb.
+            val stateBefore = svc.updatePrinterState()
+            Log.i(TAG, "getPrinterState() ANVAN enprime -> $stateBefore")
+
             svc.printerInit(debugCallback("printerInit"))
             Thread.sleep(50)
 
@@ -127,8 +130,12 @@ class SunmiPrinterHelper(private val context: Context) {
             Thread.sleep(50)
 
             svc.cutpaper(debugCallback("cutpaper"))
+            Thread.sleep(50)
 
-            Log.i(TAG, "Sekans tès fini ak vrè callback pou chak kòmand")
+            val stateAfter = svc.updatePrinterState()
+            Log.i(TAG, "getPrinterState() APRE enprime -> $stateAfter")
+
+            Log.i(TAG, "Sekans tès fini ak dyagnostik eta enprimant")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         } catch (e: InterruptedException) {
