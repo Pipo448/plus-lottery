@@ -85,26 +85,37 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            // TÈS: pa itilize printTextWithFont() ditou — sèvi ak setFontSize()
-            // + printText() separe pito. Ipotèz: printTextWithFont() gen yon
-            // bug sou vèsyon sèvis SUNMI ansyen sa a (API 25) ki "kraze" eta
-            // entèn enprimant lan san jete erè, sa ki bloke kòmand ki vin apre.
+            // TÈS: ti poz (50ms) ant chak kòmand AIDL — ipotèz: sèvis SUNMI
+            // ansyen sa a (API 25) pèdi kòmand ki voye twò vit youn apre lòt
+            // san yon ti délè pou l "dijere" chak apèl IPC.
             svc.printerInit(null)
+            Thread.sleep(50)
 
             svc.setAlignment(1, null)
-            svc.setFontSize(32f, null)
-            svc.printText("PLUS GROUP\n", null)
-            svc.setFontSize(24f, null) // remèt gwosè nòmal apre
+            Thread.sleep(50)
+
+            svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
+            Thread.sleep(50)
+
             svc.lineWrap(1, null)
+            Thread.sleep(50)
 
             svc.setAlignment(0, null)
+            Thread.sleep(50)
+
             svc.printText("Test enprimant - tout bon\n", null)
+            Thread.sleep(50)
+
             svc.lineWrap(5, null)
+            Thread.sleep(50)
+
             svc.cutpaper(null)
 
-            Log.i(TAG, "Sekans tès fini san setFontSize/printText separe")
+            Log.i(TAG, "Sekans tès fini ak ti poz ant chak kòmand")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
+        } catch (e: InterruptedException) {
+            Log.e(TAG, "Sekans entèwonp", e)
         }
     }
 
