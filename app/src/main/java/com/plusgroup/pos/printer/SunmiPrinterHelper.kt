@@ -108,34 +108,29 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            // DYAGNOSTIK MATERYÈL: verifye eta enprimant lan anvan/apre.
-            // Kòd komen: 1=ap prepare, 2=nòmal, 3=pa gen papye, 4=tèt
-            // enprimant twò cho, 5=kouvèti ouvè, 8=batri fèb.
-            val stateBefore = svc.updatePrinterState()
-            Log.i(TAG, "getPrinterState() ANVAN enprime -> $stateBefore")
-
+            // DEKOUVÈT ENPÒTAN: printText() senp sanble itilize yon font/
+            // codaj CJK (Chinwa) pa default sou sèvis sa a, ki fè tèks Latin
+            // vin defòme an senbòl Chinwa (mojibake) san jete erè. Sèl
+            // printTextWithFont() jere codaj Latin kòrèkteman — kidonk nou
+            // sèvi ak li pou TOUT liy, pa jis premye a.
             svc.printerInit(debugCallback("printerInit"))
             Thread.sleep(50)
 
             svc.setAlignment(1, debugCallback("setAlignment(1)"))
             Thread.sleep(50)
 
-            svc.printTextWithFont("PLUS GROUP\n", null, 32f, debugCallback("printTextWithFont"))
+            svc.printTextWithFont("PLUS GROUP\n", null, 32f, debugCallback("printTextWithFont-1"))
             Thread.sleep(50)
 
-            svc.printText("Test enprimant - tout bon\n", debugCallback("printText"))
+            svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, debugCallback("printTextWithFont-2"))
             Thread.sleep(50)
 
             svc.lineWrap(5, debugCallback("lineWrap"))
             Thread.sleep(50)
 
             svc.cutpaper(debugCallback("cutpaper"))
-            Thread.sleep(50)
 
-            val stateAfter = svc.updatePrinterState()
-            Log.i(TAG, "getPrinterState() APRE enprime -> $stateAfter")
-
-            Log.i(TAG, "Sekans tès fini ak dyagnostik eta enprimant")
+            Log.i(TAG, "Sekans tès fini — tout liy ak printTextWithFont")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         } catch (e: InterruptedException) {
@@ -164,20 +159,20 @@ class SunmiPrinterHelper(private val context: Context) {
 
             svc.setAlignment(1, null)
             svc.printTextWithFont("$companyName\n", null, 32f, null)
-            svc.printText("BONNE CHANCE!\n", null)
+            svc.printTextWithFont("BONNE CHANCE!\n", null, 24f, null)
             svc.lineWrap(1, null)
 
             svc.setAlignment(0, null)
-            svc.printText("Tiraj: $drawName\n", null)
-            svc.printText("Tikè No: $ticketNumber\n", null)
-            svc.printText("Nimewo: $numbers\n", null)
-            svc.printText("Montan: $betAmount HTG\n", null)
+            svc.printTextWithFont("Tiraj: $drawName\n", null, 24f, null)
+            svc.printTextWithFont("Tikè No: $ticketNumber\n", null, 24f, null)
+            svc.printTextWithFont("Nimewo: $numbers\n", null, 24f, null)
+            svc.printTextWithFont("Montan: $betAmount HTG\n", null, 24f, null)
             svc.lineWrap(1, null)
 
             svc.setAlignment(1, null)
             svc.printQRCode(ticketNumber, 8, 0, null)
             svc.lineWrap(1, null)
-            svc.printText("$footerMessage\n", null)
+            svc.printTextWithFont("$footerMessage\n", null, 24f, null)
 
             svc.lineWrap(5, null)
             svc.cutpaper(null)
@@ -213,28 +208,28 @@ class SunmiPrinterHelper(private val context: Context) {
 
             svc.setAlignment(1, null)
             svc.printTextWithFont("$companyName\n", null, 32f, null)
-            if (promoLine.isNotBlank()) svc.printText("$promoLine\n", null)
+            if (promoLine.isNotBlank()) svc.printTextWithFont("$promoLine\n", null, 24f, null)
             svc.setAlignment(0, null)
-            if (phone.isNotBlank()) svc.printText("Tel: $phone\n", null)
-            svc.printText("Vendeur: $vendeur\n", null)
-            svc.printText("Fecha: $dateTimeText\n", null)
+            if (phone.isNotBlank()) svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
+            svc.printTextWithFont("Vendeur: $vendeur\n", null, 24f, null)
+            svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
             svc.lineWrap(1, null)
 
-            svc.printText("Fiche: $ficheNumber\n", null)
-            svc.printText("$DASHES\n", null)
-            svc.printText("$drawName: $drawTotal\n", null)
+            svc.printTextWithFont("Fiche: $ficheNumber\n", null, 24f, null)
+            svc.printTextWithFont("$DASHES\n", null, 24f, null)
+            svc.printTextWithFont("$drawName: $drawTotal\n", null, 24f, null)
 
             for ((code, numero, prix) in lines) {
-                svc.printText(twoColumnLine("$code   $numero", prix) + "\n", null)
+                svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
             }
 
-            svc.printText("$DASHES\n", null)
-            svc.printText(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null)
+            svc.printTextWithFont("$DASHES\n", null, 24f, null)
+            svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null, 24f, null)
             svc.lineWrap(1, null)
 
             svc.setAlignment(1, null)
             if (footerMessage.isNotBlank()) {
-                svc.printText("$footerMessage\n", null)
+                svc.printTextWithFont("$footerMessage\n", null, 24f, null)
                 svc.lineWrap(1, null)
             }
 
