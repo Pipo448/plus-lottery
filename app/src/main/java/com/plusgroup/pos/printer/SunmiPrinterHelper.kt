@@ -86,7 +86,7 @@ class SunmiPrinterHelper(private val context: Context) {
             svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
             svc.setAlignment(0, null)
             svc.lineWrap(1, null)
-            svc.printText("Tès enprimant — tout bon!\n", null)
+            svc.printText("Test enprimant - tout bon\n", null)
             svc.lineWrap(3, null)
             svc.cutpaper(null)
         } catch (e: RemoteException) {
