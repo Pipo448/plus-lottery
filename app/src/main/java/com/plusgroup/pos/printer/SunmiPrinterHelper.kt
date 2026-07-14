@@ -74,6 +74,10 @@ class SunmiPrinterHelper(private val context: Context) {
     /**
      * Enprime yon tès senp — itilize sa pou verifye entegrasyon an mache
      * anvan w bati resi konplè tikè yo.
+     *
+     * VÈSYON DEBUG: chak apèl AIDL log kòd retou li (anpil metòd IWoyouService
+     * retounen yon kòd erè entye olye jete yon eksepsyon — sa pèmèt nou izole
+     * EGZAKTEMAN ki kòmand ki echwe, menm si Logcat pa montre okenn crash).
      */
     fun printTestReceipt() {
         val svc = woyouService ?: run {
@@ -81,14 +85,29 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         try {
-            svc.printerInit(null)
-            svc.setAlignment(1, null) // 0=goch, 1=santr, 2=dwat
-            svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
-            svc.setAlignment(0, null)
-            svc.lineWrap(1, null)
-            svc.printText("Test enprimant - tout bon\n", null)
-            svc.lineWrap(3, null)
-            svc.cutpaper(null)
+            val r1 = svc.printerInit(null)
+            Log.i(TAG, "printerInit -> $r1")
+
+            val r2 = svc.setAlignment(1, null)
+            Log.i(TAG, "setAlignment(1) -> $r2")
+
+            val r3 = svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
+            Log.i(TAG, "printTextWithFont -> $r3")
+
+            val r4 = svc.lineWrap(1, null)
+            Log.i(TAG, "lineWrap(1) -> $r4")
+
+            val r5 = svc.setAlignment(0, null)
+            Log.i(TAG, "setAlignment(0) -> $r5")
+
+            val r6 = svc.printText("Test enprimant - tout bon\n", null)
+            Log.i(TAG, "printText -> $r6")
+
+            val r7 = svc.lineWrap(5, null)
+            Log.i(TAG, "lineWrap(5) -> $r7")
+
+            val r8 = svc.cutpaper(null)
+            Log.i(TAG, "cutpaper -> $r8")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         }
@@ -130,7 +149,7 @@ class SunmiPrinterHelper(private val context: Context) {
             svc.lineWrap(1, null)
             svc.printText("$footerMessage\n", null)
 
-            svc.lineWrap(4, null)
+            svc.lineWrap(5, null)
             svc.cutpaper(null)
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime resi tikè a", e)
@@ -194,7 +213,7 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.lineWrap(1, null)
             }
 
-            svc.lineWrap(3, null)
+            svc.lineWrap(5, null)
             svc.cutpaper(null)
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime Fich la", e)
