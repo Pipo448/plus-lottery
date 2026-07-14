@@ -79,34 +79,56 @@ class SunmiPrinterHelper(private val context: Context) {
      * retounen yon kòd erè entye olye jete yon eksepsyon — sa pèmèt nou izole
      * EGZAKTEMAN ki kòmand ki echwe, menm si Logcat pa montre okenn crash).
      */
+    /**
+     * Callback debug — jiskaprezan nou te toujou pase `null` pou ICallback,
+     * kidonk nou pa t janm wè si sèvis SUNMI a rapòte yon erè (onRaiseException)
+     * oswa yon rezilta enprime (onPrintResult) apre chak kòmand. Sa a log
+     * TOUT repons pou nou ka detekte erè ki te envizib jiska prezan.
+     */
+    private fun debugCallback(label: String): woyou.aidlservice.jiuiv5.ICallback.Stub {
+        return object : woyou.aidlservice.jiuiv5.ICallback.Stub() {
+            override fun onRunResult(isSuccess: Boolean) {
+                Log.i(TAG, "[$label] onRunResult -> $isSuccess")
+            }
+            override fun onReturnString(result: String?) {
+                Log.i(TAG, "[$label] onReturnString -> $result")
+            }
+            override fun onRaiseException(code: Int, msg: String?) {
+                Log.e(TAG, "[$label] onRaiseException -> code=$code msg=$msg")
+            }
+            override fun onPrintResult(code: Int, msg: String?) {
+                Log.i(TAG, "[$label] onPrintResult -> code=$code msg=$msg")
+            }
+        }
+    }
+
     fun printTestReceipt() {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
         try {
-            // TÈS: RANVÈSE LÒD 2 liy yo — "Test enprimant" (senp, san gwo
-            // font) PREMYE, "PLUS GROUP" (gwo font) DEZYÈM. Ipotèz: se
-            // POZISYON kòmand lan nan sekans lan (2yèm kòmand enprime)
-            // ki pwoblèm nan, pa kontni/fòma liy lan.
-            svc.printerInit(null)
+            // TÈS: pase yon VRÈ callback (pa null) pou chak kòmand, pou nou
+            // ka wè si sèvis SUNMI a rapòte yon erè an silans via
+            // onRaiseException/onPrintResult.
+            svc.printerInit(debugCallback("printerInit"))
             Thread.sleep(50)
 
-            svc.setAlignment(1, null)
+            svc.setAlignment(1, debugCallback("setAlignment(1)"))
             Thread.sleep(50)
 
-            svc.printText("Test enprimant - tout bon\n", null)
+            svc.printTextWithFont("PLUS GROUP\n", null, 32f, debugCallback("printTextWithFont"))
             Thread.sleep(50)
 
-            svc.printTextWithFont("PLUS GROUP\n", null, 32f, null)
+            svc.printText("Test enprimant - tout bon\n", debugCallback("printText"))
             Thread.sleep(50)
 
-            svc.lineWrap(5, null)
+            svc.lineWrap(5, debugCallback("lineWrap"))
             Thread.sleep(50)
 
-            svc.cutpaper(null)
+            svc.cutpaper(debugCallback("cutpaper"))
 
-            Log.i(TAG, "Sekans tès fini ak lòd ranvèse")
+            Log.i(TAG, "Sekans tès fini ak vrè callback pou chak kòmand")
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         } catch (e: InterruptedException) {
