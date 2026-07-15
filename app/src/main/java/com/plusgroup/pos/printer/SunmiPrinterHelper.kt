@@ -79,58 +79,26 @@ class SunmiPrinterHelper(private val context: Context) {
      * retounen yon kòd erè entye olye jete yon eksepsyon — sa pèmèt nou izole
      * EGZAKTEMAN ki kòmand ki echwe, menm si Logcat pa montre okenn crash).
      */
-    /**
-     * Callback debug — jiskaprezan nou te toujou pase `null` pou ICallback,
-     * kidonk nou pa t janm wè si sèvis SUNMI a rapòte yon erè (onRaiseException)
-     * oswa yon rezilta enprime (onPrintResult) apre chak kòmand. Sa a log
-     * TOUT repons pou nou ka detekte erè ki te envizib jiska prezan.
-     */
-    private fun debugCallback(label: String): woyou.aidlservice.jiuiv5.ICallback.Stub {
-        return object : woyou.aidlservice.jiuiv5.ICallback.Stub() {
-            override fun onRunResult(isSuccess: Boolean) {
-                Log.i(TAG, "[$label] onRunResult -> $isSuccess")
-            }
-            override fun onReturnString(result: String?) {
-                Log.i(TAG, "[$label] onReturnString -> $result")
-            }
-            override fun onRaiseException(code: Int, msg: String?) {
-                Log.e(TAG, "[$label] onRaiseException -> code=$code msg=$msg")
-            }
-            override fun onPrintResult(code: Int, msg: String?) {
-                Log.i(TAG, "[$label] onPrintResult -> code=$code msg=$msg")
-            }
-        }
-    }
-
     fun printTestReceipt() {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
         try {
-            // DEKOUVÈT ENPÒTAN: printText() senp sanble itilize yon font/
-            // codaj CJK (Chinwa) pa default sou sèvis sa a, ki fè tèks Latin
-            // vin defòme an senbòl Chinwa (mojibake) san jete erè. Sèl
-            // printTextWithFont() jere codaj Latin kòrèkteman — kidonk nou
-            // sèvi ak li pou TOUT liy, pa jis premye a.
-            svc.printerInit(debugCallback("printerInit"))
+            svc.printerInit(null)
             Thread.sleep(50)
 
-            svc.setAlignment(1, debugCallback("setAlignment(1)"))
+            svc.setAlignment(1, null)
             Thread.sleep(50)
 
-            svc.printTextWithFont("PLUS GROUP\n", null, 32f, debugCallback("printTextWithFont-1"))
+            svc.printTextWithFont("PLUS GROUP\n", null, 28f, null)
             Thread.sleep(50)
 
-            svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, debugCallback("printTextWithFont-2"))
+            svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, null)
             Thread.sleep(50)
 
-            svc.lineWrap(5, debugCallback("lineWrap"))
-            Thread.sleep(50)
-
-            svc.cutpaper(debugCallback("cutpaper"))
-
-            Log.i(TAG, "Sekans tès fini — tout liy ak printTextWithFont")
+            svc.lineWrap(5, null)
+            svc.cutpaper(null)
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime tès la", e)
         } catch (e: InterruptedException) {
@@ -156,28 +124,45 @@ class SunmiPrinterHelper(private val context: Context) {
         }
         try {
             svc.printerInit(null)
+            Thread.sleep(50)
 
             svc.setAlignment(1, null)
-            svc.printTextWithFont("$companyName\n", null, 32f, null)
+            Thread.sleep(50)
+            svc.printTextWithFont("$companyName\n", null, 28f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("BONNE CHANCE!\n", null, 24f, null)
+            Thread.sleep(50)
             svc.lineWrap(1, null)
+            Thread.sleep(50)
 
             svc.setAlignment(0, null)
+            Thread.sleep(50)
             svc.printTextWithFont("Tiraj: $drawName\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("Tikè No: $ticketNumber\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("Nimewo: $numbers\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("Montan: $betAmount HTG\n", null, 24f, null)
+            Thread.sleep(50)
             svc.lineWrap(1, null)
+            Thread.sleep(50)
 
             svc.setAlignment(1, null)
+            Thread.sleep(50)
             svc.printQRCode(ticketNumber, 8, 0, null)
+            Thread.sleep(50)
             svc.lineWrap(1, null)
+            Thread.sleep(50)
             svc.printTextWithFont("$footerMessage\n", null, 24f, null)
+            Thread.sleep(50)
 
             svc.lineWrap(5, null)
             svc.cutpaper(null)
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime resi tikè a", e)
+        } catch (e: InterruptedException) {
+            Log.e(TAG, "Sekans entèwonp", e)
         }
     }
 
@@ -205,43 +190,71 @@ class SunmiPrinterHelper(private val context: Context) {
         }
         try {
             svc.printerInit(null)
+            Thread.sleep(50)
 
             svc.setAlignment(1, null)
-            svc.printTextWithFont("$companyName\n", null, 32f, null)
-            if (promoLine.isNotBlank()) svc.printTextWithFont("$promoLine\n", null, 24f, null)
+            Thread.sleep(50)
+            svc.printTextWithFont("$companyName\n", null, 28f, null)
+            Thread.sleep(50)
+            if (promoLine.isNotBlank()) {
+                svc.printTextWithFont("$promoLine\n", null, 24f, null)
+                Thread.sleep(50)
+            }
+
             svc.setAlignment(0, null)
-            if (phone.isNotBlank()) svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
+            Thread.sleep(50)
+            if (phone.isNotBlank()) {
+                svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
+                Thread.sleep(50)
+            }
             svc.printTextWithFont("Vendeur: $vendeur\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
+            Thread.sleep(50)
             svc.lineWrap(1, null)
+            Thread.sleep(50)
 
             svc.printTextWithFont("Fiche: $ficheNumber\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("$DASHES\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont("$drawName: $drawTotal\n", null, 24f, null)
+            Thread.sleep(50)
 
             for ((code, numero, prix) in lines) {
                 svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
+                Thread.sleep(50)
             }
 
             svc.printTextWithFont("$DASHES\n", null, 24f, null)
+            Thread.sleep(50)
             svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null, 24f, null)
+            Thread.sleep(50)
             svc.lineWrap(1, null)
+            Thread.sleep(50)
 
             svc.setAlignment(1, null)
+            Thread.sleep(50)
             if (footerMessage.isNotBlank()) {
                 svc.printTextWithFont("$footerMessage\n", null, 24f, null)
+                Thread.sleep(50)
                 svc.lineWrap(1, null)
+                Thread.sleep(50)
             }
 
             if (!qrData.isNullOrBlank()) {
                 svc.printQRCode(qrData, 8, 0, null)
+                Thread.sleep(50)
                 svc.lineWrap(1, null)
+                Thread.sleep(50)
             }
 
             svc.lineWrap(5, null)
             svc.cutpaper(null)
         } catch (e: RemoteException) {
             Log.e(TAG, "Echèk enprime Fich la", e)
+        } catch (e: InterruptedException) {
+            Log.e(TAG, "Sekans entèwonp", e)
         }
     }
 
