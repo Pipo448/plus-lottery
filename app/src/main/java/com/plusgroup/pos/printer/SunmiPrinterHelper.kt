@@ -92,7 +92,7 @@ class SunmiPrinterHelper(private val context: Context) {
     }
 
     /** Ti délè ant chak kòmand AIDL — evite "race condition" mojibake. */
-    private fun pause(ms: Long = 50) {
+    private fun pause(ms: Long = 30) {
         try {
             Thread.sleep(ms)
         } catch (_: InterruptedException) {
@@ -127,9 +127,9 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printTestReceipt) ===")
             try {
                 svc.printerInit(null)
-                pause(200) // délè pi long apre init pou font/codaj la chaje
+                pause(120) // délè apre init pou font/codaj la chaje
                 forceLatinCodepage(svc)
-                pause(100)
+                pause(60)
 
                 svc.setAlignment(1, null)
                 pause()
@@ -140,7 +140,8 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, null)
                 pause()
 
-                svc.lineWrap(8, null)
+                svc.lineWrap(12, null)
+                pause(300) // ase tan pou motè papye a fin fè tout avans lan anvan koupe
                 svc.cutpaper(null)
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime tès la", e)
@@ -166,9 +167,9 @@ class SunmiPrinterHelper(private val context: Context) {
         Thread {
             try {
                 svc.printerInit(null)
-                pause(200)
+                pause(120)
                 forceLatinCodepage(svc)
-                pause(100)
+                pause(60)
 
                 svc.setAlignment(1, null)
                 pause()
@@ -201,7 +202,8 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.printTextWithFont("$footerMessage\n", null, 24f, null)
                 pause()
 
-                svc.lineWrap(8, null)
+                svc.lineWrap(12, null)
+                pause(300) // ase tan pou motè papye a fin fè tout avans lan anvan koupe
                 svc.cutpaper(null)
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime resi tikè a", e)
@@ -236,9 +238,9 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printFicheReceipt) ===")
             try {
                 svc.printerInit(null)
-                pause(200) // délè pi long apre init pou font/codaj la chaje
+                pause(120) // délè apre init pou font/codaj la chaje
                 forceLatinCodepage(svc)
-                pause(100)
+                pause(60)
 
                 svc.setAlignment(1, null)
                 pause()
@@ -299,7 +301,8 @@ class SunmiPrinterHelper(private val context: Context) {
 
                 // Délè final pi gwo — asire tout papye a fizikman soti
                 // anvan koupe a, sinon rès la rete kwense anndan.
-                svc.lineWrap(8, null)
+                svc.lineWrap(12, null)
+                pause(300) // ase tan pou motè papye a fin fè tout avans lan anvan koupe
                 svc.cutpaper(null)
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime Fich la", e)
