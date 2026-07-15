@@ -80,15 +80,18 @@ class MyFichesActivity : AppCompatActivity() {
             return
         }
 
-        val inflater = layoutInflater
         var total = 0.0
 
         for (ticket in tickets) {
             val amount = ticket.betAmount ?: 0.0
             if (ticket.status != "cancelled") total += amount
 
+            // ticket.numbers se kounye a yon List<String> (backend retounen
+            // yon vrè Array JSON) — nou jwenn yo ansanm ak vigil pou afichaj.
+            val numerosText = ticket.numbers?.joinToString(", ") ?: ""
+
             val row = android.widget.TextView(this).apply {
-                text = "${ticket.ticketNumber ?: "—"}   ${ticket.numbers ?: ""}   ${amount} HTG   (${ticket.status ?: "—"})"
+                text = "${ticket.ticketNumber ?: "—"}   $numerosText   ${amount} HTG   (${ticket.status ?: "—"})"
                 textSize = 14f
                 setPadding(8, 8, 8, 8)
             }

@@ -109,6 +109,7 @@ data class AgentBalance(
     @com.google.gson.annotations.SerializedName("lifetime_sales")
     val lifetimeSales: Double? = null,
 )
+
 data class Ticket(
     val id: String? = null,
     @com.google.gson.annotations.SerializedName("ticket_number")
@@ -116,7 +117,10 @@ data class Ticket(
     val status: String? = null,
     @com.google.gson.annotations.SerializedName("bet_amount")
     val betAmount: Double? = null,
-    val numbers: String? = null,
+    // IMPÒTAN: backend la estoke sa a kòm yon kolòn jsonb (yon vrè Array
+    // JSON), pa yon String senp — kidonk modèl la dwe List<String>, pa
+    // String, sinon Gson jete "Expected a string but was BEGIN_ARRAY".
+    val numbers: List<String>? = null,
     @com.google.gson.annotations.SerializedName("sold_at")
     val soldAt: String? = null,
     @com.google.gson.annotations.SerializedName("is_winner")
@@ -130,7 +134,8 @@ data class VerifyTicketResult(
     val status: String? = null,
     val isWinner: Boolean? = null,
     val prizeAmount: Double? = null,
-    val numbers: String? = null,
+    // Menm rezon ak Ticket.numbers anwo a — vrè Array JSON, pa String.
+    val numbers: List<String>? = null,
     val betAmount: Double? = null,
     val soldAt: String? = null,
 )

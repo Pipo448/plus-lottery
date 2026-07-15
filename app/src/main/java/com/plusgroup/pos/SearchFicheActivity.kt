@@ -70,10 +70,15 @@ class SearchFicheActivity : AppCompatActivity() {
                 }
                 val gagnanLabel = if (result.isWinner == true) "WI ✅ (${result.prizeAmount ?: 0} HTG)" else "Non"
 
+                // result.numbers se yon List<String> (backend retounen yon
+                // vrè Array JSON) — nou jwenn yo ansanm ak vigil pou afichaj
+                // pwòp, olye montre fòma lis Kotlin brit tankou "[25, 32]".
+                val numerosText = result.numbers?.joinToString(", ")?.takeIf { it.isNotBlank() } ?: "—"
+
                 binding.tvResult.text = buildString {
                     appendLine("Tikè No: ${result.ticketNumber ?: ticketNumber}")
                     appendLine("Statut: $statusLabel")
-                    appendLine("Nimewo: ${result.numbers ?: "—"}")
+                    appendLine("Nimewo: $numerosText")
                     appendLine("Montan: ${result.betAmount ?: 0} HTG")
                     appendLine("Gen: $gagnanLabel")
                     appendLine("Vandi: ${result.soldAt ?: "—"}")
