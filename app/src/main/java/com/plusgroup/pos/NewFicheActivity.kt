@@ -15,6 +15,9 @@ import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.SellTicketRequest
 import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.DeviceIdHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -32,8 +35,10 @@ import java.text.DecimalFormat
  * backend la, epi si tout liy yo pase, enprime resi a otomatikman —
  * san popup/konfimasyon anplis.
  *
- * Soumèt final la rele `POST agent/tickets` YON FWA POU CHAK LIY, youn
- * apre lòt (pa gen wout "batch" nan backend la kounye a).
+ * PÈFÒMANS: soumisyon tikè yo fèt AN PARALÈL (pa youn apre lòt), e pwofil
+ * konpayi/paramèt yo kache apre premye chaje a — sa redwi anpil kantite
+ * tan ekran an rete "ap chaje" anvan enprime a kòmanse, espesyalman pou
+ * fich ki gen anpil liy.
  */
 class NewFicheActivity : AppCompatActivity() {
 
@@ -57,6 +62,19 @@ class NewFicheActivity : AppCompatActivity() {
 
     private val moneyFormat = DecimalFormat("#,##0.00")
     private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
+
+    /**
+     * Ti "kach" senp pou pwofil konpayi/paramèt yo, valab pandan tout vi
+     * pwosesis app la (rete la jiskaske app la fèmen nèt). Sa evite fè 2
+     * rekèt rezo anplis CHAK fwa ajan an enprime — nou chèche yo yon sèl
+     * fwa, epi reyitilize valè yo apre.
+     */
+    private object CompanyInfoCache {
+        var companyName: String? = null
+        var vendeur: String? = null
+        var footerMessage: String? = null
+        var loaded: Boolean = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -421,8 +439,9 @@ class NewFicheActivity : AppCompatActivity() {
 
     // ==================== ENPRIME FICH LA ====================
     // Itilize menm PrinterManager ki deja konfigire (SUNMI oswa Bluetooth
-    // eksitèn) — reyitilize `printTicketReceipt()` ki deja egziste, ak lis
-    // liy yo mete ansanm nan chan "numbers" olye yon sèl nimewo.
+    // eksitèn) — reyitilize `printFicheReceipt()`. Pwofil konpayi/paramèt
+    // yo KACHE apre premye chaje a (CompanyInfoCache) pou evite 2 rekèt
+    // rezo anplis chak fwa ajan an enprime.
     private fun printCurrentFiche() {
         if (lines.isEmpty()) {
             Toast.makeText(this, "Pa gen liy pou enprime", Toast.LENGTH_SHORT).show()
@@ -451,21 +470,26 @@ class NewFicheActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            var companyName = "PLUS GROUP"
-            var vendeur = "—"
-            var footerMessage = "Mèsi pou konfyans ou!"
-            try {
-                val api = ApiClient.getService(applicationContext)
-                val profile = api.getProfile().body()?.data
-                companyName = profile?.tenantName?.uppercase() ?: companyName
-                vendeur = profile?.branchName ?: profile?.fullName ?: vendeur
+            if (!CompanyInfoCache.loaded) {
+                try {
+                    val api = ApiClient.getService(applicationContext)
+                    val profile = api.getProfile().body()?.data
+                    CompanyInfoCache.companyName = profile?.tenantName?.uppercase()
+                    CompanyInfoCache.vendeur = profile?.branchName ?: profile?.fullName
 
-                val settings = api.getCompanySettings().body()?.data ?: emptyList()
-                val msg = settings.firstOrNull { it.key == "message" }?.value
-                if (!msg.isNullOrBlank()) footerMessage = msg
-            } catch (_: Exception) {
-                // Si sa echwe, kontinye ak valè default yo — pa bloke enprime a.
+                    val settings = api.getCompanySettings().body()?.data ?: emptyList()
+                    val msg = settings.firstOrNull { it.key == "message" }?.value
+                    if (!msg.isNullOrBlank()) CompanyInfoCache.footerMessage = msg
+                } catch (_: Exception) {
+                    // Si sa echwe, kontinye ak valè default yo — pa bloke enprime a.
+                } finally {
+                    CompanyInfoCache.loaded = true
+                }
             }
+
+            val companyName = CompanyInfoCache.companyName ?: "PLUS GROUP"
+            val vendeur = CompanyInfoCache.vendeur ?: "—"
+            val footerMessage = CompanyInfoCache.footerMessage ?: "Mèsi pou konfyans ou!"
 
             printerManager.connect {
                 runOnUiThread {
@@ -550,10 +574,11 @@ class NewFicheActivity : AppCompatActivity() {
         binding.tvTotal.text = "Total: ${moneyFormat.format(total)}"
     }
 
-    // ==================== SOUMÈT + ENPRIME (yon apèl pou chak liy) ====================
+    // ==================== SOUMÈT + ENPRIME (AN PARALÈL) ====================
     // Yon SÈL aksyon: bouton enprime a rele fonksyon sa a dirèkteman.
-    // Si tout liy yo soumèt avèk siksè, enprime a fèt otomatikman, san
-    // popup/konfimasyon anplis. Si gen erè, yon sèl mesaj Toast montre l.
+    // Tout liy yo soumèt AN MENM TAN (an paralèl, pa youn apre lòt) — sa
+    // redwi anpil tan atant pou fich ki gen anpil liy. Si tout liy yo
+    // reyisi, enprime a fèt otomatikman, san popup/konfimasyon anplis.
 
     private fun submitFiche() {
         val draw = selectedDraw
@@ -577,31 +602,40 @@ class NewFicheActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val api = ApiClient.getService(applicationContext)
-            var successCount = 0
-            var lastErrorMsg: String? = null
-
             val linesToSubmit = lines.toList()
 
-            for (line in linesToSubmit) {
-                try {
-                    val res = api.sellTicket(
-                        SellTicketRequest(
-                            drawId = draw.id,
-                            gameId = game.id,
-                            numbers = listOf(line.numero),
-                            betAmount = line.price,
-                            posDeviceId = deviceId,
-                        )
-                    )
-                    if (res.isSuccessful) {
-                        successCount++
-                    } else {
-                        lastErrorMsg = "Liy '${line.numero}': ${res.errorBody()?.string() ?: "erè enkoni"}"
+            // Soumèt TOUT liy yo AN PARALÈL — chak rekèt kòmanse san
+            // tann rezilta lòt yo, sa redwi tan total la anpil pou fich
+            // ki gen plizyè liy (10 liy an paralèl ≈ tan 1 sèl rekèt,
+            // olye 10× tan 1 rekèt tankou avan).
+            val results: List<Pair<FicheLine, String?>> = coroutineScope {
+                linesToSubmit.map { line ->
+                    async {
+                        try {
+                            val res = api.sellTicket(
+                                SellTicketRequest(
+                                    drawId = draw.id,
+                                    gameId = game.id,
+                                    numbers = listOf(line.numero),
+                                    betAmount = line.price,
+                                    posDeviceId = deviceId,
+                                )
+                            )
+                            if (res.isSuccessful) {
+                                line to null
+                            } else {
+                                line to (res.errorBody()?.string() ?: "erè enkoni")
+                            }
+                        } catch (e: Exception) {
+                            line to (e.message ?: "erè rezo")
+                        }
                     }
-                } catch (e: Exception) {
-                    lastErrorMsg = "Liy '${line.numero}': ${e.message}"
-                }
+                }.awaitAll()
             }
+
+            val successCount = results.count { it.second == null }
+            val lastError = results.lastOrNull { it.second != null }
+            val lastErrorMsg = lastError?.let { "Liy '${it.first.numero}': ${it.second}" }
 
             binding.btnPrint.isEnabled = true
 
