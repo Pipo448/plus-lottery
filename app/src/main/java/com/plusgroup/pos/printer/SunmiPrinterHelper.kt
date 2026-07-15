@@ -92,7 +92,7 @@ class SunmiPrinterHelper(private val context: Context) {
     }
 
     /** Ti délè ant chak kòmand AIDL — evite "race condition" mojibake. */
-    private fun pause(ms: Long = 30) {
+    private fun pause(ms: Long = 15) {
         try {
             Thread.sleep(ms)
         } catch (_: InterruptedException) {
@@ -295,7 +295,7 @@ class SunmiPrinterHelper(private val context: Context) {
                 if (!qrData.isNullOrBlank()) {
                     svc.printQRCode(qrData, 8, 0, null)
                     pause()
-                    svc.lineWrap(1, null)
+                    svc.lineWrap(3, null) // ekstra espas apre QR pou l pa koupe twò raz
                     pause()
                 }
 
