@@ -21,6 +21,7 @@ import com.plusgroup.pos.network.models.VerifyTicketResult
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -58,6 +59,14 @@ interface ApiService {
         @Query("start") start: String? = null,
         @Query("end") end: String? = null,
     ): Response<ApiListResponse<Ticket>>
+
+    // Detay yon sèl tikè pa ID (itil pou refreshi/reklike apre yon aksyon)
+    @GET("agent/tickets/{id}")
+    suspend fun getTicketById(@Path("id") id: String): Response<ApiDataResponse<Ticket>>
+
+    // "Elimine" nan "Mes fiches" — anile yon tikè pa ID
+    @PATCH("agent/tickets/{id}/cancel")
+    suspend fun cancelTicket(@Path("id") id: String): Response<ApiMessageResponse>
 
     // "Rapò" — Rapò Pasyèl pou yon jou
     @GET("agent/reports/partial")
