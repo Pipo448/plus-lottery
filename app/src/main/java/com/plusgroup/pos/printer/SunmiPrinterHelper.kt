@@ -110,6 +110,7 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         Thread {
+            Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printTestReceipt) ===")
             try {
                 svc.printerInit(null)
                 pause(200) // délè pi long apre init pou font/codaj la chaje
@@ -214,6 +215,7 @@ class SunmiPrinterHelper(private val context: Context) {
             return
         }
         Thread {
+            Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printFicheReceipt) ===")
             try {
                 svc.printerInit(null)
                 pause(200) // délè pi long apre init pou font/codaj la chaje
