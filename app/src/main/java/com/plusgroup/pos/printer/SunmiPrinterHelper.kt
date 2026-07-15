@@ -104,6 +104,20 @@ class SunmiPrinterHelper(private val context: Context) {
      * Enprime yon tès senp — itilize sa pou verifye entegrasyon an mache
      * anvan w bati resi konplè tikè yo. Egzekite sou yon thread separe.
      */
+    /**
+     * Fòse kodpaj karaktè enprimant lan sou PC437 (Standard Europe/USA) via
+     * yon kòmand ESC/POS brit: ESC t 0 (0x1B 0x74 0x00). Sa rezoud pwoblèm
+     * "mojibake" (tèks Latin ki tradui an senbòl Chinwa) ki rive lè
+     * enprimant lan rete sou yon kodpaj GBK/CJK pa default.
+     */
+    private fun forceLatinCodepage(svc: IWoyouService) {
+        try {
+            svc.sendRAWData(byteArrayOf(0x1B, 0x74, 0x00), null)
+        } catch (e: RemoteException) {
+            Log.e(TAG, "Echèk fòse kodpaj Latin", e)
+        }
+    }
+
     fun printTestReceipt() {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
@@ -114,6 +128,8 @@ class SunmiPrinterHelper(private val context: Context) {
             try {
                 svc.printerInit(null)
                 pause(200) // délè pi long apre init pou font/codaj la chaje
+                forceLatinCodepage(svc)
+                pause(100)
 
                 svc.setAlignment(1, null)
                 pause()
@@ -151,6 +167,8 @@ class SunmiPrinterHelper(private val context: Context) {
             try {
                 svc.printerInit(null)
                 pause(200)
+                forceLatinCodepage(svc)
+                pause(100)
 
                 svc.setAlignment(1, null)
                 pause()
@@ -219,6 +237,8 @@ class SunmiPrinterHelper(private val context: Context) {
             try {
                 svc.printerInit(null)
                 pause(200) // délè pi long apre init pou font/codaj la chaje
+                forceLatinCodepage(svc)
+                pause(100)
 
                 svc.setAlignment(1, null)
                 pause()
