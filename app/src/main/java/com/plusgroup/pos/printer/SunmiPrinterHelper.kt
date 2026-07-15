@@ -20,6 +20,26 @@ import woyou.aidlservice.jiuiv5.IWoyouService
  * SUNMI a epi mete l nan:
  *   app/src/main/aidl/woyou/aidlservice/jiuiv5/IWoyouService.aidl
  * anvan pwojè a ka konpile.
+ *
+ * NÒT TEKNIK enpòtan (aprè anpil tès sou yon aparèy SUNMI V2 reyèl,
+ * API 25 / Android 7.1.1):
+ * 1. `printText()` senp SANS font eksplisit sanble itilize yon codaj CJK
+ *    (Chinwa) pa default sou ansyen sèvis sa a — li fè tèks Latin/Kreyòl
+ *    vin defòme an senbòl Chinwa (mojibake) san jete okenn erè. SÈL
+ *    `printTextWithFont()` jere codaj Latin kòrèkteman, kidonk nou sèvi
+ *    ak li pou TOUT liy, pa jis kèk grenn.
+ * 2. `printerInit()` bezwen yon délè pi long (~200ms) anvan premye
+ *    kòmand tèks la, paske sèvis la sanble bezwen "chaje" font/codaj la;
+ *    san sa, premye karaktè(s) yo ka rete defòme menm ak printTextWithFont.
+ * 3. Chak kòmand AIDL swiv pa yon ti délè (~50ms) — san sa, "race
+ *    condition" fè premye karaktè yon liy vin defòme lè l swiv yon
+ *    lineWrap() twò vit.
+ * 4. Tout sekans enprime a egzekite sou yon THREAD SEPARE (pa sou
+ *    main/UI thread), paske Thread.sleep() itilize pou jere pwoblèm anwo
+ *    yo ta jele ekran an si l te egzekite sou main thread.
+ * 5. `lineWrap()` final la dwe ase gwo (8, pa 3-5) pou fè tout rès fich
+ *    la fizikman soti anvan koupe a, sinon dènye pati a rete "kwense"
+ *    anndan mekanis enprimant lan.
  */
 class SunmiPrinterHelper(private val context: Context) {
 
@@ -71,44 +91,48 @@ class SunmiPrinterHelper(private val context: Context) {
         }
     }
 
+    /** Ti délè ant chak kòmand AIDL — evite "race condition" mojibake. */
+    private fun pause(ms: Long = 50) {
+        try {
+            Thread.sleep(ms)
+        } catch (_: InterruptedException) {
+            // Pa gwo zafè si sa entèwonp — kontinye kanmenm.
+        }
+    }
+
     /**
      * Enprime yon tès senp — itilize sa pou verifye entegrasyon an mache
-     * anvan w bati resi konplè tikè yo.
-     *
-     * VÈSYON DEBUG: chak apèl AIDL log kòd retou li (anpil metòd IWoyouService
-     * retounen yon kòd erè entye olye jete yon eksepsyon — sa pèmèt nou izole
-     * EGZAKTEMAN ki kòmand ki echwe, menm si Logcat pa montre okenn crash).
+     * anvan w bati resi konplè tikè yo. Egzekite sou yon thread separe.
      */
     fun printTestReceipt() {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        try {
-            svc.printerInit(null)
-            Thread.sleep(50)
+        Thread {
+            try {
+                svc.printerInit(null)
+                pause(200) // délè pi long apre init pou font/codaj la chaje
 
-            svc.setAlignment(1, null)
-            Thread.sleep(50)
+                svc.setAlignment(1, null)
+                pause()
 
-            svc.printTextWithFont("PLUS GROUP\n", null, 28f, null)
-            Thread.sleep(50)
+                svc.printTextWithFont("PLUS GROUP\n", null, 28f, null)
+                pause()
 
-            svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, null)
-            Thread.sleep(50)
+                svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, null)
+                pause()
 
-            svc.lineWrap(5, null)
-            svc.cutpaper(null)
-        } catch (e: RemoteException) {
-            Log.e(TAG, "Echèk enprime tès la", e)
-        } catch (e: InterruptedException) {
-            Log.e(TAG, "Sekans entèwonp", e)
-        }
+                svc.lineWrap(8, null)
+                svc.cutpaper(null)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Echèk enprime tès la", e)
+            }
+        }.start()
     }
 
     /**
-     * Enprime yon resi tikè bolèt. Ranpli/ajiste fòma a selon bezwen reyèl
-     * lè n rive nan etap "vann tikè" a.
+     * Enprime yon resi tikè bolèt. Egzekite sou yon thread separe.
      */
     fun printTicketReceipt(
         companyName: String,
@@ -122,53 +146,54 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        try {
-            svc.printerInit(null)
-            Thread.sleep(50)
+        Thread {
+            try {
+                svc.printerInit(null)
+                pause(200)
 
-            svc.setAlignment(1, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("$companyName\n", null, 28f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("BONNE CHANCE!\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.lineWrap(1, null)
-            Thread.sleep(50)
+                svc.setAlignment(1, null)
+                pause()
+                svc.printTextWithFont("$companyName\n", null, 28f, null)
+                pause()
+                svc.printTextWithFont("BONNE CHANCE!\n", null, 24f, null)
+                pause()
+                svc.lineWrap(1, null)
+                pause()
 
-            svc.setAlignment(0, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("Tiraj: $drawName\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("Tikè No: $ticketNumber\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("Nimewo: $numbers\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("Montan: $betAmount HTG\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.lineWrap(1, null)
-            Thread.sleep(50)
+                svc.setAlignment(0, null)
+                pause()
+                svc.printTextWithFont("Tiraj: $drawName\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("Tikè No: $ticketNumber\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("Nimewo: $numbers\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("Montan: $betAmount HTG\n", null, 24f, null)
+                pause()
+                svc.lineWrap(1, null)
+                pause()
 
-            svc.setAlignment(1, null)
-            Thread.sleep(50)
-            svc.printQRCode(ticketNumber, 8, 0, null)
-            Thread.sleep(50)
-            svc.lineWrap(1, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("$footerMessage\n", null, 24f, null)
-            Thread.sleep(50)
+                svc.setAlignment(1, null)
+                pause()
+                svc.printQRCode(ticketNumber, 8, 0, null)
+                pause()
+                svc.lineWrap(1, null)
+                pause()
+                svc.printTextWithFont("$footerMessage\n", null, 24f, null)
+                pause()
 
-            svc.lineWrap(5, null)
-            svc.cutpaper(null)
-        } catch (e: RemoteException) {
-            Log.e(TAG, "Echèk enprime resi tikè a", e)
-        } catch (e: InterruptedException) {
-            Log.e(TAG, "Sekans entèwonp", e)
-        }
+                svc.lineWrap(8, null)
+                svc.cutpaper(null)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Echèk enprime resi tikè a", e)
+            }
+        }.start()
     }
 
     /**
      * Enprime yon Fich konplè, nan menm fòma resi bolèt tradisyonèl la
      * (menm fòma ak `BluetoothPrinterHelper.printFicheReceipt`).
+     * Egzekite sou yon thread separe pou l pa jele ekran an.
      */
     fun printFicheReceipt(
         companyName: String,
@@ -188,74 +213,76 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        try {
-            svc.printerInit(null)
-            Thread.sleep(50)
+        Thread {
+            try {
+                svc.printerInit(null)
+                pause(200) // délè pi long apre init pou font/codaj la chaje
 
-            svc.setAlignment(1, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("$companyName\n", null, 28f, null)
-            Thread.sleep(50)
-            if (promoLine.isNotBlank()) {
-                svc.printTextWithFont("$promoLine\n", null, 24f, null)
-                Thread.sleep(50)
-            }
+                svc.setAlignment(1, null)
+                pause()
+                svc.printTextWithFont("$companyName\n", null, 28f, null)
+                pause()
+                if (promoLine.isNotBlank()) {
+                    svc.printTextWithFont("$promoLine\n", null, 24f, null)
+                    pause()
+                }
 
-            svc.setAlignment(0, null)
-            Thread.sleep(50)
-            if (phone.isNotBlank()) {
-                svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
-                Thread.sleep(50)
-            }
-            svc.printTextWithFont("Vendeur: $vendeur\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.lineWrap(1, null)
-            Thread.sleep(50)
-
-            svc.printTextWithFont("Fiche: $ficheNumber\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("$DASHES\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont("$drawName: $drawTotal\n", null, 24f, null)
-            Thread.sleep(50)
-
-            for ((code, numero, prix) in lines) {
-                svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
-                Thread.sleep(50)
-            }
-
-            svc.printTextWithFont("$DASHES\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null, 24f, null)
-            Thread.sleep(50)
-            svc.lineWrap(1, null)
-            Thread.sleep(50)
-
-            svc.setAlignment(1, null)
-            Thread.sleep(50)
-            if (footerMessage.isNotBlank()) {
-                svc.printTextWithFont("$footerMessage\n", null, 24f, null)
-                Thread.sleep(50)
+                svc.setAlignment(0, null)
+                pause()
+                if (phone.isNotBlank()) {
+                    svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
+                    pause()
+                }
+                svc.printTextWithFont("Vendeur: $vendeur\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
+                pause()
                 svc.lineWrap(1, null)
-                Thread.sleep(50)
-            }
+                pause()
 
-            if (!qrData.isNullOrBlank()) {
-                svc.printQRCode(qrData, 8, 0, null)
-                Thread.sleep(50)
+                svc.printTextWithFont("Fiche: $ficheNumber\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("$DASHES\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont("$drawName: $drawTotal\n", null, 24f, null)
+                pause()
+
+                for ((code, numero, prix) in lines) {
+                    svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
+                    pause()
+                }
+
+                svc.printTextWithFont("$DASHES\n", null, 24f, null)
+                pause()
+                svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null, 24f, null)
+                pause()
                 svc.lineWrap(1, null)
-                Thread.sleep(50)
-            }
+                pause()
 
-            svc.lineWrap(5, null)
-            svc.cutpaper(null)
-        } catch (e: RemoteException) {
-            Log.e(TAG, "Echèk enprime Fich la", e)
-        } catch (e: InterruptedException) {
-            Log.e(TAG, "Sekans entèwonp", e)
-        }
+                svc.setAlignment(1, null)
+                pause()
+                if (footerMessage.isNotBlank()) {
+                    svc.printTextWithFont("$footerMessage\n", null, 24f, null)
+                    pause()
+                    svc.lineWrap(1, null)
+                    pause()
+                }
+
+                if (!qrData.isNullOrBlank()) {
+                    svc.printQRCode(qrData, 8, 0, null)
+                    pause()
+                    svc.lineWrap(1, null)
+                    pause()
+                }
+
+                // Délè final pi gwo — asire tout papye a fizikman soti
+                // anvan koupe a, sinon rès la rete kwense anndan.
+                svc.lineWrap(8, null)
+                svc.cutpaper(null)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Echèk enprime Fich la", e)
+            }
+        }.start()
     }
 
     // Aliyen tèks agoch ak yon valè adwat sou menm liy (menm lojik ak
