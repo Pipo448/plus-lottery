@@ -1,0 +1,38 @@
+warning: in the working copy of 'app/src/main/java/com/plusgroup/pos/MyFichesActivity.kt', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app/src/main/java/com/plusgroup/pos/MyFichesActivity.kt b/app/src/main/java/com/plusgroup/pos/MyFichesActivity.kt[m
+[1mindex c9b3eab..60d1073 100644[m
+[1m--- a/app/src/main/java/com/plusgroup/pos/MyFichesActivity.kt[m
+[1m+++ b/app/src/main/java/com/plusgroup/pos/MyFichesActivity.kt[m
+[36m@@ -57,6 +57,7 @@[m [mclass MyFichesActivity : AppCompatActivity() {[m
+         binding.tvFin.setOnClickListener { pickDate(endDate) { binding.tvFin.text = dateFormat.format(endDate.time) } }[m
+ [m
+         binding.btnSearch.setOnClickListener { loadFiches() }[m
+[32m+[m[32m        binding.swipeRefresh.setOnRefreshListener { loadFiches() }[m
+ [m
+         loadFiches()[m
+     }[m
+[36m@@ -86,10 +87,14 @@[m [mclass MyFichesActivity : AppCompatActivity() {[m
+             try {[m
+                 val api = ApiClient.getService(applicationContext)[m
+                 val res = api.getMyTickets(start, end)[m
+[31m-                val fiches = res.body()?.data ?: emptyList()[m
+[32m+[m[32m                // Fich ki ANILE pa dwe parèt ditou nan "Mes fiches" — sèl[m
+[32m+[m[32m                // kote yo dwe vizib se panèl admin (sekte "Elimine").[m
+[32m+[m[32m                val fiches = (res.body()?.data ?: emptyList()).filter { it.status != "cancelled" }[m
+                 renderFiches(fiches)[m
+             } catch (e: Exception) {[m
+                 Toast.makeText(this@MyFichesActivity, "Erè: ${e.message}", Toast.LENGTH_LONG).show()[m
+[32m+[m[32m            } finally {[m
+[32m+[m[32m                binding.swipeRefresh.isRefreshing = false[m
+             }[m
+         }[m
+     }[m
+[36m@@ -108,7 +113,7 @@[m [mclass MyFichesActivity : AppCompatActivity() {[m
+ [m
+         for (fiche in fiches) {[m
+             val mise = fiche.totalMise ?: 0.0[m
+[31m-            if (fiche.status != "cancelled") grandTotal += mise[m
+[32m+[m[32m            grandTotal += mise[m
+ [m
+             val card = LinearLayout(this).apply {[m
+                 orientation = LinearLayout.VERTICAL[m

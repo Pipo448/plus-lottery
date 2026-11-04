@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Meni bouton 3 pwen an sou dashboard la -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuTirajDisponib"
+        android:title="Tiraj disponib" />
+    <item
+        android:id="@+id/menuBoulKiSoti"
+        android:title="Boul ki sòti" />
+    <item
+        android:id="@+id/menuKont"
+        android:title="Kont" />
+    <item
+        android:id="@+id/menuDekonekte"
+        android:title="Dekonekte" />
+</menu>

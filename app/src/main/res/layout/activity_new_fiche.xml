@@ -1,455 +1,452 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  NOUVÈL FICH — vèsyon 3 (design "swa").
+  Tout ID ak tip view yo rete menm jan, NewFicheActivity.kt pa chanje.
+  Estrikti: en-tèt ak ikòn won → ba kolòn → liy yo sou vag → panèl blan
+  anba a (kwen awondi anwo) ak total, tiraj, chip jwèt, 2 gwo chan, ANTRE.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@drawable/bg_wave_blue"
+    android:orientation="vertical">
 
     <!-- En-tèt: retounen / efase tout / pataje / enprime -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:layout_height="64dp"
+        android:background="@color/pos_surface"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerVertical="true"
+            style="@style/Widget.PlusPOS.IconButton"
             android:layout_alignParentStart="true"
-            android:background="@android:color/transparent"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_icon_blue"
             android:contentDescription="Retounen"
-            android:src="@android:drawable/ic_menu_revert" />
+            android:src="@drawable/ic_back"
+            android:tint="@color/pos_blue" />
 
         <ImageButton
             android:id="@+id/btnClearAll"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            style="@style/Widget.PlusPOS.IconButton"
             android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
             android:layout_toEndOf="@id/btnBack"
-            android:layout_marginStart="4dp"
-            android:background="@android:color/transparent"
-            android:tint="#DC2626"
+            android:background="@drawable/bg_icon_red"
             android:contentDescription="Efase tout"
-            android:src="@android:drawable/ic_menu_delete" />
+            android:src="@drawable/ic_delete"
+            android:tint="@color/pos_red" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btnShare"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:tint="#22C55E"
+                style="@style/Widget.PlusPOS.IconButton"
+                android:background="@drawable/bg_icon_green"
                 android:contentDescription="Pataje"
-                android:src="@android:drawable/ic_menu_share" />
+                android:src="@drawable/ic_share"
+                android:tint="@color/pos_green" />
 
             <ImageButton
                 android:id="@+id/btnPrint"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="4dp"
-                android:background="@android:color/transparent"
-                android:tint="#F59E0B"
+                style="@style/Widget.PlusPOS.IconButton"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_icon_amber"
                 android:contentDescription="Enprime"
-                android:src="@android:drawable/ic_menu_gallery" />
+                android:src="@drawable/ic_print"
+                android:tint="@color/pos_amber_deep" />
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Onglè seksyon: Tiraj / Boul / Kòb -->
+    <!-- Ba kolòn: Tiraj / Boul / Kòb -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="42dp"
+        android:background="@drawable/bg_header_bar"
+        android:elevation="2dp"
         android:orientation="horizontal"
-        android:background="#808080">
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <View
-            android:layout_width="36dp"
+            android:layout_width="44dp"
             android:layout_height="match_parent" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
             android:text="Tiraj"
-            android:textColor="@android:color/white" />
+            android:textColor="@color/pos_on_color"
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:text="Boul"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            android:textColor="@color/pos_on_color"
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:text="Kòb"
-            android:textColor="@android:color/white" />
+            android:textColor="@color/pos_on_color"
+            android:textSize="15sp" />
     </LinearLayout>
 
-    <!-- ZÒN LIY YO (anwo, ak background vag la, ranpli tout espas ki rete) -->
+    <!-- ZÒN LIY YO -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg_wave_blue">
+        android:layout_weight="1">
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="12dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="24dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/tvFicheLabel"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="BORLETTE"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="4dp">
 
-                <ImageButton
-                    android:id="@+id/btnEditGameLabel"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="4dp"
-                    android:background="@android:color/transparent"
-                    android:tint="#DC2626"
-                    android:contentDescription="Chanje kategori"
-                    android:src="@android:drawable/ic_menu_edit" />
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/tvFicheLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.06"
+                        android:text="BORLETTE"
+                        android:textColor="@color/pos_ink"
+                        android:textSize="15sp" />
 
-            <LinearLayout
-                android:id="@+id/llLinesContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="8dp" />
+                    <ImageButton
+                        android:id="@+id/btnEditGameLabel"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/bg_icon_button"
+                        android:contentDescription="Chanje kategori"
+                        android:padding="7dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_edit"
+                        android:tint="@color/pos_red" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llLinesContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:animateLayoutChanges="true"
+                    android:orientation="vertical" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>
 
-    <!-- KONPOZITÈ (anba, fiks): Total + Chwazi Tiraj + kategori + antre manyèl -->
+    <!-- PANÈL ANBA A: Total + Tiraj + chip jwèt + chan + ANTRE -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet_top"
+        android:elevation="16dp"
         android:orientation="vertical"
-        android:background="@android:color/white"
-        android:elevation="8dp"
-        android:padding="16dp">
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="14dp">
+
+        <!-- Ti manch dekoratif anlè panèl la -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_scroll_track" />
 
         <TextView
             android:id="@+id/tvTotal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
+            android:paddingBottom="6dp"
             android:text="Total: 0.00"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:paddingBottom="8dp" />
+            android:textColor="@color/pos_ink"
+            android:textSize="19sp" />
 
+        <!-- Chwazi tiraj -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingBottom="8dp">
+            android:orientation="horizontal"
+            android:paddingBottom="10dp">
 
             <TextView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_badge"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
                 android:text="LT"
-                android:textSize="10sp" />
+                android:textColor="@color/pos_on_color"
+                android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/tvChwaziTiraj"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="12dp"
-                android:text="CHWAZI TIRAJ"
-                android:textStyle="bold"
-                android:textSize="16sp" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tiraj"
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Label"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvChwaziTiraj"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableEnd="@drawable/ic_chevron_down"
+                    android:drawablePadding="8dp"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:text="CHWAZI TIRAJ"
+                    android:textColor="@color/pos_ink"
+                    android:textSize="20sp" />
+            </LinearLayout>
         </LinearLayout>
 
+        <!-- Chip jwèt yo — ba defilman an anba montre gen plis -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none">
+            android:fadeScrollbars="false"
+            android:paddingBottom="10dp"
+            android:scrollbarSize="5dp"
+            android:scrollbarStyle="outsideOverlay"
+            android:scrollbarThumbHorizontal="@drawable/bg_scroll_thumb"
+            android:scrollbarTrackHorizontal="@drawable/bg_scroll_track"
+            android:scrollbars="horizontal">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingBottom="4dp">
 
                 <Button
                     android:id="@+id/btnBPaire"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="BPaire"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#3B82F6" />
+                    app:backgroundTint="@color/pos_blue" />
 
                 <Button
                     android:id="@+id/btnGrap"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="Grap"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#F59E0B" />
+                    android:textColor="@color/pos_on_amber"
+                    app:backgroundTint="@color/pos_amber" />
 
                 <Button
                     android:id="@+id/btnP0"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P0"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P1"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P2"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P3"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P4"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P5"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P6"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP7"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P7"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P8"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnP9"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    style="@style/Widget.PlusPOS.Button.Chip"
                     android:text="P9"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#22C55E" />
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnMariage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:text="MARIAGE"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#F59E0B" />
+                    style="@style/Widget.PlusPOS.Button.Chip"
+                    android:text="Mariage"
+                    android:textColor="@color/pos_on_amber"
+                    app:backgroundTint="@color/pos_amber" />
 
                 <Button
                     android:id="@+id/btnLoto4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:text="LOTO4"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#3B82F6" />
+                    style="@style/Widget.PlusPOS.Button.Chip"
+                    android:text="Loto4"
+                    app:backgroundTint="@color/pos_blue" />
 
                 <Button
                     android:id="@+id/btnLoto5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:text="LOTO5"
-                    android:textColor="@android:color/white"
-                    android:backgroundTint="#3B82F6" />
+                    style="@style/Widget.PlusPOS.Button.Chip"
+                    android:layout_marginEnd="0dp"
+                    android:text="Loto5"
+                    app:backgroundTint="@color/pos_blue" />
             </LinearLayout>
         </HorizontalScrollView>
 
+        <!-- 2 gwo chan: Boul la / Pri -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingTop="12dp"
-            android:gravity="center_vertical">
+            android:paddingTop="8dp">
 
             <EditText
                 android:id="@+id/etBoulLa"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="58dp"
+                android:layout_marginEnd="12dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_input_big"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
                 android:hint="Boul la"
+                android:importantForAutofill="no"
                 android:inputType="number"
-                android:background="@android:drawable/edit_text" />
+                android:textColor="@color/pos_ink"
+                android:textColorHint="#94A3B8"
+                android:textSize="22sp" />
 
             <EditText
                 android:id="@+id/etMontant"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="58dp"
                 android:layout_weight="1"
+                android:background="@drawable/bg_input_big"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
                 android:hint="Pri"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal"
-                android:background="@android:drawable/edit_text" />
+                android:textColor="@color/pos_ink"
+                android:textColorHint="#94A3B8"
+                android:textSize="22sp" />
         </LinearLayout>
 
-        <!-- Parèt SÈLMAN lè 4 chif tape nan "Boul la" — chwazi si se Mariage oswa Loto4 -->
+        <!-- Parèt SÈLMAN lè 4 chif tape nan "Boul la" -->
         <LinearLayout
             android:id="@+id/llMariageLoto4Chooser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingTop="8dp"
+            android:paddingTop="10dp"
             android:visibility="gone">
 
             <Button
                 android:id="@+id/btnChooseMariage"
+                style="@style/Widget.PlusPOS.Button.Soft"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
                 android:text="Mariage"
-                android:textColor="@android:color/white"
-                android:backgroundTint="#F59E0B" />
+                android:textColor="@color/pos_on_amber"
+                app:backgroundTint="@color/pos_amber" />
 
             <Button
                 android:id="@+id/btnChooseLoto4"
+                style="@style/Widget.PlusPOS.Button.Soft"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:text="Loto4"
-                android:textColor="@android:color/white"
-                android:backgroundTint="#3B82F6" />
+                app:backgroundTint="@color/pos_blue" />
         </LinearLayout>
 
         <Button
             android:id="@+id/btnAntre"
+            style="@style/Widget.PlusPOS.Button.Pill"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="ANTRE"
-            android:backgroundTint="#3B82F6"
-            android:textColor="@android:color/white" />
+            android:layout_height="54dp"
+            android:layout_marginTop="14dp"
+            android:text="Antre"
+            app:backgroundTint="@color/pos_sky"
+            app:cornerRadius="16dp" />
     </LinearLayout>
 </LinearLayout>

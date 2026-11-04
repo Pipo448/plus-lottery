@@ -14,13 +14,22 @@ class SessionManager(context: Context) {
 
     fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
 
+    // Refresh token — pèmèt APK a jwenn yon nouvo token otomatikman lè
+    // ansyen an ekspire, san ajan an pa bezwen rekonekte.
+    fun saveRefreshToken(token: String?) {
+        prefs.edit().putString(KEY_REFRESH, token).apply()
+    }
+
+    fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH, null)
+
     fun clear() {
-        prefs.edit().remove(KEY_TOKEN).apply()
+        prefs.edit().remove(KEY_TOKEN).remove(KEY_REFRESH).apply()
     }
 
     fun isLoggedIn(): Boolean = !getToken().isNullOrEmpty()
 
     companion object {
         private const val KEY_TOKEN = "token"
+        private const val KEY_REFRESH = "refresh_token"
     }
 }

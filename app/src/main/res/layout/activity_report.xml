@@ -1,235 +1,270 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  REKONSTRIKSYON dezyèm vèsyon — sipòte tout 4 rapò yo (PARTIEL, F.TIRAGE,
-  F.GAGNANT, TRASACT) ak F.ELIMINER, ak yon filtè PATAJE (De/A + Tiraj)
-  epi yon zòn rezilta ki chanje selon mòd aktif la.
+  RAPÒ — vèsyon 3 (design "swa"). Tout ID yo rete menm jan:
+  5 bouton rapò (PARTIEL, F.TIRAGE, F.GAGNANT, TRASACT, F.ELIMINER),
+  filtè pataje (De / A / Tiraj) ak 2 zòn rezilta.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@drawable/bg_wave_blue"
+    android:orientation="vertical">
 
+    <!-- En-tèt -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
+        android:layout_height="64dp"
+        android:background="@color/pos_surface"
         android:gravity="center_vertical"
-        android:padding="8dp">
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            style="@style/Widget.PlusPOS.IconButton"
+            android:background="@drawable/bg_icon_blue"
             android:contentDescription="Retounen"
-            android:src="@android:drawable/ic_menu_revert" />
+            android:src="@drawable/ic_back"
+            android:tint="@color/pos_blue" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
             android:text="Rapport"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.PlusPOS.Title" />
 
         <ImageButton
             android:id="@+id/btnPrintReport"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            style="@style/Widget.PlusPOS.IconButton"
+            android:background="@drawable/bg_icon_amber"
             android:contentDescription="Enprime rapò"
-            android:src="@android:drawable/ic_menu_share" />
+            android:src="@drawable/ic_print"
+            android:tint="@color/pos_amber_deep" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="14dp">
 
             <!-- ==================== BOUTON KATEGORI RAPÒ ==================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnPartiel"
+                    style="@style/Widget.PlusPOS.Button.Soft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:backgroundTint="#22C55E"
-                    android:textColor="@android:color/white"
-                    android:text="PARTIEL" />
+                    android:text="Partiel"
+                    app:backgroundTint="@color/pos_green" />
 
                 <Button
                     android:id="@+id/btnFTirage"
+                    style="@style/Widget.PlusPOS.Button.Soft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:backgroundTint="#F59E0B"
-                    android:textColor="@android:color/white"
-                    android:text="F.TIRAGE" />
+                    android:text="F.Tirage"
+                    android:textColor="@color/pos_on_amber"
+                    app:backgroundTint="@color/pos_amber"
+                    app:rippleColor="#1F000000" />
 
                 <Button
                     android:id="@+id/btnFGagnant"
+                    style="@style/Widget.PlusPOS.Button.Soft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="#3B82F6"
-                    android:textColor="@android:color/white"
-                    android:text="F.GAGNANT" />
+                    android:text="F.Gagnant"
+                    app:backgroundTint="@color/pos_blue" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="14dp"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnTrasact"
+                    style="@style/Widget.PlusPOS.Button.Soft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:backgroundTint="#3B82F6"
-                    android:textColor="@android:color/white"
-                    android:text="TRASACT.." />
+                    android:text="Trasact.."
+                    app:backgroundTint="@color/pos_sky" />
 
                 <Button
                     android:id="@+id/btnFEliminer"
+                    style="@style/Widget.PlusPOS.Button.Soft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="#F59E0B"
-                    android:textColor="@android:color/white"
-                    android:text="F.ELIMINER" />
+                    android:text="F.Eliminer"
+                    app:backgroundTint="@color/pos_red" />
             </LinearLayout>
 
-            <!-- ==================== FILTÈ PATAJE: DE / A / TIRAJ ==================== -->
+            <!-- ==================== FILTÈ: DE / A / TIRAJ ==================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="4dp">
+                android:background="@drawable/bg_card_rounded"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="14dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginEnd="4dp">
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="De"
-                        android:textStyle="bold" />
+                        android:layout_marginEnd="10dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvDateFrom"
-                        android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="De"
+                            android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
+
+                        <TextView
+                            android:id="@+id/tvDateFrom"
+                            style="@style/Widget.PlusPOS.DateField" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:background="#808080"
-                        android:textColor="@android:color/white"
-                        android:padding="12dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="A"
+                            android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
+
+                        <TextView
+                            android:id="@+id/tvDateTo"
+                            style="@style/Widget.PlusPOS.DateField" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/tvTirageLabel"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginTop="12dp"
+                    android:text="Tirage"
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="A"
-                        android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tvDateTo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="#808080"
-                        android:textColor="@android:color/white"
-                        android:padding="12dp" />
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_field">
+
+                        <Spinner
+                            android:id="@+id/spinnerTirage"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="36dp" />
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="12dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_down" />
+                    </FrameLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnSearch"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_circle_button"
+                        android:backgroundTint="@color/pos_blue"
+                        android:contentDescription="Chèche"
+                        android:elevation="4dp"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_search"
+                        android:stateListAnimator="@animator/press_lift"
+                        android:tint="@color/pos_on_color" />
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tvTirageLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tirage"
-                android:textStyle="bold"
-                android:layout_marginTop="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerTirage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp" />
-
-            <ImageButton
-                android:id="@+id/btnSearch"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_gravity="center"
-                android:backgroundTint="#3B82F6"
-                android:contentDescription="Chèche"
-                android:src="@android:drawable/ic_menu_search" />
-
-            <!-- ==================== REZILTA — PARTIEL / F.TIRAGE (rezime) ==================== -->
+            <!-- ==================== REZILTA — PARTIEL / F.TIRAGE ==================== -->
             <LinearLayout
                 android:id="@+id/llSummaryResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_glass"
                 android:orientation="vertical"
+                android:padding="16dp"
                 android:visibility="visible">
 
                 <TextView
                     android:id="@+id/tvSummaryTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
                     android:gravity="center"
                     android:text="Rapport partiel"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="4dp" />
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Title"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvBalanceValue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
                     android:gravity="center"
                     android:text=""
-                    android:textSize="26sp"
-                    android:textColor="#8B0000"
-                    android:textStyle="bold"
+                    android:textColor="@color/pos_red"
+                    android:textSize="30sp"
                     android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/tvBalanceLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center"
                     android:text="Balance"
-                    android:textColor="#606060"
-                    android:visibility="gone"
-                    android:layout_marginBottom="12dp" />
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Label"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:id="@+id/llSummaryRows"
@@ -238,34 +273,36 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- ==================== REZILTA — LIS (F.GAGNANT / TRASACT / F.ELIMINER) ==================== -->
+            <!-- ==================== REZILTA — LIS ==================== -->
             <LinearLayout
                 android:id="@+id/llListResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_glass"
                 android:orientation="vertical"
+                android:padding="16dp"
                 android:visibility="gone">
 
                 <TextView
                     android:id="@+id/tvListTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
                     android:gravity="center"
                     android:text=""
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp" />
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Title"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvListSummary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="sans-serif-medium"
                     android:gravity="center"
-                    android:textSize="14sp"
-                    android:textColor="#8B0000"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="@color/pos_red"
+                    android:textSize="14sp" />
 
                 <LinearLayout
                     android:id="@+id/llListContainer"
@@ -277,26 +314,58 @@
         </LinearLayout>
     </ScrollView>
 
+    <!-- Ba anba a: Bolèt / Paramèt -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:background="#3B82F6">
+        android:layout_height="64dp"
+        android:background="@drawable/bg_nav_bar"
+        android:elevation="12dp"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:id="@+id/tabBolet"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center" />
+            android:background="@drawable/bg_nav_item"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                style="@style/Widget.PlusPOS.NavIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_clipboard"
+                android:tint="@color/pos_on_color" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bolèt"
+                android:textAppearance="@style/TextAppearance.PlusPOS.NavLabel"
+                android:textColor="@color/pos_on_color" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/tabParamet"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center" />
+            android:background="@drawable/bg_nav_item"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                style="@style/Widget.PlusPOS.NavIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_settings"
+                android:tint="@color/pos_on_color_dim" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Paramèt"
+                android:textAppearance="@style/TextAppearance.PlusPOS.NavLabel"
+                android:textColor="@color/pos_on_color_dim" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

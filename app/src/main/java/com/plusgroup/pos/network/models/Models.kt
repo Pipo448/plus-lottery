@@ -17,6 +17,12 @@ data class LoginResponse(
 data class LoginResponseData(
     val accessToken: String? = null,
     val token: String? = null,
+    val refreshToken: String? = null,
+)
+
+// POST auth/refresh
+data class RefreshRequest(
+    val refreshToken: String,
 )
 
 data class RegisterDeviceRequest(
@@ -68,6 +74,49 @@ data class SellTicketRequest(
     // Menm valè a dwe pase pou TOUT liy ki fè pati YON SÈL fich, pou
     // backend lan ka gwoupe yo ansanm nan "Mes fiches".
     val ficheNumber: String? = null,
+)
+
+// ==================== VANN YON FICH KONPLÈ (POST agent/fiches) ====================
+// Tout liy yo pati ansanm; si youn pa pase, backend lan pa vann ayen.
+// `requestId` pèmèt re-eseye san risk: menm requestId = menm fich, pa doub vant.
+data class SellFicheRequest(
+    val requestId: String,
+    val ficheNumber: String,
+    val drawId: String,
+    val gameId: String,
+    val deviceCode: String?,
+    val lines: List<SellFicheLine>,
+)
+
+data class SellFicheLine(
+    val numero: String,
+    val gameType: String?,   // borlette, loto3, mariage, loto4, loto5
+    val option: String?,     // "01" / "02" / "03" pou loto4/loto5
+    val amount: Double,
+)
+
+data class SellFicheResponse(
+    val success: Boolean? = null,
+    val message: String? = null,
+    val data: SellFicheResult? = null,
+)
+
+data class SellFicheResult(
+    val replay: Boolean? = null,
+    val ficheNumber: String? = null,
+    val drawName: String? = null,
+    val soldAt: String? = null,
+    val total: Double? = null,
+    val lines: List<SoldLine>? = null,
+)
+
+data class SoldLine(
+    val lineNo: Int? = null,
+    val ticketNumber: String? = null,
+    val numero: String? = null,
+    val gameType: String? = null,
+    val option: String? = null,
+    val amount: Double? = null,
 )
 
 data class SellTicketResponse(
@@ -136,6 +185,9 @@ data class FicheLineSummary(
     val numero: String? = null,
     val betAmount: Double? = null,
     val status: String? = null,
+    val gameType: String? = null,
+    val option: String? = null,
+    val prize: Double? = null,
 )
 
 data class FicheSummary(
@@ -152,12 +204,34 @@ data class FicheSummary(
 
 data class VerifyTicketResult(
     val ticketNumber: String? = null,
+    val ficheNumber: String? = null,
     val status: String? = null,
     val isWinner: Boolean? = null,
     val prizeAmount: Double? = null,
     val numbers: List<String>? = null,
     val betAmount: Double? = null,
     val soldAt: String? = null,
+    val drawName: String? = null,
+    val drawDate: String? = null,
+    val results: List<String?>? = null,
+    val agent: String? = null,
+    val lines: List<VerifyLine>? = null,
+)
+
+data class VerifyLine(
+    val ticketNumber: String? = null,
+    val numero: String? = null,
+    val gameType: String? = null,
+    val option: String? = null,
+    val amount: Double? = null,
+    val status: String? = null,
+    val prize: Double? = null,
+    val winningPosition: Int? = null,
+)
+
+data class PayFicheResult(
+    val paidLines: Int? = null,
+    val totalPaid: Double? = null,
 )
 
 data class PartialReport(

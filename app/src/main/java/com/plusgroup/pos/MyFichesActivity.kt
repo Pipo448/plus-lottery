@@ -140,7 +140,12 @@ class MyFichesActivity : AppCompatActivity() {
             val detailView = TextView(this).apply {
                 text = "Mise: ${moneyFormat.format(mise)}  /  Gain: ${moneyFormat.format(fiche.totalGain ?: 0.0)}  /  $statusLabel"
                 textSize = 13f
-                setTextColor(android.graphics.Color.DKGRAY)
+                // Fich ki genyen (poko peye) parèt an vèt pou ajan an wè l touswit
+                setTextColor(
+                    if (fiche.status == "winner") android.graphics.Color.parseColor("#16A34A")
+                    else android.graphics.Color.DKGRAY
+                )
+                if (fiche.status == "winner") setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
 
             card.addView(titleView)
@@ -216,6 +221,7 @@ class MyFichesActivity : AppCompatActivity() {
         header.addView(TextView(this).apply { text = "Jeux"; setTypeface(typeface, android.graphics.Typeface.BOLD); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
         header.addView(TextView(this).apply { text = "Pari"; setTypeface(typeface, android.graphics.Typeface.BOLD); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
         header.addView(TextView(this).apply { text = "Mise"; setTypeface(typeface, android.graphics.Typeface.BOLD); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
+        header.addView(TextView(this).apply { text = "Gain"; setTypeface(typeface, android.graphics.Typeface.BOLD); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
         container.addView(header)
 
         fiche.lines?.forEach { line ->
@@ -223,6 +229,19 @@ class MyFichesActivity : AppCompatActivity() {
             row.addView(TextView(this).apply { text = categoryLabelFor(line.numero ?: ""); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
             row.addView(TextView(this).apply { text = line.numero ?: "—"; layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
             row.addView(TextView(this).apply { text = moneyFormat.format(line.betAmount ?: 0.0); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
+            row.addView(TextView(this).apply {
+                text = when (line.status) {
+                    "winner", "paid" -> moneyFormat.format(line.prize ?: 0.0)
+                    "cancelled" -> "Anile"
+                    "lost" -> "—"
+                    else -> "..."
+                }
+                if (line.status == "winner" || line.status == "paid") {
+                    setTextColor(android.graphics.Color.parseColor("#16A34A"))
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                }
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
             container.addView(row)
         }
 
@@ -231,6 +250,13 @@ class MyFichesActivity : AppCompatActivity() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             setPadding(0, 12, 0, 0)
         })
+        if ((fiche.totalGain ?: 0.0) > 0) {
+            container.addView(TextView(this).apply {
+                text = "Total Gain: ${moneyFormat.format(fiche.totalGain ?: 0.0)}  (${statusLabelFor(fiche.status)})"
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(android.graphics.Color.parseColor("#16A34A"))
+            })
+        }
 
         val dialog = AlertDialog.Builder(this)
             .setTitle("Detay Fich")
@@ -242,6 +268,8 @@ class MyFichesActivity : AppCompatActivity() {
         dialog.setButton(AlertDialog.BUTTON_NEUTRAL, "Imprime") { _, _ -> printFicheSummary(fiche) }
         if (fiche.status == "active") {
             dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Elimine") { _, _ -> confirmCancelFiche(fiche) }
+        } else if (fiche.status == "winner" && fiche.ficheNumber != null) {
+            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Peye") { _, _ -> confirmPayFiche(fiche) }
         }
 
         dialog.show()
@@ -255,6 +283,39 @@ class MyFichesActivity : AppCompatActivity() {
             numero.length == 4 -> "LOTO4"
             numero.length == 5 -> "LOTO5"
             else -> "BORLETTE"
+        }
+    }
+
+    // ==================== PEYE (fich ki genyen) ====================
+
+    private fun confirmPayFiche(fiche: FicheSummary) {
+        AlertDialog.Builder(this)
+            .setTitle("Peye fich la?")
+            .setMessage("Ou pral peye ${moneyFormat.format(fiche.totalGain ?: 0.0)} HTG pou fich #${fiche.ficheNumber}.")
+            .setPositiveButton("Wi, peye") { _, _ -> payFiche(fiche) }
+            .setNegativeButton("Non", null)
+            .show()
+    }
+
+    private fun payFiche(fiche: FicheSummary) {
+        val ficheNumber = fiche.ficheNumber ?: return
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(applicationContext).payFiche(ficheNumber)
+                if (res.isSuccessful) {
+                    val paid = res.body()?.data?.totalPaid ?: 0.0
+                    Toast.makeText(this@MyFichesActivity, "Fich peye: ${moneyFormat.format(paid)} HTG", Toast.LENGTH_LONG).show()
+                    loadFiches()
+                } else {
+                    androidx.appcompat.app.AlertDialog.Builder(this@MyFichesActivity)
+                        .setTitle("Fich la pa ka peye")
+                        .setMessage(com.plusgroup.pos.util.ApiErrors.message(res, "Pa t ka peye fich la."))
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MyFichesActivity, "Erè rezo: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -287,11 +348,12 @@ class MyFichesActivity : AppCompatActivity() {
                     Toast.makeText(this@MyFichesActivity, "Fich elimine avèk siksè", Toast.LENGTH_SHORT).show()
                     loadFiches()
                 } else {
-                    Toast.makeText(
-                        this@MyFichesActivity,
-                        "Erè: ${res.errorBody()?.string() ?: "pa t ka anile"}",
-                        Toast.LENGTH_LONG,
-                    ).show()
+                    // Egz: "Ou pa ka anile fich sa a ankò: li gen plis pase 5 minit depi li vann."
+                    androidx.appcompat.app.AlertDialog.Builder(this@MyFichesActivity)
+                        .setTitle("Fich la pa ka elimine")
+                        .setMessage(com.plusgroup.pos.util.ApiErrors.message(res, "Pa t ka anile fich la."))
+                        .setPositiveButton("OK", null)
+                        .show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@MyFichesActivity, "Erè rezo: ${e.message}", Toast.LENGTH_LONG).show()

@@ -1,63 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- PARAMÈT — vèsyon 3 (design "swa"). ID yo pa chanje. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@drawable/bg_wave_blue"
+    android:orientation="vertical">
 
-    <!-- Bouton aksyon anlè (estòb pou kounye a) -->
+    <!-- Bouton aksyon anlè -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:background="@color/pos_surface"
+        android:elevation="4dp"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="14dp">
 
-        <Button android:id="@+id/btnKont"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="KONT $"
-            android:textColor="@android:color/white" android:backgroundTint="#22C55E" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
 
-        <Button android:id="@+id/btnTiraj"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="TIRAJ"
-            android:textColor="@android:color/white" android:backgroundTint="#3B82F6" />
-    </LinearLayout>
+            <Button
+                android:id="@+id/btnKont"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:text="Kont $"
+                app:backgroundTint="@color/pos_green" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <Button
+                android:id="@+id/btnTiraj"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="Tiraj"
+                app:backgroundTint="@color/pos_blue" />
+        </LinearLayout>
 
-        <Button android:id="@+id/btnBoulKiSoti"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="BOUL KI SOTI"
-            android:textColor="@android:color/black" android:backgroundTint="#F59E0B" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-        <Button android:id="@+id/btnMizajou"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="MIZAJOU"
-            android:textColor="@android:color/white" android:backgroundTint="#DC2626" />
+            <Button
+                android:id="@+id/btnBoulKiSoti"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:text="Boul ki soti"
+                android:textColor="@color/pos_on_amber"
+                app:backgroundTint="@color/pos_amber"
+                app:rippleColor="#1F000000" />
+
+            <Button
+                android:id="@+id/btnMizajou"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="Mizajou"
+                app:backgroundTint="@color/pos_red" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView
         android:id="@+id/tvVersion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/black"
-        android:textColor="@android:color/white"
+        android:background="@color/pos_navy"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:padding="8dp"
-        android:text="Version : 1.0.0 @PlusGroup" />
+        android:letterSpacing="0.04"
+        android:padding="9dp"
+        android:text="Version : 1.0.0 @PlusGroup"
+        android:textColor="@color/pos_on_color"
+        android:textSize="13sp" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
-        <LinearLayout
-            android:id="@+id/llSettingsContainer"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp" />
+            android:padding="12dp">
+
+            <LinearLayout
+                android:id="@+id/llSettingsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_rounded"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="18dp"
+                android:paddingBottom="12dp" />
+        </FrameLayout>
     </ScrollView>
 </LinearLayout>

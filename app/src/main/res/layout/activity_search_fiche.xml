@@ -1,92 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- CHACHE FICH — vèsyon 3 (design "swa"). ID yo pa chanje. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@drawable/bg_wave_blue"
+    android:orientation="vertical">
 
+    <!-- En-tèt -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
+        android:layout_height="64dp"
+        android:background="@color/pos_surface"
         android:gravity="center_vertical"
-        android:padding="8dp">
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            style="@style/Widget.PlusPOS.IconButton"
+            android:background="@drawable/bg_icon_blue"
             android:contentDescription="Retounen"
-            android:src="@android:drawable/ic_menu_revert" />
+            android:src="@drawable/ic_back"
+            android:tint="@color/pos_blue" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:text="Rechercher fiche"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.PlusPOS.Title" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnScan"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_margin="8dp"
-        android:text="SCAN"
-        android:textColor="@android:color/white"
-        android:backgroundTint="#3B82F6" />
-
+    <!-- Scan + chan tikè -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@android:color/white"
-        android:elevation="2dp"
-        android:padding="8dp">
+        android:background="@color/pos_surface"
+        android:elevation="4dp"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="14dp">
 
-        <ImageButton
-            android:id="@+id/btnSearchIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="Chèche"
-            android:src="@android:drawable/ic_menu_search" />
+        <Button
+            android:id="@+id/btnScan"
+            style="@style/Widget.PlusPOS.Button.Pill"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Scan"
+            app:backgroundTint="@color/pos_blue"
+            app:icon="@drawable/ic_scan"
+            app:iconGravity="textStart"
+            app:iconTint="@color/pos_on_color" />
 
-        <EditText
-            android:id="@+id/etTicket"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:hint="Entrer Ticket"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:background="@android:color/transparent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_field"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="14dp">
+
+            <ImageButton
+                android:id="@+id/btnSearchIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_icon_button"
+                android:contentDescription="Chèche"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_search"
+                android:tint="@color/pos_blue" />
+
+            <EditText
+                android:id="@+id/etTicket"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Entrer Ticket"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:textColor="@color/pos_ink"
+                android:textColorHint="#94A3B8"
+                android:textSize="16sp" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- Rezilta -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/bg_wave_blue">
+        android:padding="12dp">
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_glass"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
             <TextView
                 android:id="@+id/tvResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:lineSpacingExtra="3dp"
                 android:padding="16dp"
-                android:textColor="@android:color/black"
-                android:textSize="15sp"
-                android:fontFamily="monospace" />
+                android:textColor="@color/pos_ink"
+                android:textIsSelectable="true"
+                android:textSize="15sp" />
         </ScrollView>
     </FrameLayout>
 </LinearLayout>

@@ -71,6 +71,8 @@ class LoginActivity : AppCompatActivity() {
                 // Sove token tanporèman — nesesè pou apèl registerDevice pi ba a,
                 // paske entèsèptè a mete l nan header Authorization la.
                 session.saveToken(token)
+                // Pou APK a ka renouvle token an otomatikman (pa rekonekte chak 15 minit)
+                session.saveRefreshToken(res.body()!!.data?.refreshToken)
 
                 // Marye/verifye Device ID la ak ajan sa a. Si sa echwe (aparèy pa
                 // otorize, oswa pwoblèm rezo), koneksyon an DWE anile — se pwen

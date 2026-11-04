@@ -19,6 +19,8 @@ import com.plusgroup.pos.network.models.LoginRequest
 import com.plusgroup.pos.network.models.LoginResponse
 import com.plusgroup.pos.network.models.PartialReport
 import com.plusgroup.pos.network.models.RegisterDeviceRequest
+import com.plusgroup.pos.network.models.SellFicheRequest
+import com.plusgroup.pos.network.models.SellFicheResponse
 import com.plusgroup.pos.network.models.SellTicketRequest
 import com.plusgroup.pos.network.models.SellTicketResponse
 import com.plusgroup.pos.network.models.Ticket
@@ -51,6 +53,11 @@ interface ApiService {
     @GET("agent/games")
     suspend fun getGames(): Response<ApiListResponse<LotteryGame>>
 
+    // Vann TOUT yon fich nan yon sèl demann (atomik). Itilize sa pou tout vant.
+    @POST("agent/fiches")
+    suspend fun sellFiche(@Body body: SellFicheRequest): Response<SellFicheResponse>
+
+    // Ansyen fason (yon boul pa demann) — kenbe pou konpatibilite sèlman.
     @POST("agent/tickets")
     suspend fun sellTicket(@Body body: SellTicketRequest): Response<SellTicketResponse>
 
@@ -67,6 +74,10 @@ interface ApiService {
     ): Response<ApiListResponse<FicheSummary>>
 
     // Detay yon sèl tikè pa ID (rete itil pou lòt kontèks, egzanp verifikasyon)
+    // PEYE yon fich ki genyen (tout liy ki genyen yo)
+    @PATCH("agent/tickets/fiche/{ficheNumber}/pay")
+    suspend fun payFiche(@Path("ficheNumber") ficheNumber: String): Response<ApiDataResponse<com.plusgroup.pos.network.models.PayFicheResult>>
+
     @GET("agent/tickets/{id}")
     suspend fun getTicketById(@Path("id") id: String): Response<ApiDataResponse<Ticket>>
 

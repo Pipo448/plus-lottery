@@ -1,106 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- FICH MWEN YO — vèsyon 3 (design "swa"). ID yo pa chanje. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@drawable/bg_wave_blue"
+    android:orientation="vertical">
 
+    <!-- En-tèt -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
+        android:layout_height="64dp"
+        android:background="@color/pos_surface"
         android:gravity="center_vertical"
-        android:padding="8dp">
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            style="@style/Widget.PlusPOS.IconButton"
+            android:background="@drawable/bg_icon_blue"
             android:contentDescription="Retounen"
-            android:src="@android:drawable/ic_menu_revert" />
+            android:src="@drawable/ic_back"
+            android:tint="@color/pos_blue" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:text="Mes fiches"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.PlusPOS.Title" />
     </LinearLayout>
 
+    <!-- Filtè dat -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/pos_surface"
+        android:elevation="4dp"
+        android:gravity="bottom"
         android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="bottom">
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="14dp">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginEnd="8dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Debut"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
 
             <TextView
                 android:id="@+id/tvDebut"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#808080"
-                android:textColor="@android:color/white"
-                android:padding="12dp" />
+                style="@style/Widget.PlusPOS.DateField" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginEnd="8dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Fin"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
 
             <TextView
                 android:id="@+id/tvFin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#808080"
-                android:textColor="@android:color/white"
-                android:padding="12dp" />
+                style="@style/Widget.PlusPOS.DateField" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnSearch"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:backgroundTint="#3B82F6"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_circle_button"
+            android:backgroundTint="@color/pos_blue"
             android:contentDescription="Chèche"
-            android:src="@android:drawable/ic_menu_search" />
+            android:elevation="4dp"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_search"
+            android:stateListAnimator="@animator/press_lift"
+            android:tint="@color/pos_on_color" />
     </LinearLayout>
 
+    <!-- Lis fich yo -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/bg_wave_blue"
-        android:padding="8dp">
+        android:padding="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/white"
-            android:orientation="vertical">
+            android:background="@drawable/bg_card_rounded"
+            android:elevation="4dp"
+            android:orientation="vertical"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
 
             <!-- SwipeRefreshLayout: rale ekran an desann pou rechaje lis la -->
             <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -110,7 +119,9 @@
 
                 <ScrollView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
 
                     <LinearLayout
                         android:id="@+id/llResultContainer"

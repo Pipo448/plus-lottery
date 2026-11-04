@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fon meni 3 pwen an: blan, kwen awondi -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="16dp" />
+    <solid android:color="@color/pos_surface" />
+    <padding android:top="6dp" android:bottom="6dp" />
+</shape>

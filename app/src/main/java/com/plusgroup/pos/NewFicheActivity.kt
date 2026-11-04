@@ -14,12 +14,12 @@ import com.plusgroup.pos.databinding.ItemFicheLineBinding
 import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
-import com.plusgroup.pos.network.models.SellTicketRequest
+import com.plusgroup.pos.network.models.SellFicheLine
+import com.plusgroup.pos.network.models.SellFicheRequest
+import com.plusgroup.pos.network.models.SellFicheResult
+import com.plusgroup.pos.util.ApiErrors
 import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.DeviceIdHelper
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -33,8 +33,14 @@ import java.text.DecimalFormat
  * Chak liy ka EFASE (kòbèy) oswa MODIFYE pri li (kreyon) apa, san l pa
  * afekte lòt liy yo.
  *
- * Yon SÈL bouton (ikòn enprime anlè a) fè tout bagay: soumèt chak liy bay
- * backend la, epi si tout liy yo pase, enprime resi a otomatikman.
+ * Yon SÈL bouton (ikòn enprime anlè a) fè tout bagay: voye TOUT fich la
+ * bay backend la nan YON SÈL demann (POST agent/fiches). Backend lan vann
+ * tout liy yo ansanm oswa ayen (tiraj fèmen, limit, boul bloke…), epi
+ * si l pase, resi a enprime otomatikman.
+ *
+ * REQUEST ID: si rezo a koupe pandan vant lan, ajan an ka peze enprime
+ * ankò san danje — nou re-voye MENM requestId la, backend lan rekonèt li
+ * epi li pa vann fich la de fwa.
  *
  * FICHE_NUMBER: tout liy yon menm fich jenere e voye AK MENM `ficheNumber`
  * la, pou backend lan ka gwoupe yo ansanm nan "Mes fiches" (olye chak liy
@@ -67,6 +73,12 @@ class NewFicheActivity : AppCompatActivity() {
     private data class PrefillLine(val numero: String, val price: Double)
 
     private val lines = mutableListOf<FicheLine>()
+
+    // Dènye demann ki pa t konfime (rezo koupe). Si ajan an re-eseye ak
+    // EGZAKTEMAN menm fich la, nou re-voye menm ID yo → pa gen doub vant.
+    private var pendingRequestId: String? = null
+    private var pendingFicheNumber: String? = null
+    private var pendingSignature: String? = null
 
     private val moneyFormat = DecimalFormat("#,##0.00")
     private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
@@ -479,36 +491,54 @@ class NewFicheActivity : AppCompatActivity() {
     }
 
     // ==================== JENERE NIMEWO FICH ====================
-    // Yon SÈL nimewo pou TOUT liy nan menm fich la — jenere yon sèl fwa
-    // pandan `submitFiche()`, epi voye ak CHAK rekèt sellTicket, epi
-    // reyitilize pou enprime a (olye 2 nimewo diferan tankou anvan).
+    // Yon SÈL nimewo pou TOUT fich la — jenere nan `submitFiche()`, voye
+    // ak demann lan, epi enprime sou resi a (QR kòd la tou).
     private fun generateFicheNumber(): String {
-        val raw = (System.currentTimeMillis() % 1_000_000_000L).toString().padStart(12, '0').takeLast(12)
+        // 12 chif soti nan lè a an milisegond (pa repete avan ~30 ane)
+        val raw = (System.currentTimeMillis() % 1_000_000_000_000L).toString().padStart(12, '0')
         return "${raw.substring(0, 4)}-${raw.substring(4, 8)}-${raw.substring(8, 12)}"
     }
 
+    private fun gameTypeFor(category: String): String = when (category) {
+        "BORLETTE" -> "borlette"
+        "LOTO3" -> "loto3"
+        "LOTO4" -> "loto4"
+        "LOTO5" -> "loto5"
+        "MARIAGE" -> "mariage"
+        else -> category.lowercase()
+    }
+
+    private fun codeFor(gameType: String?): String = when (gameType?.lowercase()) {
+        "borlette" -> "BO"
+        "loto3" -> "LT"
+        "loto4" -> "L4"
+        "loto5" -> "L5"
+        "mariage" -> "MA"
+        else -> (gameType ?: "").take(2).uppercase()
+    }
+
+    /** Siyati fich la: si li chanje, se yon NOUVO vant (nouvo requestId). */
+    private fun currentSignature(drawId: String, gameId: String): String =
+        drawId + "|" + gameId + "|" + lines.joinToString(";") { "${it.category}:${it.numero}:${it.optionLabel}:${it.price}" }
+
     // ==================== ENPRIME FICH LA ====================
-    private fun printCurrentFiche(ficheNumber: String) {
-        if (lines.isEmpty()) {
+    private fun printCurrentFiche(result: SellFicheResult) {
+        val soldLines = result.lines.orEmpty()
+        if (soldLines.isEmpty()) {
             Toast.makeText(this, "Pa gen liy pou enprime", Toast.LENGTH_SHORT).show()
             return
         }
-        val drawName = selectedDraw?.name ?: "—"
-        val total = lines.sumOf { it.price }
+        val ficheNumber = result.ficheNumber ?: "—"
+        val drawName = result.drawName ?: selectedDraw?.name ?: "—"
+        val total = result.total ?: soldLines.sumOf { it.amount ?: 0.0 }
 
         val dateFormat = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US)
         val dateTimeText = dateFormat.format(java.util.Date())
 
-        val printLines: List<Triple<String, String, String>> = lines.map { line ->
-            val code = when (line.category) {
-                "BORLETTE" -> "BO"
-                "LOTO3" -> "LT"
-                "LOTO4" -> "L4"
-                "LOTO5" -> "L5"
-                "MARIAGE" -> "MA"
-                else -> line.category.take(2).uppercase()
-            }
-            Triple(code, line.numero, moneyFormat.format(line.price))
+        // Resi a enprime SA BACKEND LAN ANREJISTRE (pa sa ki te sou ekran an)
+        val printLines: List<Triple<String, String, String>> = soldLines.map { line ->
+            val numero = if (!line.option.isNullOrBlank()) "${line.numero} (O${line.option.trimStart('0')})" else (line.numero ?: "")
+            Triple(codeFor(line.gameType), numero, moneyFormat.format(line.amount ?: 0.0))
         }
 
         lifecycleScope.launch {
@@ -537,7 +567,7 @@ class NewFicheActivity : AppCompatActivity() {
                     if (!printerManager.isReady()) {
                         Toast.makeText(
                             this@NewFicheActivity,
-                            "Enprimant pa konekte. Ale nan Paramèt/MainActivity pou konekte l.",
+                            "Fich la VANN, men enprimant lan pa konekte. Konekte l epi reenprime fich la nan \"Fich mwen yo\".",
                             Toast.LENGTH_LONG,
                         ).show()
                         return@runOnUiThread
@@ -615,7 +645,7 @@ class NewFicheActivity : AppCompatActivity() {
 
     // ==================== SOUMÈT + ENPRIME (AN PARALÈL) ====================
 
-    private fun submitFiche() {
+    private fun submitFiche(isRetryAfterCollision: Boolean = false) {
         val draw = selectedDraw
         val game = selectedGame
 
@@ -632,62 +662,93 @@ class NewFicheActivity : AppCompatActivity() {
             return
         }
 
-        val deviceId = DeviceIdHelper.getDeviceId(this)
-        // Yon SÈL nimewo fich pou TOUT liy sa yo — pèmèt backend lan
-        // gwoupe yo ansanm nan "Mes fiches".
-        val ficheNumber = generateFicheNumber()
+        // Menm fich ak dènye eseye ki pa t konfime → re-itilize menm ID yo
+        val signature = currentSignature(draw.id, game.id)
+        if (signature != pendingSignature || pendingRequestId == null) {
+            pendingRequestId = java.util.UUID.randomUUID().toString()
+            pendingFicheNumber = generateFicheNumber()
+            pendingSignature = signature
+        }
+
+        val request = SellFicheRequest(
+            requestId = pendingRequestId!!,
+            ficheNumber = pendingFicheNumber!!,
+            drawId = draw.id,
+            gameId = game.id,
+            deviceCode = DeviceIdHelper.getDeviceId(this),
+            lines = lines.map { line ->
+                SellFicheLine(
+                    numero = line.numero,
+                    gameType = gameTypeFor(line.category),
+                    option = if (line.category == "LOTO4" || line.category == "LOTO5") line.optionLabel else null,
+                    amount = line.price,
+                )
+            },
+        )
+
         binding.btnPrint.isEnabled = false
 
         lifecycleScope.launch {
-            val api = ApiClient.getService(applicationContext)
-            val linesToSubmit = lines.toList()
+            try {
+                val api = ApiClient.getService(applicationContext)
+                val res = api.sellFiche(request)
+                val result = res.body()?.data
 
-            val results: List<Pair<FicheLine, String?>> = coroutineScope {
-                linesToSubmit.map { line ->
-                    async {
-                        try {
-                            val res = api.sellTicket(
-                                SellTicketRequest(
-                                    drawId = draw.id,
-                                    gameId = game.id,
-                                    numbers = listOf(line.numero),
-                                    betAmount = line.price,
-                                    posDeviceId = deviceId,
-                                    ficheNumber = ficheNumber,
-                                )
-                            )
-                            if (res.isSuccessful) {
-                                line to null
-                            } else {
-                                line to (res.errorBody()?.string() ?: "erè enkoni")
-                            }
-                        } catch (e: Exception) {
-                            line to (e.message ?: "erè rezo")
-                        }
+                if (res.isSuccessful && result != null) {
+                    // Vann! Netwaye demann an atant lan epi enprime.
+                    pendingRequestId = null
+                    pendingFicheNumber = null
+                    pendingSignature = null
+
+                    printCurrentFiche(result)
+                    lines.clear()
+                    binding.etBoulLa.text?.clear()
+                    binding.etMontant.text?.clear()
+                    refreshLinesList()
+                    refreshTotal()
+                    if (result.replay == true) {
+                        Toast.makeText(this@NewFicheActivity, "Fich sa a te deja vann — n ap enprime l.", Toast.LENGTH_LONG).show()
                     }
-                }.awaitAll()
-            }
+                    return@launch
+                }
 
-            val successCount = results.count { it.second == null }
-            val lastError = results.lastOrNull { it.second != null }
-            val lastErrorMsg = lastError?.let { "Liy '${it.first.numero}': ${it.second}" }
+                val raw = res.errorBody()?.string()
+                val message = ApiErrors.parse(raw) ?: "Vant lan pa pase. Eseye ankò."
 
-            binding.btnPrint.isEnabled = true
+                // Nimewo fich la te deja itilize (ra anpil) → nouvo nimewo, yon sèl fwa
+                if (ApiErrors.code(raw) == "FICHE_EXISTS" && !isRetryAfterCollision) {
+                    pendingRequestId = null
+                    pendingSignature = null
+                    binding.btnPrint.isEnabled = true
+                    submitFiche(isRetryAfterCollision = true)
+                    return@launch
+                }
 
-            if (successCount == linesToSubmit.size) {
-                printCurrentFiche(ficheNumber)
-                lines.clear()
-                binding.etBoulLa.text?.clear()
-                binding.etMontant.text?.clear()
-                refreshLinesList()
-                refreshTotal()
-            } else {
-                Toast.makeText(
-                    this@NewFicheActivity,
-                    "$successCount/${linesToSubmit.size} liy pase. Dènye erè: $lastErrorMsg",
-                    Toast.LENGTH_LONG,
-                ).show()
+                // Backend lan refize fich la (tiraj fèmen, limit, boul bloke…):
+                // AYEN pa vann. Ajan an korije epi re-eseye → nouvo demann.
+                pendingRequestId = null
+                pendingSignature = null
+                showSaleError(message)
+            } catch (e: Exception) {
+                // Rezo koupe: nou PA konnen si vant lan pase. Nou kenbe menm
+                // requestId la — si ajan an peze enprime ankò, backend lan
+                // ap retounen menm fich la san l pa vann li de fwa.
+                showSaleError(
+                    "Koneksyon an koupe. Nou pa konnen si fich la pase.\n\n" +
+                        "Peze ENPRIME ankò san chanje anyen: si li te deja vann, " +
+                        "li p ap vann de fwa — l ap jis enprime."
+                )
+            } finally {
+                binding.btnPrint.isEnabled = true
             }
         }
+    }
+
+    private fun showSaleError(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Fich la pa vann")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 }
