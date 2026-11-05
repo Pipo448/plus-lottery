@@ -1,6 +1,8 @@
 package com.plusgroup.pos.printer
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
@@ -180,9 +182,14 @@ class BluetoothPrinterHelper {
         grandTotal: String,
         footerMessage: String,
         qrData: String?,
+        logo: Bitmap? = null,
     ) {
         write(ESC_INIT)
         write(alignCenter())
+        if (logo != null) {
+            write(rasterImage(logo))
+            write(feed(1))
+        }
         write(boldOn())
         write(textLine(companyName))
         write(boldOff())
@@ -296,6 +303,35 @@ class BluetoothPrinterHelper {
 
     private fun textLine(text: String): ByteArray =
         (text + "\n").toByteArray(Charsets.UTF_8)
+
+    // Imaj nwa/blan an ESC/POS (GS v 0): 1 bit pa pwen, 8 pwen pa okte
+    private fun rasterImage(bmp: Bitmap): ByteArray {
+        val w = bmp.width
+        val h = bmp.height
+        val bytesPerRow = (w + 7) / 8
+        val out = java.io.ByteArrayOutputStream()
+        out.write(byteArrayOf(0x1D, 0x76, 0x30, 0x00,
+            (bytesPerRow and 0xFF).toByte(), ((bytesPerRow shr 8) and 0xFF).toByte(),
+            (h and 0xFF).toByte(), ((h shr 8) and 0xFF).toByte()))
+        val row = IntArray(w)
+        for (y in 0 until h) {
+            bmp.getPixels(row, 0, w, 0, y, w, 1)
+            for (bx in 0 until bytesPerRow) {
+                var b = 0
+                for (bit in 0 until 8) {
+                    val x = bx * 8 + bit
+                    if (x < w) {
+                        val c = row[x]
+                        val dark = Color.alpha(c) > 128 &&
+                            (Color.red(c) * 299 + Color.green(c) * 587 + Color.blue(c) * 114) / 1000 < 128
+                        if (dark) b = b or (0x80 shr bit)
+                    }
+                }
+                out.write(b)
+            }
+        }
+        return out.toByteArray()
+    }
 
     private fun alignLeft(): ByteArray = byteArrayOf(0x1B, 0x61, 0x00)
     private fun alignCenter(): ByteArray = byteArrayOf(0x1B, 0x61, 0x01)

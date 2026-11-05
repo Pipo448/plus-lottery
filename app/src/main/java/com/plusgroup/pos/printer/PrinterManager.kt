@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import com.plusgroup.pos.util.TenantBranding
 
 /**
  * Kouch inifye ki kache diferans ant enprimant SUNMI (entegre) ak
@@ -109,15 +110,17 @@ class PrinterManager(private val context: Context) {
         footerMessage: String,
         qrData: String?,
     ) {
+        // Logo tenant lan anlè fich la (si l genyen youn e si "Enprime logo a" aktif)
+        val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
         if (isSunmiDevice) {
             sunmiHelper?.printFicheReceipt(
                 companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                drawName, drawTotal, lines, grandTotal, footerMessage, qrData,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
             )
         } else {
             bluetoothHelper.printFicheReceipt(
                 companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                drawName, drawTotal, lines, grandTotal, footerMessage, qrData,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
             )
         }
     }

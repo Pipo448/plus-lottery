@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken
 import com.plusgroup.pos.databinding.ActivityNewFicheBinding
 import com.plusgroup.pos.databinding.ItemFicheLineBinding
 import com.plusgroup.pos.network.ApiClient
+import com.plusgroup.pos.util.TenantBranding
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.SellFicheLine
@@ -83,12 +84,6 @@ class NewFicheActivity : BaseActivity() {
     private val moneyFormat = DecimalFormat("#,##0.00")
     private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
 
-    private object CompanyInfoCache {
-        var companyName: String? = null
-        var vendeur: String? = null
-        var footerMessage: String? = null
-        var loaded: Boolean = false
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -542,25 +537,15 @@ class NewFicheActivity : BaseActivity() {
         }
 
         lifecycleScope.launch {
-            if (!CompanyInfoCache.loaded) {
-                try {
-                    val api = ApiClient.getService(applicationContext)
-                    val profile = api.getProfile().body()?.data
-                    CompanyInfoCache.companyName = profile?.tenantName?.uppercase()
-                    CompanyInfoCache.vendeur = profile?.branchName ?: profile?.fullName
+            // Non, telefòn, adrès, mesaj ak logo: Mon compte → Paramètres
+            // (rafrechi chak 5 minit; san entènèt, dènye valè yo sèvi)
+            TenantBranding.load(applicationContext)
 
-                    val settings = api.getCompanySettings().body()?.data ?: emptyList()
-                    val msg = settings.firstOrNull { it.key == "message" }?.value
-                    if (!msg.isNullOrBlank()) CompanyInfoCache.footerMessage = msg
-                } catch (_: Exception) {
-                } finally {
-                    CompanyInfoCache.loaded = true
-                }
-            }
-
-            val companyName = CompanyInfoCache.companyName ?: "PLUS GROUP"
-            val vendeur = CompanyInfoCache.vendeur ?: "—"
-            val footerMessage = CompanyInfoCache.footerMessage ?: "Mèsi pou konfyans ou!"
+            val companyName = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP"
+            val vendeur = TenantBranding.vendeur ?: "—"
+            val footerMessage = TenantBranding.message?.takeIf { it.isNotBlank() } ?: "Mèsi pou konfyans ou!"
+            val phone = TenantBranding.phone.orEmpty()
+            val address = TenantBranding.address.orEmpty()
 
             printerManager.connect {
                 runOnUiThread {
@@ -574,8 +559,8 @@ class NewFicheActivity : BaseActivity() {
                     }
                     printerManager.printFicheReceipt(
                         companyName = companyName,
-                        promoLine = "",
-                        phone = "",
+                        promoLine = address,
+                        phone = phone,
                         vendeur = vendeur,
                         dateTimeText = dateTimeText,
                         ficheNumber = ficheNumber,

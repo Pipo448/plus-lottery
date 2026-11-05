@@ -1,6 +1,7 @@
 package com.plusgroup.pos.printer
 
 import android.content.ComponentName
+import android.graphics.Bitmap
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
@@ -229,6 +230,7 @@ class SunmiPrinterHelper(private val context: Context) {
         grandTotal: String,
         footerMessage: String,
         qrData: String?,
+        logo: Bitmap? = null,
     ) {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
@@ -241,6 +243,20 @@ class SunmiPrinterHelper(private val context: Context) {
                 pause(120) // délè apre init pou font/codaj la chaje
                 forceLatinCodepage(svc)
                 pause(60)
+
+                // Logo tenant lan (Mon compte → Paramètres)
+                if (logo != null) {
+                    try {
+                        svc.setAlignment(1, null)
+                        pause()
+                        svc.printBitmap(logo, null)
+                        pause(120)
+                        svc.lineWrap(1, null)
+                        pause()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Logo a pa t enprime", e)
+                    }
+                }
 
                 svc.setAlignment(1, null)
                 pause()

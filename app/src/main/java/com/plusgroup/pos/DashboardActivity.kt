@@ -15,6 +15,7 @@ import com.plusgroup.pos.databinding.DialogInfoListBinding
 import com.plusgroup.pos.databinding.ItemSettingsRowBinding
 import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.util.SessionManager
+import com.plusgroup.pos.util.TenantBranding
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -47,7 +48,7 @@ class DashboardActivity : BaseActivity() {
             Toast.makeText(this, "Notifikasyon — byento", Toast.LENGTH_SHORT).show()
         }
         binding.btnMenu.setOnClickListener { showMainMenu() }
-        binding.btnRefresh.setOnClickListener { loadProfileAndBalance() }
+        binding.btnRefresh.setOnClickListener { loadProfileAndBalance(forceBranding = true) }
 
         binding.btnNouvelFich.setOnClickListener {
             startActivity(Intent(this, NewFicheActivity::class.java))
@@ -77,7 +78,19 @@ class DashboardActivity : BaseActivity() {
         loadProfileAndBalance()
     }
 
-    private fun loadProfileAndBalance() {
+    // Logo tenant lan (Mon compte → Paramètres). San logo: logo Plus la rete.
+    private fun showTenantLogo() {
+        val logo = TenantBranding.logo(this)
+        if (logo != null) binding.ivLogo.setImageBitmap(logo)
+        else binding.ivLogo.setImageResource(R.drawable.ic_launcher)
+    }
+
+    private fun loadProfileAndBalance(forceBranding: Boolean = false) {
+        showTenantLogo() // touswit ak sa ki sere sou aparèy la
+        lifecycleScope.launch {
+            TenantBranding.load(applicationContext, force = forceBranding)
+            showTenantLogo()
+        }
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getService(applicationContext)

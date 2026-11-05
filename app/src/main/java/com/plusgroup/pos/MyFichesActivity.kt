@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.plusgroup.pos.databinding.ActivityMyFichesBinding
 import com.plusgroup.pos.network.ApiClient
+import com.plusgroup.pos.util.TenantBranding
 import com.plusgroup.pos.network.models.FicheSummary
 import com.plusgroup.pos.printer.PrinterManager
 import kotlinx.coroutines.launch
@@ -383,8 +384,8 @@ class MyFichesActivity : BaseActivity() {
                     }
                     printerManager.printFicheReceipt(
                         companyName = cachedCompanyName ?: "PLUS GROUP",
-                        promoLine = "",
-                        phone = "",
+                        promoLine = TenantBranding.address.orEmpty(),
+                        phone = TenantBranding.phone.orEmpty(),
                         vendeur = cachedVendeur ?: "—",
                         dateTimeText = formatDateTime(fiche.soldAt),
                         ficheNumber = fiche.ficheNumber ?: fiche.ticketNumber ?: "—",
@@ -411,6 +412,10 @@ class MyFichesActivity : BaseActivity() {
     }
 
     private suspend fun ensureCompanyInfoCached() {
+        // Non/logo/telefòn tenant lan (Mon compte → Paramètres)
+        TenantBranding.load(applicationContext)
+        TenantBranding.companyName?.let { cachedCompanyName = it.uppercase() }
+        TenantBranding.vendeur?.let { cachedVendeur = it }
         if (cachedCompanyName != null) return
         try {
             val api = ApiClient.getService(applicationContext)
