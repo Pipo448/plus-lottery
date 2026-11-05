@@ -24,6 +24,12 @@ class BluetoothPrinterHelper {
     private var socket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
+    // Dènye enprimant ki te konekte — pou re-konekte otomatikman si l te tonbe
+    private var lastDevice: BluetoothDevice? = null
+
+    // Lè l pa null, write() mete done yo la epi tout resi a voye an YON SÈL kou
+    private var batch: java.io.ByteArrayOutputStream? = null
+
     // Dènye mesaj erè a — pèmèt UI a montre l dirèkteman san bezwen Logcat/USB.
     var lastError: String? = null
         private set
@@ -46,6 +52,7 @@ class BluetoothPrinterHelper {
     fun connect(device: BluetoothDevice): Boolean {
         disconnect()
         lastError = null
+        lastDevice = device
 
         // Yon rechèch Bluetooth an kou ka anpeche/ralanti anpil koneksyon RFCOMM.
         val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -115,12 +122,46 @@ class BluetoothPrinterHelper {
     }
 
     private fun write(bytes: ByteArray) {
-        try {
-            outputStream?.write(bytes)
-            outputStream?.flush()
+        val b = batch
+        if (b != null) {
+            b.write(bytes)
+            return
+        }
+        trySend(bytes)
+    }
+
+    private fun trySend(bytes: ByteArray): Boolean {
+        val out = outputStream ?: return false
+        return try {
+            out.write(bytes)
+            out.flush()
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Echèk voye done bay enprimant la", e)
+            lastError = "Voye: ${e.javaClass.simpleName} — ${e.message}"
+            disconnect() // koneksyon an mouri: pwochen fwa n ap re-konekte
+            false
         }
+    }
+
+    /**
+     * Prepare tout resi a nan memwa, epi voye l an yon sèl kou (pi rapid).
+     * Si koneksyon an te tonbe (enprimant etenn/rale), re-konekte yon fwa
+     * epi re-voye l otomatikman.
+     */
+    fun batched(block: () -> Unit): Boolean {
+        val buf = java.io.ByteArrayOutputStream()
+        batch = buf
+        try {
+            block()
+        } finally {
+            batch = null
+        }
+        val bytes = buf.toByteArray()
+        if (bytes.isEmpty()) return true
+        if (trySend(bytes)) return true
+        val device = lastDevice ?: return false
+        return connect(device) && trySend(bytes)
     }
 
     fun printTestReceipt() {

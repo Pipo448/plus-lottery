@@ -48,6 +48,9 @@ class DashboardActivity : BaseActivity() {
             Toast.makeText(this, "Notifikasyon — byento", Toast.LENGTH_SHORT).show()
         }
         binding.btnMenu.setOnClickListener { showMainMenu() }
+        // Konekte enprimant lan depi app la louvri: premye fich la soti touswit
+        com.plusgroup.pos.printer.PrinterManager(applicationContext).connect()
+
         binding.btnRefresh.setOnClickListener { loadProfileAndBalance(forceBranding = true) }
 
         binding.btnNouvelFich.setOnClickListener {

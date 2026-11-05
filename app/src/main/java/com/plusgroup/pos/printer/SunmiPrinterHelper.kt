@@ -48,20 +48,29 @@ class SunmiPrinterHelper(private val context: Context) {
     var isConnected: Boolean = false
         private set
 
-    private var onReadyCallback: (() -> Unit)? = null
+    // Plizyè ekran ka tann koneksyon an an menm tan
+    private val pendingCallbacks = mutableListOf<() -> Unit>()
+    @Volatile private var binding = false
+
+    private fun flushCallbacks() {
+        val list = synchronized(pendingCallbacks) { pendingCallbacks.toList().also { pendingCallbacks.clear() } }
+        list.forEach { cb -> try { cb() } catch (e: Exception) { Log.e(TAG, "Callback enprimant", e) } }
+    }
 
     private val connService = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
             woyouService = null
             isConnected = false
+            binding = false
             Log.w(TAG, "Sèvis enprimant SUNMI a dekonekte")
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             woyouService = IWoyouService.Stub.asInterface(service)
             isConnected = true
+            binding = false
             Log.i(TAG, "Sèvis enprimant SUNMI a konekte")
-            onReadyCallback?.invoke()
+            flushCallbacks()
         }
     }
 
@@ -70,14 +79,27 @@ class SunmiPrinterHelper(private val context: Context) {
      * epi tann `onReady` anvan w eseye enprime.
      */
     fun connect(onReady: (() -> Unit)? = null) {
-        onReadyCallback = onReady
+        // Deja konekte → enprime touswit (pa re-konekte chak fich)
+        if (isConnected && woyouService != null) {
+            onReady?.invoke()
+            return
+        }
+        if (onReady != null) synchronized(pendingCallbacks) { pendingCallbacks.add(onReady) }
+        if (binding) return // yon koneksyon deja an kou: callback la ap rele apre
+        binding = true
         try {
             val intent = Intent()
             intent.setPackage("woyou.aidlservice.jiuiv5")
             intent.action = "woyou.aidlservice.jiuiv5.IWoyouService"
-            context.bindService(intent, connService, Context.BIND_AUTO_CREATE)
+            val ok = context.bindService(intent, connService, Context.BIND_AUTO_CREATE)
+            if (!ok) {
+                binding = false
+                flushCallbacks()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Echèk konekte ak sèvis enprimant SUNMI a", e)
+            binding = false
+            flushCallbacks()
         }
     }
 
@@ -311,14 +333,15 @@ class SunmiPrinterHelper(private val context: Context) {
                 if (!qrData.isNullOrBlank()) {
                     svc.printQRCode(qrData, 8, 0, null)
                     pause()
-                    svc.lineWrap(3, null) // ekstra espas apre QR pou l pa koupe twò raz
+                    svc.lineWrap(1, null)
                     pause()
                 }
 
                 // Délè final pi gwo — asire tout papye a fizikman soti
                 // anvan koupe a, sinon rès la rete kwense anndan.
-                svc.lineWrap(12, null)
-                pause(300) // ase tan pou motè papye a fin fè tout avans lan anvan koupe
+                // Ase papye pou fich la depase lam koupe a, san gaspiye tan
+                svc.lineWrap(5, null)
+                pause(80)
                 svc.cutpaper(null)
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime Fich la", e)

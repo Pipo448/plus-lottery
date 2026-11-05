@@ -47,6 +47,11 @@ object TenantBranding {
 
     private fun logoFile(context: Context) = File(context.applicationContext.filesDir, "tenant_logo.img")
 
+    /** Valè ki sere sou aparèy la, SAN tann rezo a (pou enprime touswit). */
+    fun ensureCached(context: Context) {
+        if (companyName == null) restoreFromPrefs(context.applicationContext)
+    }
+
     /** Chaje done yo (sèvè a), sinon sa ki te sere sou aparèy la. */
     suspend fun load(context: Context, force: Boolean = false) {
         val app = context.applicationContext

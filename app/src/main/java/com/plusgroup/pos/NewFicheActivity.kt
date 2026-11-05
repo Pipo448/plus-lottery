@@ -92,6 +92,12 @@ class NewFicheActivity : BaseActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
 
+        // Prepare enprimant lan ak enfòmasyon fich la DEPI ekran an louvri,
+        // konsa lè ajan an peze ENPRIME, resi a soti touswit apre vant lan.
+        printerManager.connect()
+        TenantBranding.ensureCached(applicationContext)
+        lifecycleScope.launch { TenantBranding.load(applicationContext) }
+
         binding.btnClearAll.setOnClickListener {
             lines.clear()
             refreshLinesList()
@@ -537,9 +543,10 @@ class NewFicheActivity : BaseActivity() {
         }
 
         lifecycleScope.launch {
-            // Non, telefòn, adrès, mesaj ak logo: Mon compte → Paramètres
-            // (rafrechi chak 5 minit; san entènèt, dènye valè yo sèvi)
-            TenantBranding.load(applicationContext)
+            // Non, telefòn, adrès, mesaj ak logo: Mon compte → Paramètres.
+            // Nou pran sa ki deja sere a pou enprime TOUSWIT (pa tann rezo a);
+            // rafrechisman an fèt an awyè plan (onCreate + apre chak enpresyon).
+            TenantBranding.ensureCached(applicationContext)
 
             val companyName = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP"
             val vendeur = TenantBranding.vendeur ?: "—"
@@ -572,6 +579,7 @@ class NewFicheActivity : BaseActivity() {
                         qrData = ficheNumber,
                     )
                     Toast.makeText(this@NewFicheActivity, "Fich enprime avèk siksè!", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch { TenantBranding.load(applicationContext) }
                 }
             }
         }
@@ -672,6 +680,7 @@ class NewFicheActivity : BaseActivity() {
         )
 
         binding.btnPrint.isEnabled = false
+        binding.btnPrint.alpha = 0.45f // siy touswit: klik la pran
 
         lifecycleScope.launch {
             try {
@@ -725,6 +734,7 @@ class NewFicheActivity : BaseActivity() {
                 )
             } finally {
                 binding.btnPrint.isEnabled = true
+                binding.btnPrint.alpha = 1f
             }
         }
     }

@@ -48,6 +48,7 @@ class MyFichesActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMyFichesBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        printerManager.connect() // pare pou re-enprime touswit
 
         binding.btnBack.setOnClickListener { finish() }
 
@@ -412,8 +413,10 @@ class MyFichesActivity : BaseActivity() {
     }
 
     private suspend fun ensureCompanyInfoCached() {
-        // Non/logo/telefòn tenant lan (Mon compte → Paramètres)
-        TenantBranding.load(applicationContext)
+        // Non/logo/telefòn tenant lan (Mon compte → Paramètres): sa ki sere a
+        // pou enprime touswit; rafrechi an awyè plan
+        TenantBranding.ensureCached(applicationContext)
+        lifecycleScope.launch { TenantBranding.load(applicationContext) }
         TenantBranding.companyName?.let { cachedCompanyName = it.uppercase() }
         TenantBranding.vendeur?.let { cachedVendeur = it }
         if (cachedCompanyName != null) return

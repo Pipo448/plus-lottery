@@ -40,4 +40,6 @@
     <color name="pos_tint_red">#1AE11D48</color>
     <color name="pos_tint_green">#1A16A34A</color>
     <color name="pos_tint_amber">#26F59E0B</color>
+    <!-- Fon ikòn APK a -->
+    <color name="launcher_bg">#FFFFFF</color>
 </resources>

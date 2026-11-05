@@ -24,8 +24,31 @@ class PrinterManager(private val context: Context) {
 
     private val isSunmiDevice: Boolean = detectSunmi()
 
-    private var sunmiHelper: SunmiPrinterHelper? = null
-    private val bluetoothHelper = BluetoothPrinterHelper()
+    // Koneksyon enprimant lan PATAJE ant tout ekran yo e li rete louvri:
+    // fich la enprime touswit, san tann yon nouvo koneksyon chak fwa.
+    companion object {
+        @Volatile private var sharedSunmi: SunmiPrinterHelper? = null
+        private val sharedBluetooth = BluetoothPrinterHelper()
+        private val btLock = Any()
+        private const val KEY_PRINTER_MAC = "printer_mac"
+    }
+
+    private val sunmiHelper: SunmiPrinterHelper?
+        get() = sharedSunmi
+    private val bluetoothHelper: BluetoothPrinterHelper
+        get() = sharedBluetooth
+
+    /** Enprime Bluetooth sou yon lòt thread (ekran an pa bloke), resi a an yon sèl kou. */
+    private fun runBluetooth(block: () -> Unit) {
+        Thread {
+            synchronized(btLock) {
+                if (!bluetoothHelper.isConnected) {
+                    getSavedPrinterAddress()?.let { bluetoothHelper.connectByAddress(it) }
+                }
+                bluetoothHelper.batched(block)
+            }
+        }.start()
+    }
 
     val printerType: PrinterType
         get() = if (isSunmiDevice) PrinterType.SUNMI_INTEGRATED else PrinterType.BLUETOOTH_EXTERNAL
@@ -40,16 +63,24 @@ class PrinterManager(private val context: Context) {
 
     fun connect(onReady: (() -> Unit)? = null) {
         if (isSunmiDevice) {
-            sunmiHelper = SunmiPrinterHelper(context).also {
-                it.connect(onReady)
+            val helper = sharedSunmi ?: synchronized(btLock) {
+                sharedSunmi ?: SunmiPrinterHelper(context.applicationContext).also { sharedSunmi = it }
             }
+            helper.connect(onReady)
         } else {
-            // Pou Bluetooth, konekte ak dènye enprimant itilizatè a te chwazi a
-            // (si genyen). Si pa gen okenn anrejistre, `isReady()` ap fo.
+            // Deja konekte → pa re-konekte (sa te pran plizyè segonn chak fich)
+            if (bluetoothHelper.isConnected) {
+                onReady?.invoke()
+                return
+            }
+            // Konekte ak dènye enprimant itilizatè a te chwazi a (si genyen).
+            // Si pa gen okenn anrejistre, `isReady()` ap fo.
             val savedAddress = getSavedPrinterAddress()
             if (savedAddress != null) {
                 Thread {
-                    bluetoothHelper.connectByAddress(savedAddress)
+                    synchronized(btLock) {
+                        if (!bluetoothHelper.isConnected) bluetoothHelper.connectByAddress(savedAddress)
+                    }
                     onReady?.invoke()
                 }.start()
             } else {
@@ -62,9 +93,19 @@ class PrinterManager(private val context: Context) {
         }
     }
 
+    /**
+     * Koneksyon an pataje e li rete louvri pou pwochen fich la soti touswit.
+     * (Ansyen ekran yo ki rele disconnect() nan onDestroy pa koupe l ankò.)
+     */
     fun disconnect() {
-        sunmiHelper?.disconnect()
-        bluetoothHelper.disconnect()
+        // pa fè anyen ekspre
+    }
+
+    /** Fèmen koneksyon an toutbon (egz. lè ajan an chwazi yon lòt enprimant). */
+    fun releaseConnection() {
+        sharedSunmi?.disconnect()
+        sharedSunmi = null
+        synchronized(btLock) { bluetoothHelper.disconnect() }
     }
 
     fun isReady(): Boolean {
@@ -74,7 +115,7 @@ class PrinterManager(private val context: Context) {
 
     fun printTestReceipt() {
         if (isSunmiDevice) sunmiHelper?.printTestReceipt()
-        else bluetoothHelper.printTestReceipt()
+        else runBluetooth { bluetoothHelper.printTestReceipt() }
     }
 
     fun printTicketReceipt(
@@ -88,7 +129,7 @@ class PrinterManager(private val context: Context) {
         if (isSunmiDevice) {
             sunmiHelper?.printTicketReceipt(companyName, drawName, ticketNumber, numbers, betAmount, footerMessage)
         } else {
-            bluetoothHelper.printTicketReceipt(companyName, drawName, ticketNumber, numbers, betAmount, footerMessage)
+            runBluetooth { bluetoothHelper.printTicketReceipt(companyName, drawName, ticketNumber, numbers, betAmount, footerMessage) }
         }
     }
 
@@ -118,10 +159,12 @@ class PrinterManager(private val context: Context) {
                 drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
             )
         } else {
-            bluetoothHelper.printFicheReceipt(
-                companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
-            )
+            runBluetooth {
+                bluetoothHelper.printFicheReceipt(
+                    companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
+                    drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
+                )
+            }
         }
     }
 
@@ -146,9 +189,11 @@ class PrinterManager(private val context: Context) {
                 companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields,
             )
         } else {
-            bluetoothHelper.printReportReceipt(
-                companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields,
-            )
+            runBluetooth {
+                bluetoothHelper.printReportReceipt(
+                    companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields,
+                )
+            }
         }
     }
 
@@ -177,7 +222,4 @@ class PrinterManager(private val context: Context) {
         BLUETOOTH_EXTERNAL,
     }
 
-    companion object {
-        private const val KEY_PRINTER_MAC = "printer_mac"
-    }
 }
