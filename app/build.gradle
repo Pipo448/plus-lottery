@@ -70,4 +70,9 @@ dependencies {
 
     // Pull-to-refresh pou "Mes fiches"
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    // Eskane QR / kòd-ba fich yo ak kamera a (mache san Google Play Services,
+    // kidonk sou POS SUNMI yo tou). core 3.3.0 = konpatib minSdk 21.
+    implementation('com.journeyapps:zxing-android-embedded:4.3.0') { transitive = false }
+    implementation 'com.google.zxing:core:3.3.0'
 }

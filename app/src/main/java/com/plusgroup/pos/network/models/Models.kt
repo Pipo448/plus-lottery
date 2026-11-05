@@ -2,7 +2,18 @@ package com.plusgroup.pos.network.models
 
 data class LoginRequest(
     val username: String,
-    val password: String
+    val password: String,
+    // Kòd sèvè (bank) ajan an chwazi a — koneksyon an fèt sèlman sou bank sa a
+    val tenantSlug: String? = null,
+)
+
+/** Yon bank nan lis sèvè APK a (GET /public/servers). */
+data class PublicServer(
+    val code: String? = null,
+    val name: String? = null,
+    val displayName: String? = null,
+    val logo: String? = null,
+    val active: Boolean? = null,
 )
 
 data class LoginResponse(
@@ -51,6 +62,10 @@ data class Draw(
     val id: String,
     val name: String? = null,
     val status: String? = null,
+    @com.google.gson.annotations.SerializedName("open_time")
+    val openTime: String? = null,
+    @com.google.gson.annotations.SerializedName("close_time")
+    val closeTime: String? = null,
 )
 
 data class LotteryGame(

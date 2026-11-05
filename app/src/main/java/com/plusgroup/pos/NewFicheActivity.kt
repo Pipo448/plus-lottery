@@ -13,6 +13,7 @@ import com.plusgroup.pos.databinding.ActivityNewFicheBinding
 import com.plusgroup.pos.databinding.ItemFicheLineBinding
 import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.util.TenantBranding
+import com.plusgroup.pos.util.DataCache
 import com.plusgroup.pos.network.models.Draw
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.SellFicheLine
@@ -148,27 +149,49 @@ class NewFicheActivity : BaseActivity() {
 
     // ==================== CHAJE TIRAJ AK JWÈT ====================
 
+    private var prefillApplied = false
+
     private fun loadDrawsAndGames() {
+        // 1) TOUSWIT: sa ki deja nan memwa (akèy la prechaje yo)
+        val cachedDraws = DataCache.openDraws()
+        val cachedGames = DataCache.games()
+        if (cachedDraws.isNotEmpty() && cachedGames.isNotEmpty()) {
+            applyDrawsAndGames(cachedDraws, cachedGames)
+        }
+
+        // 2) An awyè plan: dènye vèsyon sèvè a
         lifecycleScope.launch {
-            try {
-                val api = ApiClient.getService(applicationContext)
-
-                val drawsRes = api.getDraws("open")
-                openDraws = drawsRes.body()?.data ?: emptyList()
-
-                val gamesRes = api.getGames()
-                activeGames = gamesRes.body()?.data ?: emptyList()
-                selectedGame = activeGames.firstOrNull()
-                binding.tvFicheLabel.text = (selectedGame?.name ?: "BORLETTE").uppercase()
-
-                applyPrefillIfAny()
-            } catch (e: Exception) {
+            val ok = DataCache.refresh(applicationContext)
+            if (ok) {
+                applyDrawsAndGames(DataCache.openDraws(), DataCache.games())
+            } else if (openDraws.isEmpty()) {
                 Toast.makeText(
                     this@NewFicheActivity,
-                    "Pa t ka chaje tiraj/jwèt yo: ${e.message}",
+                    "Pa t ka chaje tiraj yo. Verifye entènèt la.",
                     Toast.LENGTH_LONG,
                 ).show()
             }
+        }
+    }
+
+    private fun applyDrawsAndGames(draws: List<Draw>, games: List<LotteryGame>) {
+        openDraws = draws
+        if (games.isNotEmpty()) {
+            activeGames = games
+            if (selectedGame == null || activeGames.none { it.id == selectedGame?.id }) {
+                selectedGame = activeGames.firstOrNull()
+            }
+            binding.tvFicheLabel.text = (selectedGame?.name ?: "BORLETTE").uppercase()
+        }
+        // Tiraj ajan an te chwazi a fèmen pandan l t ap ekri fich la
+        val current = selectedDraw
+        if (current != null && openDraws.none { it.id == current.id }) {
+            selectedDraw = null
+            binding.tvChwaziTiraj.text = "CHWAZI TIRAJ"
+        }
+        if (!prefillApplied) {
+            prefillApplied = true
+            applyPrefillIfAny()
         }
     }
 

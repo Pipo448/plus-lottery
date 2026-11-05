@@ -68,6 +68,26 @@
                     android:src="@drawable/ic_mail"
                     android:tint="@color/pos_on_color" />
 
+                <!-- Kantite mesaj ki poko li (Bwat mesaj) -->
+                <TextView
+                    android:id="@+id/tvMailBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:layout_alignTop="@id/btnMail"
+                    android:layout_alignEnd="@id/btnMail"
+                    android:layout_marginTop="-4dp"
+                    android:layout_marginEnd="-6dp"
+                    android:background="@drawable/bg_badge_dot"
+                    android:elevation="8dp"
+                    android:gravity="center"
+                    android:minWidth="20dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:textColor="@color/pos_on_color"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
                 <ImageButton
                     android:id="@+id/btnMenu"
                     android:layout_width="46dp"

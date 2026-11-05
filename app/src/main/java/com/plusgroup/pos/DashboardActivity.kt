@@ -44,8 +44,9 @@ class DashboardActivity : BaseActivity() {
         binding.btnPrinter.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
+        // Bwat mesaj: mesaj admin bank lan voye bay ajan yo
         binding.btnMail.setOnClickListener {
-            Toast.makeText(this, "Notifikasyon — byento", Toast.LENGTH_SHORT).show()
+            com.plusgroup.pos.ui.MessagesSheet.show(this) { setMailBadge(0) }
         }
         binding.btnMenu.setOnClickListener { showMainMenu() }
         // Konekte enprimant lan depi app la louvri: premye fich la soti touswit
@@ -71,14 +72,25 @@ class DashboardActivity : BaseActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        loadProfileAndBalance()
+        // (loadProfileAndBalance fèt nan onResume, ki toujou vini apre onCreate)
     }
 
     override fun onResume() {
         super.onResume()
-        // Rafrechi balans lan chak fwa moun nan retounen sou ekran sa a
-        // (egzanp: apre l fin vann yon fich).
-        loadProfileAndBalance()
+        // Retou apre yon ti poz: renouvle token an DAVANS epi prechaje tiraj
+        // yo, pou NOUVÈL FICH louvri touswit san ajan an pa rekonekte.
+        lifecycleScope.launch {
+            com.plusgroup.pos.network.ApiClient.keepTokenFresh(applicationContext)
+            loadProfileAndBalance()
+            launch { com.plusgroup.pos.util.DataCache.refresh(applicationContext) }
+            val unread = com.plusgroup.pos.ui.MessagesSheet.unreadCount(this@DashboardActivity)
+            if (unread >= 0) setMailBadge(unread)
+        }
+    }
+
+    private fun setMailBadge(count: Int) {
+        binding.tvMailBadge.visibility = if (count > 0) android.view.View.VISIBLE else android.view.View.GONE
+        binding.tvMailBadge.text = if (count > 9) "9+" else count.toString()
     }
 
     // Logo tenant lan (Mon compte → Paramètres). San logo: logo Plus la rete.

@@ -114,8 +114,14 @@ class ReportActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getService(applicationContext)
-                val res = api.getDraws()
-                val names = (res.body()?.data ?: emptyList()).mapNotNull { it.name }.distinct()
+                // TOUT tiraj yo (menm sa ki fèmen): ajan an ka wè rapò Texas apre l fèmen
+                val res = api.getDrawNames()
+                var names = (res.body()?.data ?: emptyList()).mapNotNull { it.name?.trim() }
+                    .filter { it.isNotEmpty() }.distinct()
+                if (names.isEmpty()) {
+                    names = (api.getDraws(status = "").body()?.data ?: emptyList())
+                        .mapNotNull { it.name }.distinct()
+                }
                 drawNames = listOf("Tout") + names
                 binding.spinnerTirage.adapter = ArrayAdapter(
                     this@ReportActivity, android.R.layout.simple_spinner_dropdown_item, drawNames
@@ -235,7 +241,14 @@ class ReportActivity : BaseActivity() {
                 val res = api.getFinTirageReport(from, to, drawName)
                 val r = res.body()?.data
 
-                binding.tvBalanceValue.text = moneyFormat.format(r?.balance ?: 0.0)
+                // Balans = sa ajan an dwe remèt pwopriyetè a / sipèvizè a
+                // (vant − komisyon − gany + depo − retrè)
+                val bal = r?.balance ?: 0.0
+                binding.tvBalanceValue.text = moneyFormat.format(bal)
+                binding.tvBalanceValue.setTextColor(
+                    Color.parseColor(if (bal >= 0) "#1B0E52" else "#E11D48")
+                )
+                binding.tvBalanceLabel.text = if (bal >= 0) "BALANS POU REMÈT" else "BANK LAN DWE AJAN AN"
 
                 binding.llSummaryRows.removeAllViews()
                 addSummaryRow("Tirage", r?.tirage ?: "tout")
@@ -247,11 +260,12 @@ class ReportActivity : BaseActivity() {
                 addSummaryRow("Fiche gagnant", "${r?.ficheGagnant ?: 0}")
                 addSummaryRow("Vente", moneyFormat.format(r?.vente ?: 0.0))
                 addSummaryRow("Commission", moneyFormat.format(r?.commission ?: 0.0))
-                addSummaryRow("Paiement", moneyFormat.format(r?.aPaye ?: 0.0))
+                addSummaryRow("Paiement (gany)", moneyFormat.format(r?.aPaye ?: 0.0))
+                if (r?.pokoPeye != null && r.pokoPeye > 0) addSummaryRow("  • Poko peye", moneyFormat.format(r.pokoPeye))
                 addSummaryRow("Profit / Perte", moneyFormat.format(r?.profitPerte ?: 0.0))
                 addSummaryRow("Depot", formatMaybeNa(r?.depot))
                 addSummaryRow("Retrait", formatMaybeNa(r?.retrait))
-                addSummaryRow("Balance", moneyFormat.format(r?.balance ?: 0.0))
+                addSummaryRow("Balance (pou remèt)", moneyFormat.format(r?.balance ?: 0.0))
 
                 printReportTitle = "Rapport de fin tirage"
                 printHeaderLines = listOf(
@@ -304,8 +318,10 @@ class ReportActivity : BaseActivity() {
                 val report = res.body()?.data
                 val lines = report?.lines ?: emptyList()
 
+                val poko = report?.pokoPeye ?: 0.0
                 binding.tvListSummary.text =
-                    "${report?.ficheGagnant ?: lines.size} fich genyen — Total pri: ${moneyFormat.format(report?.totalPrize ?: 0.0)} HTG"
+                    "${report?.ficheGagnant ?: lines.size} fich genyen — Total: ${moneyFormat.format(report?.totalPrize ?: 0.0)} HTG" +
+                        if (poko > 0) "\nPoko peye: ${moneyFormat.format(poko)} HTG · klike sou yon fich pou peye l" else ""
 
                 renderGagnantLines(lines)
 
@@ -330,28 +346,32 @@ class ReportActivity : BaseActivity() {
             binding.llListContainer.addView(emptyStateView("Pa gen fich genyen pou peryòd sa a."))
             return
         }
+        // Yon kat pou chak fich; klike → detay (boul ki genyen) + PEYE
         for (line in lines) {
-            val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(16, 16, 16, 16)
+            val c = com.plusgroup.pos.databinding.ItemFicheCardBinding.inflate(layoutInflater, binding.llListContainer, false)
+            val status = if (line.paid == true) "paid" else "winner"
+            val ficheNo = line.ficheNumber ?: line.ticketNumber
+            com.plusgroup.pos.ui.FicheStatus.bindCard(
+                c,
+                status = status,
+                drawName = line.drawName,
+                meta = listOfNotNull(
+                    ficheNo?.let { "#" + com.plusgroup.pos.ui.FicheDetailSheet.formatFicheNo(it) },
+                    com.plusgroup.pos.ui.FicheDetailSheet.prettyDateTime(line.soldAt),
+                ).joinToString("  ·  "),
+                balls = line.numero?.let { "Boul ki genyen: $it" },
+                mise = moneyFormat.format(line.vente ?: 0.0),
+                gain = "+" + moneyFormat.format(line.prizeAmount ?: 0.0),
+            )
+            if (ficheNo != null) {
+                c.root.setOnClickListener {
+                    com.plusgroup.pos.ui.FicheDetailSheet.show(
+                        this, ficheNo,
+                        com.plusgroup.pos.ui.FicheDetailSheet.Actions(onChanged = { loadGagnantReport() }),
+                    )
+                }
             }
-            card.addView(TextView(this).apply {
-                text = "${line.drawName ?: "—"}  •  #${line.ficheNumber ?: line.ticketNumber ?: "—"}"
-                setTypeface(typeface, Typeface.BOLD)
-                textSize = 14f
-            })
-            card.addView(TextView(this).apply {
-                text = "Vente: ${moneyFormat.format(line.vente ?: 0.0)}  /  Pri: ${moneyFormat.format(line.prizeAmount ?: 0.0)}  /  ${if (line.paid == true) "Peye" else "Poko peye"}"
-                textSize = 12f
-                setTextColor(Color.DKGRAY)
-            })
-            card.addView(TextView(this).apply {
-                text = formatDateTime(line.soldAt)
-                textSize = 11f
-                setTextColor(Color.GRAY)
-            })
-            binding.llListContainer.addView(card)
-            binding.llListContainer.addView(divider())
+            binding.llListContainer.addView(c.root)
         }
     }
 

@@ -2,23 +2,37 @@ package com.plusgroup.pos
 
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.plusgroup.pos.databinding.ActivitySearchFicheBinding
-import com.plusgroup.pos.network.ApiClient
-import kotlinx.coroutines.launch
+import com.plusgroup.pos.ui.FicheDetailSheet
 
 /**
- * "Chache Fich" — chèche yon tikè pa nimewo.
- *
- * NOTE: Bouton "SCAN" se yon estòb kounye a ("byento") — pou l vrèman li
- * yon kòd-ba ak kamera a, ta bezwen ajoute yon librè tankou ML Kit oswa
- * ZXing ak pèmisyon kamera; se yon pwochen etap apa.
+ * "Chache Fich" — pa nimewo, oswa pa SCAN:
+ *  • Bouton SCAN → kamera a li QR/kòd-ba ki sou fich enprime a.
+ *  • POS SUNMI ki gen eskanè entegre: eskanè a "tape" nimewo a nan chan an
+ *    epi peze ENTER → rechèch la fèt otomatikman.
+ * Rezilta a parèt nan yon bèl fèy detay ak bouton PEYE / ELIMINE.
  */
 class SearchFicheActivity : BaseActivity() {
 
+    companion object {
+        const val EXTRA_FICHE = "EXTRA_FICHE"
+        const val EXTRA_SCAN = "EXTRA_SCAN"
+    }
+
     private lateinit var binding: ActivitySearchFicheBinding
+
+    private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
+        val code = result?.contents?.trim()
+        if (code.isNullOrEmpty()) return@registerForActivityResult
+        val fiche = extractFicheNumber(code)
+        binding.etTicket.setText(fiche)
+        openFiche(fiche)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,14 +40,11 @@ class SearchFicheActivity : BaseActivity() {
         setContentView(binding.root)
 
         binding.btnBack.setOnClickListener { finish() }
-
-        binding.btnScan.setOnClickListener {
-            Toast.makeText(this, "Eskane kòd-ba — byento", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnScan.setOnClickListener { startScan() }
 
         binding.etTicket.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH ||
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER)
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE ||
+                event?.keyCode == KeyEvent.KEYCODE_ENTER
             ) {
                 searchTicket()
                 true
@@ -42,63 +53,47 @@ class SearchFicheActivity : BaseActivity() {
             }
         }
         binding.btnSearchIcon.setOnClickListener { searchTicket() }
+        binding.tvResult.text = "Eskane QR ki sou fich la, oswa tape nimewo fich la."
+
+        intent.getStringExtra(EXTRA_FICHE)?.let {
+            binding.etTicket.setText(it)
+            openFiche(it)
+        }
+        if (intent.getBooleanExtra(EXTRA_SCAN, false) && savedInstanceState == null) startScan()
+    }
+
+    private fun startScan() {
+        val options = ScanOptions()
+            .setPrompt("Mete QR ki sou fich la nan kare a")
+            .setBeepEnabled(true)
+            .setOrientationLocked(true)
+            .setCaptureActivity(ScanActivity::class.java)
+        scanLauncher.launch(options)
     }
 
     private fun searchTicket() {
-        val ticketNumber = binding.etTicket.text.toString().trim()
-        if (ticketNumber.isEmpty()) {
-            Toast.makeText(this, "Antre nimewo fich la (oswa nimewo tikè a)", Toast.LENGTH_SHORT).show()
+        val raw = binding.etTicket.text.toString().trim()
+        if (raw.isEmpty()) {
+            Toast.makeText(this, "Antre nimewo fich la, oswa peze SCAN", Toast.LENGTH_SHORT).show()
             return
         }
+        openFiche(extractFicheNumber(raw))
+    }
 
-        binding.tvResult.text = ""
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getService(applicationContext)
-                val res = api.verifyTicket(ticketNumber)
-                val result = res.body()?.data
+    private fun openFiche(ficheNumber: String) {
+        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)
+            ?.hideSoftInputFromWindow(binding.etTicket.windowToken, 0)
+        binding.tvResult.text = "Fich #${FicheDetailSheet.formatFicheNo(ficheNumber)}"
+        FicheDetailSheet.show(this, ficheNumber)
+    }
 
-                if (!res.isSuccessful || result == null) {
-                    binding.tvResult.text = com.plusgroup.pos.util.ApiErrors.message(res, "Fich '$ticketNumber' pa jwenn.")
-                    return@launch
-                }
-
-                val statusLabel = when (result.status) {
-                    "active" -> "Aktif (rezilta poko soti)"
-                    "cancelled" -> "Anile"
-                    "winner" -> "GENYEN ✅ — poko peye"
-                    "paid" -> "Genyen — deja PEYE"
-                    "lost" -> "Pèdi"
-                    else -> result.status ?: "—"
-                }
-                val money = java.text.DecimalFormat("#,##0.00")
-                val boulKiSoti = result.results?.filterNotNull()?.joinToString(" - ")?.takeIf { it.isNotBlank() }
-
-                binding.tvResult.text = buildString {
-                    appendLine("Fich No : ${result.ficheNumber ?: result.ticketNumber ?: ticketNumber}")
-                    appendLine("Tiraj   : ${result.drawName ?: "—"} ${result.drawDate ?: ""}")
-                    if (boulKiSoti != null) appendLine("Boul    : $boulKiSoti")
-                    appendLine("Ajan    : ${result.agent ?: "—"}")
-                    appendLine("Statut  : $statusLabel")
-                    appendLine("--------------------------------")
-                    result.lines.orEmpty().forEach { l ->
-                        val opt = if (!l.option.isNullOrBlank()) " O${l.option.trimStart('0')}" else ""
-                        val gain = when (l.status) {
-                            "winner", "paid" -> "+" + money.format(l.prize ?: 0.0)
-                            "cancelled" -> "anile"
-                            "lost" -> "-"
-                            else -> "..."
-                        }
-                        appendLine(String.format("%-9s %8s  %10s", (l.numero ?: "") + opt, money.format(l.amount ?: 0.0), gain))
-                    }
-                    appendLine("--------------------------------")
-                    appendLine("Total mise : ${money.format(result.betAmount ?: 0.0)} HTG")
-                    appendLine("Total gain : ${money.format(result.prizeAmount ?: 0.0)} HTG")
-                    appendLine("Vandi      : ${result.soldAt ?: "—"}")
-                }
-            } catch (e: Exception) {
-                binding.tvResult.text = "Erè: ${e.message}"
-            }
+    /** QR la ka gen nimewo a sèlman, oswa yon tèks/lyen ki genyen l: kenbe chif yo. */
+    private fun extractFicheNumber(code: String): String {
+        val digitsOnly = code.filter { it.isDigit() }
+        return when {
+            code.matches(Regex("[0-9 -]+")) -> digitsOnly
+            Regex("\\d{10,}").find(code) != null -> Regex("\\d{10,}").find(code)!!.value
+            else -> code.trim()
         }
     }
 }

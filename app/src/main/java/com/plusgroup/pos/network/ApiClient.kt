@@ -61,6 +61,76 @@ object ApiClient {
         return retrofit!!.create(ApiService::class.java)
     }
 
+    // ==================== TOKEN TOUJOU FRÈ ====================
+    // Lè ajan an kite POS la yon ti tan, token an (15 min) ekspire. Avan,
+    // premye demann lan te resevwa 401 → refresh → re-voye: sa te pran tan
+    // (e Render te ka ap dòmi tou). Kounye a, depi app la retounen devan
+    // (onResume), nou renouvle token an DAVANS si l prèske fini.
+
+    private val refreshLock = Any()
+    private val plainClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
+    internal sealed class RefreshResult {
+        data class Ok(val accessToken: String) : RefreshResult()
+        object Rejected : RefreshResult()
+        object NetworkError : RefreshResult()
+    }
+
+    internal fun refreshTokens(session: SessionManager, refreshToken: String): RefreshResult = try {
+        val body = Gson().toJson(RefreshRequest(refreshToken))
+            .toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url(BASE_URL + "auth/refresh")
+            .post(body)
+            .build()
+        plainClient.newCall(request).execute().use { res ->
+            if (res.code == 401 || res.code == 403) return RefreshResult.Rejected
+            if (!res.isSuccessful) return RefreshResult.NetworkError
+            val raw = res.body?.string() ?: return RefreshResult.NetworkError
+            val json = JsonParser.parseString(raw).asJsonObject
+            val data = if (json.has("data")) json.getAsJsonObject("data") else json
+            val access = data.get("accessToken")?.asString ?: return RefreshResult.Rejected
+            session.saveToken(access)
+            data.get("refreshToken")?.asString?.let { session.saveRefreshToken(it) }
+            RefreshResult.Ok(access)
+        }
+    } catch (e: Exception) {
+        RefreshResult.NetworkError
+    }
+
+    /** Konbyen segonn ki rete anvan token an ekspire (null = pa ka li l). */
+    private fun secondsLeft(token: String): Long? = try {
+        val payload = token.split(".")[1]
+        val json = String(android.util.Base64.decode(payload, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING))
+        val exp = JsonParser.parseString(json).asJsonObject.get("exp")?.asLong
+        exp?.let { it - System.currentTimeMillis() / 1000 }
+    } catch (_: Exception) {
+        null
+    }
+
+    /**
+     * Rele l nan onResume: si token an ap fini nan mwens pase 3 minit (oswa
+     * li fini deja), renouvle l an awyè plan. Pa bloke ekran an.
+     */
+    suspend fun keepTokenFresh(context: Context) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val session = SessionManager(context.applicationContext)
+        val token = session.getToken() ?: return@withContext
+        val left = secondsLeft(token)
+        if (left != null && left > 180) return@withContext
+        synchronized(refreshLock) {
+            // Yon lòt apèl te ka deja renouvle l
+            val current = session.getToken() ?: return@synchronized
+            if (current != token) return@synchronized
+            val refresh = session.getRefreshToken() ?: return@synchronized
+            if (refreshTokens(session, refresh) == RefreshResult.Rejected) session.clear()
+        }
+    }
+
     /**
      * Lè backend lan reponn 401 (token ekspire), nou mande yon nouvo token
      * ak refresh token an, epi nou re-voye MENM demann lan otomatikman.
@@ -71,17 +141,12 @@ object ApiClient {
         private val session: SessionManager,
     ) : Authenticator {
 
-        private val plainClient = OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .build()
-
         override fun authenticate(route: Route?, response: Response): Request? {
             val path = response.request.url.encodedPath
             if (path.contains("/auth/")) return null          // pa refresh sou login/refresh
             if (responseCount(response) >= 2) return null       // pa boukle
 
-            synchronized(this) {
+            synchronized(refreshLock) {
                 val usedToken = response.request.header("Authorization")?.removePrefix("Bearer ")
                 val current = session.getToken()
 
@@ -93,7 +158,7 @@ object ApiClient {
                 }
 
                 val refresh = session.getRefreshToken() ?: return null
-                return when (val result = refreshTokens(refresh)) {
+                return when (val result = refreshTokens(session, refresh)) {
                     is RefreshResult.Ok -> response.request.newBuilder()
                         .header("Authorization", "Bearer ${result.accessToken}")
                         .build()
@@ -105,34 +170,6 @@ object ApiClient {
                     RefreshResult.NetworkError -> null // pa dekonekte ajan an pou yon pwoblèm rezo
                 }
             }
-        }
-
-        private sealed class RefreshResult {
-            data class Ok(val accessToken: String) : RefreshResult()
-            object Rejected : RefreshResult()
-            object NetworkError : RefreshResult()
-        }
-
-        private fun refreshTokens(refreshToken: String): RefreshResult = try {
-            val body = Gson().toJson(RefreshRequest(refreshToken))
-                .toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(BASE_URL + "auth/refresh")
-                .post(body)
-                .build()
-            plainClient.newCall(request).execute().use { res ->
-                if (res.code == 401 || res.code == 403) return RefreshResult.Rejected
-                if (!res.isSuccessful) return RefreshResult.NetworkError
-                val raw = res.body?.string() ?: return RefreshResult.NetworkError
-                val json = JsonParser.parseString(raw).asJsonObject
-                val data = if (json.has("data")) json.getAsJsonObject("data") else json
-                val access = data.get("accessToken")?.asString ?: return RefreshResult.Rejected
-                session.saveToken(access)
-                data.get("refreshToken")?.asString?.let { session.saveRefreshToken(it) }
-                RefreshResult.Ok(access)
-            }
-        } catch (e: Exception) {
-            RefreshResult.NetworkError
         }
 
         private fun responseCount(response: Response): Int {

@@ -38,6 +38,13 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body body: LoginRequest): Response<LoginResponse>
 
+    // ----- Sèvè (bank) — piblik, anvan login -----
+    @GET("public/servers")
+    suspend fun getServers(): Response<ApiListResponse<com.plusgroup.pos.network.models.PublicServer>>
+
+    @GET("public/servers/{code}")
+    suspend fun getServer(@retrofit2.http.Path("code") code: String): Response<ApiDataResponse<com.plusgroup.pos.network.models.PublicServer>>
+
     @POST("agent/register-device")
     suspend fun registerDevice(@Body body: RegisterDeviceRequest): Response<ApiMessageResponse>
 
@@ -122,6 +129,17 @@ interface ApiService {
     ): Response<ApiListResponse<TransactionLine>>
 
     // "Boul Ki Soti" — nimewo ki soti pou tiraj ki gen rezilta deja antre
+    // Non tout tiraj yo (menm sa ki fèmen) — filtè rapò yo
+    @GET("agent/draws/names")
+    suspend fun getDrawNames(): Response<ApiListResponse<com.plusgroup.pos.network.models.DrawName>>
+
+    // Bwat mesaj (Box)
+    @GET("agent/messages")
+    suspend fun getMessages(): Response<ApiDataResponse<com.plusgroup.pos.network.models.AgentInbox>>
+
+    @POST("agent/messages/read")
+    suspend fun markMessagesRead(@Body body: com.plusgroup.pos.network.models.MarkReadRequest): Response<ApiMessageResponse>
+
     @GET("agent/draws/results")
     suspend fun getDrawResults(@Query("date") date: String? = null): Response<ApiListResponse<com.plusgroup.pos.network.models.DrawResult>>
 
