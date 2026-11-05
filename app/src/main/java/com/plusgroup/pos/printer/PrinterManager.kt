@@ -152,6 +152,7 @@ class PrinterManager(private val context: Context) {
         grandTotal: String,
         footerMessage: String,
         qrData: String?,
+        sections: List<ReceiptSection>? = null,
     ) {
         // "·" pa nan codepage enprimant yo (li te parèt kòm 路): ranplase l
         val vendeur = vendeur.replace("·", "-")
@@ -160,13 +161,13 @@ class PrinterManager(private val context: Context) {
         if (isSunmiDevice) {
             sunmiHelper?.printFicheReceipt(
                 companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections,
             )
         } else {
             runBluetooth {
                 bluetoothHelper.printFicheReceipt(
                     companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                    drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo,
+                    drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections,
                 )
             }
         }

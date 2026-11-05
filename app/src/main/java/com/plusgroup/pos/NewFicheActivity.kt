@@ -59,8 +59,8 @@ class NewFicheActivity : BaseActivity() {
     private lateinit var binding: ActivityNewFicheBinding
 
     private var openDraws: List<Draw> = emptyList()
-    // Ajan an ka chwazi PLIZYÈ tiraj: menm boul yo vann sou chak tiraj
-    // (yon fich separe pou chak tiraj) → total la miltipliye.
+    // Ajan an ka chwazi PLIZYÈ tiraj: menm boul yo vann sou chak tiraj,
+    // men se YON SÈL fich (yon nimewo, yon QR, yon resi) → total × tiraj.
     private val selectedDraws = mutableListOf<Draw>()
     private val selectedDraw: Draw? get() = selectedDraws.firstOrNull()
 
@@ -81,8 +81,8 @@ class NewFicheActivity : BaseActivity() {
 
     // Dènye demann ki pa t konfime (rezo koupe). Si ajan an re-eseye ak
     // EGZAKTEMAN menm fich la, nou re-voye menm ID yo → pa gen doub vant.
-    // (Yon pè requestId/ficheNumber pou chak tiraj.)
-    private val pendingByDraw = mutableMapOf<String, Pair<String, String>>()
+    private var pendingRequestId: String? = null
+    private var pendingFicheNumber: String? = null
     private var pendingSignature: String? = null
 
     private val moneyFormat = DecimalFormat("#,##0.00")
@@ -269,11 +269,14 @@ class NewFicheActivity : BaseActivity() {
             .show()
     }
 
-    /** Non tiraj yo jan yo parèt devan chak boul: "Georgia-Soir" oswa "Georgia-Soir + NY soir" */
+    /**
+     * Non tiraj yo jan yo parèt devan chak boul. Plizyè tiraj: youn anba
+     * lòt ("Georgia-Soir\nFlorida Soir") pou tout non yo parèt nèt.
+     */
     private fun drawsLabel(): String = when (selectedDraws.size) {
         0 -> "—"
         1 -> selectedDraws[0].name ?: "—"
-        else -> selectedDraws.joinToString(" + ") { it.name ?: "—" }
+        else -> selectedDraws.joinToString("\n") { it.name ?: "—" }
     }
 
     /**
@@ -577,7 +580,7 @@ class NewFicheActivity : BaseActivity() {
 
     /** Siyati fich la: si li chanje, se yon NOUVO vant (nouvo requestId). */
     private fun currentSignature(gameId: String): String =
-        gameId + "|" + lines.joinToString(";") { "${it.category}:${it.numero}:${it.optionLabel}:${it.price}" }
+        selectedDraws.joinToString(",") { it.id } + "|" + gameId + "|" + lines.joinToString(";") { "${it.category}:${it.numero}:${it.optionLabel}:${it.price}" }
 
     // ==================== ENPRIME FICH LA ====================
     private fun printCurrentFiche(result: SellFicheResult) {
@@ -589,6 +592,19 @@ class NewFicheActivity : BaseActivity() {
         val ficheNumber = result.ficheNumber ?: "—"
         val drawName = result.drawName ?: selectedDraw?.name ?: "—"
         val total = result.total ?: soldLines.sumOf { it.amount ?: 0.0 }
+
+        // Fich plizyè tiraj: yon seksyon pou chak tiraj sou MENM resi a
+        fun toPrint(l: com.plusgroup.pos.network.models.SoldLine): Triple<String, String, String> {
+            val numero = if (!l.option.isNullOrBlank()) "${l.numero} (O${l.option.trimStart('0')})" else (l.numero ?: "")
+            return Triple(codeFor(l.gameType), numero, moneyFormat.format(l.amount ?: 0.0))
+        }
+        val sections = result.draws?.takeIf { it.size > 1 }?.map { part ->
+            com.plusgroup.pos.printer.ReceiptSection(
+                drawName = part.drawName ?: "—",
+                drawTotal = moneyFormat.format(part.total ?: part.lines.orEmpty().sumOf { it.amount ?: 0.0 }),
+                lines = part.lines.orEmpty().map { toPrint(it) },
+            )
+        }
 
         val dateFormat = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US)
         val dateTimeText = dateFormat.format(java.util.Date())
@@ -634,6 +650,7 @@ class NewFicheActivity : BaseActivity() {
                         grandTotal = moneyFormat.format(total),
                         footerMessage = footerMessage,
                         qrData = ficheNumber,
+                        sections = sections,
                     )
                     Toast.makeText(this@NewFicheActivity, "Fich enprime avèk siksè!", Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch { TenantBranding.load(applicationContext) }
@@ -666,6 +683,10 @@ class NewFicheActivity : BaseActivity() {
 
                 val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
                 rowBinding.tvLineTiraj.text = line.drawName
+                // Plizyè tiraj: tout non yo, youn anba lòt, yon ti jan pi piti
+                val nDraws = line.drawName.count { it == '\n' } + 1
+                rowBinding.tvLineTiraj.maxLines = nDraws.coerceAtMost(6)
+                rowBinding.tvLineTiraj.textSize = if (nDraws > 1) 13f else 16f
                 rowBinding.tvLineBoul.text = line.numero
                 rowBinding.tvLineOption.text = line.optionLabel ?: ""
                 rowBinding.tvLineKob.text = moneyFormat.format(line.price)
@@ -700,7 +721,7 @@ class NewFicheActivity : BaseActivity() {
 
     // ==================== SOUMÈT + ENPRIME (AN PARALÈL) ====================
 
-    private fun submitFiche() {
+    private fun submitFiche(isRetryAfterCollision: Boolean = false) {
         val draws = selectedDraws.toList()
         val game = selectedGame
 
@@ -718,103 +739,85 @@ class NewFicheActivity : BaseActivity() {
         }
 
         // Menm fich ak dènye eseye ki pa t konfime → re-itilize menm ID yo
-        // (pou chak tiraj), konsa yon re-eseye pa janm vann de fwa.
         val signature = currentSignature(game.id)
-        if (signature != pendingSignature) {
-            pendingByDraw.clear()
+        if (signature != pendingSignature || pendingRequestId == null) {
+            pendingRequestId = java.util.UUID.randomUUID().toString()
+            pendingFicheNumber = generateFicheNumber()
             pendingSignature = signature
         }
-        val saleLines = lines.map { line ->
-            SellFicheLine(
-                numero = line.numero,
-                gameType = gameTypeFor(line.category),
-                option = if (line.category == "LOTO4" || line.category == "LOTO5") line.optionLabel else null,
-                amount = line.price,
-            )
-        }
+
+        // YON SÈL fich: plizyè tiraj → drawIds (backend lan vann boul yo sou
+        // chak tiraj nan menm tranzaksyon an: tout oswa anyen)
+        val request = SellFicheRequest(
+            requestId = pendingRequestId!!,
+            ficheNumber = pendingFicheNumber!!,
+            drawId = draws.first().id,
+            drawIds = if (draws.size > 1) draws.map { it.id } else null,
+            gameId = game.id,
+            deviceCode = DeviceIdHelper.getDeviceId(this),
+            lines = lines.map { line ->
+                SellFicheLine(
+                    numero = line.numero,
+                    gameType = gameTypeFor(line.category),
+                    option = if (line.category == "LOTO4" || line.category == "LOTO5") line.optionLabel else null,
+                    amount = line.price,
+                )
+            },
+        )
 
         binding.btnPrint.isEnabled = false
         binding.btnPrint.alpha = 0.45f // siy touswit: klik la pran
 
         lifecycleScope.launch {
-            val api = ApiClient.getService(applicationContext)
-            val sold = mutableListOf<Draw>()
-            val errors = mutableListOf<String>()
-            var networkProblem = false
+            try {
+                val api = ApiClient.getService(applicationContext)
+                val res = api.sellFiche(request)
+                val result = res.body()?.data
 
-            // Yon fich separe pou chak tiraj (chak fich gen nimewo + QR pa l)
-            for (draw in draws) {
-                var attempt = 0
-                while (attempt < 2) {
-                    attempt++
-                    val ids = pendingByDraw.getOrPut(draw.id) {
-                        java.util.UUID.randomUUID().toString() to generateFicheNumber()
-                    }
-                    val request = SellFicheRequest(
-                        requestId = ids.first,
-                        ficheNumber = ids.second,
-                        drawId = draw.id,
-                        gameId = game.id,
-                        deviceCode = DeviceIdHelper.getDeviceId(this@NewFicheActivity),
-                        lines = saleLines,
-                    )
-                    try {
-                        val res = api.sellFiche(request)
-                        val result = res.body()?.data
-                        if (res.isSuccessful && result != null) {
-                            pendingByDraw.remove(draw.id)
-                            printCurrentFiche(result)
-                            sold.add(draw)
-                            if (result.replay == true) {
-                                Toast.makeText(this@NewFicheActivity, "Fich ${draw.name} te deja vann — n ap enprime l.", Toast.LENGTH_LONG).show()
-                            }
-                            break
-                        }
-                        val raw = res.errorBody()?.string()
-                        // Nimewo fich la te deja itilize (ra anpil) → nouvo nimewo, yon sèl fwa
-                        if (ApiErrors.code(raw) == "FICHE_EXISTS" && attempt < 2) {
-                            pendingByDraw.remove(draw.id)
-                            continue
-                        }
-                        // Refize (tiraj fèmen, limit, boul bloke…): ANYEN pa vann pou tiraj sa a
-                        pendingByDraw.remove(draw.id)
-                        errors.add("${draw.name ?: "Tiraj"}: " + (ApiErrors.parse(raw) ?: "Vant lan pa pase."))
-                        break
-                    } catch (e: Exception) {
-                        // Rezo koupe: nou pa konnen si l pase → kenbe menm ID yo
-                        networkProblem = true
-                        errors.add("${draw.name ?: "Tiraj"}: koneksyon an koupe")
-                        break
-                    }
-                }
-            }
+                if (res.isSuccessful && result != null) {
+                    pendingRequestId = null
+                    pendingFicheNumber = null
+                    pendingSignature = null
 
-            if (errors.isEmpty()) {
-                // Tout tiraj yo vann: netwaye fich la (tiraj yo rete chwazi pou pwochen fich la)
-                lines.clear()
-                binding.etBoulLa.text?.clear()
-                binding.etMontant.text?.clear()
-                refreshLinesList()
-                refreshTotal()
-                if (draws.size > 1) {
-                    Toast.makeText(this@NewFicheActivity, "${draws.size} fich vann (${draws.size} tiraj)", Toast.LENGTH_LONG).show()
+                    printCurrentFiche(result)
+                    lines.clear()
+                    binding.etBoulLa.text?.clear()
+                    binding.etMontant.text?.clear()
+                    refreshLinesList()
+                    refreshTotal()
+                    if (result.replay == true) {
+                        Toast.makeText(this@NewFicheActivity, "Fich sa a te deja vann — n ap enprime l.", Toast.LENGTH_LONG).show()
+                    }
+                    return@launch
                 }
-            } else {
-                // Kèk tiraj vann, lòt pa vann: retire sa ki vann yo, kenbe boul yo
-                if (sold.isNotEmpty()) {
-                    selectedDraws.removeAll { d -> sold.any { it.id == d.id } }
-                    onDrawsChanged()
+
+                val raw = res.errorBody()?.string()
+                val message = ApiErrors.parse(raw) ?: "Vant lan pa pase. Eseye ankò."
+
+                // Nimewo fich la te deja itilize (ra anpil) → nouvo nimewo, yon sèl fwa
+                if (ApiErrors.code(raw) == "FICHE_EXISTS" && !isRetryAfterCollision) {
+                    pendingRequestId = null
+                    pendingSignature = null
+                    binding.btnPrint.isEnabled = true
+                    submitFiche(isRetryAfterCollision = true)
+                    return@launch
                 }
-                val head = if (sold.isNotEmpty()) "Vann: ${sold.joinToString(", ") { it.name ?: "—" }}\n\n" else ""
-                val tail = if (networkProblem) {
-                    "\n\nPeze ENPRIME ankò san chanje anyen: sa ki te deja pase p ap vann de fwa — l ap jis enprime."
-                } else {
-                    ""
-                }
-                showSaleError(head + "Pa vann:\n" + errors.joinToString("\n") + tail)
+
+                // Refize (tiraj fèmen, limit, boul bloke…): ANYEN pa vann,
+                // menm pou lòt tiraj yo. Ajan an korije epi re-eseye.
+                pendingRequestId = null
+                pendingSignature = null
+                showSaleError(message)
+            } catch (e: Exception) {
+                showSaleError(
+                    "Koneksyon an koupe. Nou pa konnen si fich la pase.\n\n" +
+                        "Peze ENPRIME ankò san chanje anyen: si li te deja vann, " +
+                        "li p ap vann de fwa — l ap jis enprime."
+                )
+            } finally {
+                binding.btnPrint.isEnabled = true
+                binding.btnPrint.alpha = 1f
             }
-            binding.btnPrint.isEnabled = true
-            binding.btnPrint.alpha = 1f
         }
     }
 

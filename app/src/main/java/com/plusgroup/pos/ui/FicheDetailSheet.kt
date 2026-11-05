@@ -207,7 +207,24 @@ object FicheDetailSheet {
         b.llFicheLines.visibility = View.VISIBLE
         b.llFicheLines.removeAllViews()
         val lines = r.lines.orEmpty()
-        lines.forEachIndexed { i, l -> b.llFicheLines.addView(lineRow(activity, l, i > 0)) }
+        // Fich plizyè tiraj: yon ti tit pou chak tiraj (ak boul ki soti yo)
+        val multi = lines.mapNotNull { it.drawName }.distinct().size > 1
+        var lastDraw: String? = null
+        lines.forEachIndexed { i, l ->
+            if (multi && l.drawName != lastDraw) {
+                lastDraw = l.drawName
+                val res = l.drawResults.orEmpty().mapNotNull { it?.trim()?.takeIf { x -> x.isNotEmpty() } }
+                b.llFicheLines.addView(TextView(activity).apply {
+                    text = (l.drawName ?: "—") + if (res.isNotEmpty()) "   ·   " + res.joinToString(" - ") else ""
+                    textSize = 13f
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                    setTextColor(ContextCompat.getColor(activity, R.color.pos_navy))
+                    val d = activity.resources.displayMetrics.density
+                    setPadding((4 * d).toInt(), if (i == 0) 0 else (12 * d).toInt(), 0, (2 * d).toInt())
+                })
+            }
+            b.llFicheLines.addView(lineRow(activity, l, i > 0 && !(multi && l.drawName != lines.getOrNull(i - 1)?.drawName)))
+        }
         if (lines.isEmpty()) {
             b.llFicheLines.addView(TextView(activity).apply {
                 text = "Pa gen liy."

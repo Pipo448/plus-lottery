@@ -224,7 +224,10 @@ class BluetoothPrinterHelper {
         footerMessage: String,
         qrData: String?,
         logo: Bitmap? = null,
+        sections: List<ReceiptSection>? = null,
     ) {
+        val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
+        val lineCount = secs.sumOf { it.lines.size }
         write(ESC_INIT)
         write(alignCenter())
         if (logo != null) {
@@ -248,14 +251,19 @@ class BluetoothPrinterHelper {
         write(textLine("Fiche: $ficheNumber"))
         write(textLine(DASHES))
 
-        write(textLine("$drawName: $drawTotal"))
-
-        for ((code, numero, prix) in lines) {
-            write(textLine(twoColumnLine("$code   $numero", prix)))
+        secs.forEachIndexed { idx, sec ->
+            if (idx > 0) write(feed(1))
+            write(boldOn())
+            write(textLine("${sec.drawName}: ${sec.drawTotal}"))
+            write(boldOff())
+            for ((code, numero, prix) in sec.lines) {
+                write(textLine(twoColumnLine("$code   $numero", prix)))
+            }
         }
 
         write(textLine(DASHES))
-        write(textLine(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal)))
+        if (secs.size > 1) write(textLine("${secs.size} tiraj"))
+        write(textLine(twoColumnLine("Total:  ${String.format("%03d", lineCount)}", grandTotal)))
         write(feed(1))
 
         write(alignCenter())

@@ -97,7 +97,9 @@ data class SellTicketRequest(
 data class SellFicheRequest(
     val requestId: String,
     val ficheNumber: String,
-    val drawId: String,
+    val drawId: String?,
+    // Plizyè tiraj sou YON SÈL fich (null = yon sèl tiraj)
+    val drawIds: List<String>? = null,
     val gameId: String,
     val deviceCode: String?,
     val lines: List<SellFicheLine>,
@@ -121,6 +123,16 @@ data class SellFicheResult(
     val ficheNumber: String? = null,
     val drawName: String? = null,
     val soldAt: String? = null,
+    val total: Double? = null,
+    val lines: List<SoldLine>? = null,
+    // Fich plizyè tiraj: yon pati pou chak tiraj
+    val drawCount: Int? = null,
+    val draws: List<SoldDrawPart>? = null,
+)
+
+data class SoldDrawPart(
+    val drawId: String? = null,
+    val drawName: String? = null,
     val total: Double? = null,
     val lines: List<SoldLine>? = null,
 )
@@ -203,6 +215,7 @@ data class FicheLineSummary(
     val gameType: String? = null,
     val option: String? = null,
     val prize: Double? = null,
+    val drawName: String? = null,
 )
 
 data class FicheSummary(
@@ -242,6 +255,8 @@ data class VerifyLine(
     val status: String? = null,
     val prize: Double? = null,
     val winningPosition: Int? = null,
+    val drawName: String? = null,
+    val drawResults: List<String?>? = null,
 )
 
 data class PayFicheResult(

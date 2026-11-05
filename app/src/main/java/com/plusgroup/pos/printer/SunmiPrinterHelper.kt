@@ -258,7 +258,11 @@ class SunmiPrinterHelper(private val context: Context) {
         footerMessage: String,
         qrData: String?,
         logo: Bitmap? = null,
+        sections: List<ReceiptSection>? = null,
     ) {
+        // Fich plizyè tiraj: yon seksyon pou chak tiraj
+        val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
+        val lineCount = secs.sumOf { it.lines.size }
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
@@ -315,17 +319,26 @@ class SunmiPrinterHelper(private val context: Context) {
                 pause()
                 svc.printTextWithFont("$DASHES\n", null, 24f, null)
                 pause()
-                svc.printTextWithFont("$drawName: $drawTotal\n", null, 24f, null)
-                pause()
-
-                for ((code, numero, prix) in lines) {
-                    svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
+                secs.forEachIndexed { idx, sec ->
+                    if (idx > 0) {
+                        svc.lineWrap(1, null)
+                        pause()
+                    }
+                    svc.printTextWithFont("${sec.drawName}: ${sec.drawTotal}\n", null, 26f, null)
                     pause()
+                    for ((code, numero, prix) in sec.lines) {
+                        svc.printTextWithFont(twoColumnLine("$code   $numero", prix) + "\n", null, 24f, null)
+                        pause()
+                    }
                 }
 
                 svc.printTextWithFont("$DASHES\n", null, 24f, null)
                 pause()
-                svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lines.size)}", grandTotal) + "\n", null, 24f, null)
+                if (secs.size > 1) {
+                    svc.printTextWithFont("${secs.size} tiraj\n", null, 24f, null)
+                    pause()
+                }
+                svc.printTextWithFont(twoColumnLine("Total:  ${String.format("%03d", lineCount)}", grandTotal) + "\n", null, 24f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()

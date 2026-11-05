@@ -227,6 +227,18 @@ class MyFichesActivity : BaseActivity() {
             )
         } ?: emptyList()
 
+        // Fich plizyè tiraj: yon seksyon pou chak tiraj (menm jan ak premye resi a)
+        val byDraw = fiche.lines.orEmpty().groupBy { it.drawName ?: fiche.drawName ?: "—" }
+        val sections = if (byDraw.size > 1) byDraw.map { (name, ls) ->
+            com.plusgroup.pos.printer.ReceiptSection(
+                drawName = name,
+                drawTotal = moneyFormat.format(ls.sumOf { it.betAmount ?: 0.0 }),
+                lines = ls.map { l ->
+                    Triple(shortCodeFor(categoryLabelFor(l.numero ?: "")), l.numero ?: "—", moneyFormat.format(l.betAmount ?: 0.0))
+                },
+            )
+        } else null
+
         lifecycleScope.launch {
             ensureCompanyInfoCached()
 
@@ -249,6 +261,7 @@ class MyFichesActivity : BaseActivity() {
                         grandTotal = moneyFormat.format(fiche.totalMise ?: 0.0),
                         footerMessage = "Kopi fich",
                         qrData = fiche.ficheNumber ?: fiche.ticketNumber,
+                        sections = sections,
                     )
                     Toast.makeText(this@MyFichesActivity, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
                 }
