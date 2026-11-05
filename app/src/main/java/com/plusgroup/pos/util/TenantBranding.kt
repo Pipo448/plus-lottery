@@ -56,7 +56,7 @@ object TenantBranding {
             c.isEmpty() && n.isEmpty() -> null
             c.isEmpty() -> n
             n.isEmpty() || n.equals(c, ignoreCase = true) -> c
-            else -> "$c · $n"
+            else -> "$c - $n"
         }
     }
 

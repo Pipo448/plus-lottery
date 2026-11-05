@@ -87,13 +87,23 @@ class SearchFicheActivity : BaseActivity() {
         FicheDetailSheet.show(this, ficheNumber)
     }
 
-    /** QR la ka gen nimewo a sèlman, oswa yon tèks/lyen ki genyen l: kenbe chif yo. */
+    /**
+     * QR ki sou fich la gen nimewo a AK tirè yo ("7939-1006-5118"), jan l
+     * anrejistre a. Avan, nou te retire tirè yo → fich la pa t jwenn.
+     * Kounye a: 12 chif (ak oswa san tirè/espas) → fòma "XXXX-XXXX-XXXX".
+     */
     private fun extractFicheNumber(code: String): String {
-        val digitsOnly = code.filter { it.isDigit() }
-        return when {
-            code.matches(Regex("[0-9 -]+")) -> digitsOnly
-            Regex("\\d{10,}").find(code) != null -> Regex("\\d{10,}").find(code)!!.value
-            else -> code.trim()
+        val trimmed = code.trim()
+        val digits = trimmed.filter { it.isDigit() }
+        val looksNumeric = trimmed.matches(Regex("[0-9 -]+"))
+        val candidate = when {
+            looksNumeric -> digits
+            else -> Regex("\\d{4}-?\\d{4}-?\\d{4}").find(trimmed)?.value?.filter { it.isDigit() } ?: return trimmed
+        }
+        return if (candidate.length == 12) {
+            "${candidate.substring(0, 4)}-${candidate.substring(4, 8)}-${candidate.substring(8)}"
+        } else {
+            trimmed
         }
     }
 }

@@ -30,6 +30,8 @@ class PrinterManager(private val context: Context) {
         @Volatile private var sharedSunmi: SunmiPrinterHelper? = null
         private val sharedBluetooth = BluetoothPrinterHelper()
         private val btLock = Any()
+        // Resi Bluetooth yo enprime nan lòd yo te voye a, youn apre lòt
+        private val btQueue = java.util.concurrent.Executors.newSingleThreadExecutor()
         private const val KEY_PRINTER_MAC = "printer_mac"
     }
 
@@ -40,14 +42,14 @@ class PrinterManager(private val context: Context) {
 
     /** Enprime Bluetooth sou yon lòt thread (ekran an pa bloke), resi a an yon sèl kou. */
     private fun runBluetooth(block: () -> Unit) {
-        Thread {
+        btQueue.execute {
             synchronized(btLock) {
                 if (!bluetoothHelper.isConnected) {
                     getSavedPrinterAddress()?.let { bluetoothHelper.connectByAddress(it) }
                 }
                 bluetoothHelper.batched(block)
             }
-        }.start()
+        }
     }
 
     val printerType: PrinterType
@@ -151,6 +153,8 @@ class PrinterManager(private val context: Context) {
         footerMessage: String,
         qrData: String?,
     ) {
+        // "·" pa nan codepage enprimant yo (li te parèt kòm 路): ranplase l
+        val vendeur = vendeur.replace("·", "-")
         // Logo tenant lan anlè fich la (si l genyen youn e si "Enprime logo a" aktif)
         val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
         if (isSunmiDevice) {
@@ -185,6 +189,7 @@ class PrinterManager(private val context: Context) {
         footerFields: List<Pair<String, String>> = emptyList(),
         agent: String = "",
     ) {
+        val agent = agent.replace("·", "-")
         // Menm logo ak fich yo (Mon compte → Paramètres)
         val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
         if (isSunmiDevice) {

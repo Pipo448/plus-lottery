@@ -242,7 +242,7 @@ class BluetoothPrinterHelper {
             write(textLine("Ajan: $vendeur"))
             write(boldOff())
         }
-        write(textLine("Fecha: $dateTimeText"))
+        write(textLine("Ticket: $dateTimeText"))
         write(feed(1))
         write(alignLeft())
         write(textLine("Fiche: $ficheNumber"))

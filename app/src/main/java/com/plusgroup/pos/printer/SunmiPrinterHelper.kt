@@ -44,6 +44,11 @@ import woyou.aidlservice.jiuiv5.IWoyouService
  */
 class SunmiPrinterHelper(private val context: Context) {
 
+    // Tout resi yo pase youn apre lòt (egz. plizyè fich pou plizyè tiraj):
+    // yo pa janm melanje sou papye a.
+    private val printQueue = java.util.concurrent.Executors.newSingleThreadExecutor()
+
+
     private var woyouService: IWoyouService? = null
     var isConnected: Boolean = false
         private set
@@ -146,7 +151,7 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        Thread {
+        printQueue.execute {
             Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printTestReceipt) ===")
             try {
                 svc.printerInit(null)
@@ -169,7 +174,7 @@ class SunmiPrinterHelper(private val context: Context) {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime tès la", e)
             }
-        }.start()
+        }
     }
 
     /**
@@ -187,7 +192,7 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        Thread {
+        printQueue.execute {
             try {
                 svc.printerInit(null)
                 pause(120)
@@ -231,7 +236,7 @@ class SunmiPrinterHelper(private val context: Context) {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime resi tikè a", e)
             }
-        }.start()
+        }
     }
 
     /**
@@ -258,7 +263,7 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        Thread {
+        printQueue.execute {
             Log.e(TAG, "=== MAKI_VESYON_9 EGZEKITE (printFicheReceipt) ===")
             try {
                 svc.printerInit(null)
@@ -301,7 +306,7 @@ class SunmiPrinterHelper(private val context: Context) {
 
                 svc.setAlignment(0, null)
                 pause()
-                svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
+                svc.printTextWithFont("Ticket: $dateTimeText\n", null, 24f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()
@@ -350,7 +355,7 @@ class SunmiPrinterHelper(private val context: Context) {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime Fich la", e)
             }
-        }.start()
+        }
     }
 
     /**
@@ -376,7 +381,7 @@ class SunmiPrinterHelper(private val context: Context) {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
         }
-        Thread {
+        printQueue.execute {
             try {
                 svc.printerInit(null)
                 pause(120)
@@ -446,7 +451,7 @@ class SunmiPrinterHelper(private val context: Context) {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Echèk enprime rapò a", e)
             }
-        }.start()
+        }
     }
 
     // Aliyen tèks agoch ak yon valè adwat sou menm liy (menm lojik ak
