@@ -289,13 +289,17 @@ class SunmiPrinterHelper(private val context: Context) {
                     pause()
                 }
 
-                svc.setAlignment(0, null)
-                pause()
                 if (phone.isNotBlank()) {
                     svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
                     pause()
                 }
-                svc.printTextWithFont("Vendeur: $vendeur\n", null, 24f, null)
+                // Non ajan an anlè fich la, byen vizib
+                if (vendeur.isNotBlank() && vendeur != "—") {
+                    svc.printTextWithFont("Ajan: $vendeur\n", null, 26f, null)
+                    pause()
+                }
+
+                svc.setAlignment(0, null)
                 pause()
                 svc.printTextWithFont("Fecha: $dateTimeText\n", null, 24f, null)
                 pause()
@@ -365,6 +369,8 @@ class SunmiPrinterHelper(private val context: Context) {
         headerLines: List<Pair<String, String>>,
         bodyFields: List<Pair<String, String>>,
         footerFields: List<Pair<String, String>> = emptyList(),
+        agent: String = "",
+        logo: Bitmap? = null,
     ) {
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
@@ -377,6 +383,19 @@ class SunmiPrinterHelper(private val context: Context) {
                 forceLatinCodepage(svc)
                 pause(60)
 
+                // Logo + non tenant lan, menm jan ak fich yo
+                if (logo != null) {
+                    try {
+                        svc.setAlignment(1, null)
+                        pause()
+                        svc.printBitmap(logo, null)
+                        pause(120)
+                        svc.lineWrap(1, null)
+                        pause()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Logo a pa t enprime", e)
+                    }
+                }
                 svc.setAlignment(1, null)
                 pause()
                 svc.printTextWithFont("$companyName\n", null, 28f, null)
@@ -389,7 +408,11 @@ class SunmiPrinterHelper(private val context: Context) {
                     svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
                     pause()
                 }
-                svc.printTextWithFont("$reportTitle\n", null, 24f, null)
+                if (agent.isNotBlank()) {
+                    svc.printTextWithFont("Ajan: $agent\n", null, 26f, null)
+                    pause()
+                }
+                svc.printTextWithFont("$reportTitle\n", null, 26f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()

@@ -183,15 +183,18 @@ class PrinterManager(private val context: Context) {
         headerLines: List<Pair<String, String>>,
         bodyFields: List<Pair<String, String>>,
         footerFields: List<Pair<String, String>> = emptyList(),
+        agent: String = "",
     ) {
+        // Menm logo ak fich yo (Mon compte → Paramètres)
+        val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
         if (isSunmiDevice) {
             sunmiHelper?.printReportReceipt(
-                companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields,
+                companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields, agent, logo,
             )
         } else {
             runBluetooth {
                 bluetoothHelper.printReportReceipt(
-                    companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields,
+                    companyName, branchCode, phone, reportTitle, headerLines, bodyFields, footerFields, agent, logo,
                 )
             }
         }

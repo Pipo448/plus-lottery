@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.plusgroup.pos.databinding.ActivityReportBinding
 import com.plusgroup.pos.network.ApiClient
+import com.plusgroup.pos.util.TenantBranding
 import com.plusgroup.pos.network.models.EliminatedLine
 import com.plusgroup.pos.network.models.GagnantLine
 import com.plusgroup.pos.network.models.TransactionLine
@@ -551,14 +552,21 @@ class ReportActivity : BaseActivity() {
                         Toast.makeText(this@ReportActivity, "Enprimant pa konekte.", Toast.LENGTH_LONG).show()
                         return@runOnUiThread
                     }
+                    // Ajan an enprime anlè (menm jan ak fich yo): pa repete l anba
+                    val headers = printHeaderLines.filterNot { (k, _) ->
+                        k.equals("Vendeur", true) || k.equals("Agent", true) || k.equals("Ajan", true)
+                    }
                     printerManager.printReportReceipt(
                         companyName = cachedCompanyName ?: "PLUS GROUP",
                         branchCode = cachedBranchCode ?: "",
                         phone = cachedPhone ?: "",
                         reportTitle = printReportTitle,
-                        headerLines = printHeaderLines,
+                        headerLines = listOfNotNull(
+                            TenantBranding.branch?.takeIf { it.isNotBlank() }?.let { "Sikisal" to it },
+                        ) + headers,
                         bodyFields = printBodyFields,
                         footerFields = printFooterFields,
+                        agent = cachedVendeur ?: "",
                     )
                     Toast.makeText(this@ReportActivity, "Rapò voye bay enprimant lan", Toast.LENGTH_SHORT).show()
                 }
@@ -567,19 +575,23 @@ class ReportActivity : BaseActivity() {
     }
 
     private suspend fun ensureCompanyInfoCached() {
+        // Non, logo, telefòn, adrès tenant lan (Mon compte → Paramètres) +
+        // non ajan an — menm sous ak fich yo. Sa ki sere a sèvi touswit.
+        TenantBranding.ensureCached(applicationContext)
+        if (TenantBranding.companyName == null) TenantBranding.load(applicationContext)
+        else lifecycleScope.launch { TenantBranding.load(applicationContext) }
+        cachedCompanyName = TenantBranding.companyName?.uppercase() ?: cachedCompanyName
+        cachedVendeur = TenantBranding.vendeur ?: cachedVendeur
+        cachedPhone = TenantBranding.phone
+        cachedBranchCode = TenantBranding.address
         if (cachedCompanyName != null) return
         try {
-            val api = ApiClient.getService(applicationContext)
-            val profile = api.getProfile().body()?.data
+            val profile = ApiClient.getService(applicationContext).getProfile().body()?.data
             cachedCompanyName = profile?.tenantName?.uppercase()
-            cachedVendeur = profile?.branchName ?: profile?.fullName
-            // NOTE: cachedBranchCode/cachedPhone rete vid pou kounye a — mwen
-            // pa t sèten de non egzat chan sa yo nan AgentProfile/CompanySetting
-            // (deviceId? phone? telephone?). Si w vle yo parèt sou resi a,
-            // ranpli cachedBranchCode / cachedPhone isit la ak chan ki egziste
-            // reyèlman nan modèl ou yo.
+            cachedVendeur = profile?.username ?: profile?.fullName
         } catch (_: Exception) {
             // Kontinye ak valè default si sa echwe.
         }
     }
+
 }

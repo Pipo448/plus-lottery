@@ -235,8 +235,13 @@ class BluetoothPrinterHelper {
         write(textLine(companyName))
         write(boldOff())
         if (promoLine.isNotBlank()) write(textLine(promoLine))
-        write(textLine("Tel: $phone"))
-        write(textLine("Vendeur: $vendeur"))
+        if (phone.isNotBlank()) write(textLine("Tel: $phone"))
+        // Non ajan an anlè fich la
+        if (vendeur.isNotBlank() && vendeur != "—") {
+            write(boldOn())
+            write(textLine("Ajan: $vendeur"))
+            write(boldOff())
+        }
         write(textLine("Fecha: $dateTimeText"))
         write(feed(1))
         write(alignLeft())
@@ -280,14 +285,25 @@ class BluetoothPrinterHelper {
         headerLines: List<Pair<String, String>>,
         bodyFields: List<Pair<String, String>>,
         footerFields: List<Pair<String, String>> = emptyList(),
+        agent: String = "",
+        logo: Bitmap? = null,
     ) {
         write(ESC_INIT)
         write(alignCenter())
+        if (logo != null) {
+            write(rasterImage(logo))
+            write(feed(1))
+        }
         write(boldOn())
         write(textLine(companyName))
         write(boldOff())
         if (branchCode.isNotBlank()) write(textLine(branchCode))
         if (phone.isNotBlank()) write(textLine("Tel: $phone"))
+        if (agent.isNotBlank()) {
+            write(boldOn())
+            write(textLine("Ajan: $agent"))
+            write(boldOff())
+        }
         write(textLine(reportTitle))
         write(feed(1))
 

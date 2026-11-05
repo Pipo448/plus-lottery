@@ -33,7 +33,9 @@ object TenantBranding {
     @Volatile var phone: String? = null; private set
     @Volatile var address: String? = null; private set
     @Volatile var message: String? = null; private set
+    /** Ajan an jan l parèt anlè fich yo ak rapò yo: "004 · Jean Pierre" */
     @Volatile var vendeur: String? = null; private set
+    @Volatile var branch: String? = null; private set
     @Volatile var printLogo: Boolean = true; private set
 
     @Volatile private var loadedAt = 0L
@@ -47,9 +49,42 @@ object TenantBranding {
 
     private fun logoFile(context: Context) = File(context.applicationContext.filesDir, "tenant_logo.img")
 
+    private fun agentLabel(code: String?, name: String?): String? {
+        val c = code?.trim().orEmpty()
+        val n = name?.trim().orEmpty()
+        return when {
+            c.isEmpty() && n.isEmpty() -> null
+            c.isEmpty() -> n
+            n.isEmpty() || n.equals(c, ignoreCase = true) -> c
+            else -> "$c · $n"
+        }
+    }
+
     /** Valè ki sere sou aparèy la, SAN tann rezo a (pou enprime touswit). */
     fun ensureCached(context: Context) {
         if (companyName == null) restoreFromPrefs(context.applicationContext)
+    }
+
+    /**
+     * Ajan an chwazi yon sèvè (bank) sou ekran login nan: sere non ak logo
+     * bank lan TOUSWIT (anvan konekte), pou akèy la ak fich yo.
+     * newTenant = true → efase enfòmasyon ansyen bank lan (telefòn, adrès...).
+     */
+    suspend fun setServer(context: Context, name: String?, logoUrl: String?, newTenant: Boolean) {
+        val app = context.applicationContext
+        val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val oldUrl = prefs.getString("logo_url", "").orEmpty()
+        val url = logoUrl.orEmpty()
+        val edit = prefs.edit()
+            .putString("company_name", name)
+            .putString("logo_url", url)
+        if (newTenant) edit.remove("phone").remove("address").remove("message").remove("vendeur").remove("branch")
+        edit.apply()
+        if (newTenant) loadedAt = 0L
+        if (url != oldUrl || (url.isNotBlank() && !logoFile(app).exists())) {
+            downloadLogo(app, url)
+        }
+        restoreFromPrefs(app, reloadImages = true)
     }
 
     /** Chaje done yo (sèvè a), sinon sa ki te sere sou aparèy la. */
@@ -74,7 +109,8 @@ object TenantBranding {
                 .putString("phone", settings["company_phone"])
                 .putString("address", settings["addresse"])
                 .putString("message", settings["message"])
-                .putString("vendeur", profile?.branchName ?: profile?.fullName)
+                .putString("vendeur", agentLabel(profile?.username, profile?.fullName))
+                .putString("branch", profile?.branchName)
                 .putBoolean("print_logo", settings["logo_sou_fich"] != "non")
                 .putString("logo_url", logoUrl)
                 .apply()
@@ -116,6 +152,7 @@ object TenantBranding {
         address = prefs.getString("address", null)
         message = prefs.getString("message", null)
         vendeur = prefs.getString("vendeur", null)
+        branch = prefs.getString("branch", null)
         printLogo = prefs.getBoolean("print_logo", true)
         if (reloadImages || screenLogo == null) {
             val file = logoFile(context)
