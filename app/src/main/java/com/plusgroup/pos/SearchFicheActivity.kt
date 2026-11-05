@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
  * yon kòd-ba ak kamera a, ta bezwen ajoute yon librè tankou ML Kit oswa
  * ZXing ak pèmisyon kamera; se yon pwochen etap apa.
  */
-class SearchFicheActivity : AppCompatActivity() {
+class SearchFicheActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySearchFicheBinding
 

@@ -28,7 +28,7 @@ import java.util.Locale
  * Klike sou yon kat louvri dyalòg detay ak 3 aksyon: REJOUER, IMPRIMER,
  * ELIMINÉ (jan modèl DVN Lotto a fè l).
  */
-class MyFichesActivity : AppCompatActivity() {
+class MyFichesActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMyFichesBinding
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())

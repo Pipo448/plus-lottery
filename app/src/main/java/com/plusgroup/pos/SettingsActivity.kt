@@ -4,12 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.plusgroup.pos.databinding.ActivitySettingsBinding
 import com.plusgroup.pos.databinding.ItemSettingsRowBinding
 import com.plusgroup.pos.databinding.ItemSettingsSectionBinding
 import com.plusgroup.pos.network.ApiClient
+import com.plusgroup.pos.util.UiScale
 import kotlinx.coroutines.launch
 
 /**
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  * "Date expiration", "Limite gain", "Limite credit" pa AJAN PA EGZISTE
  * ankò nan backend Plus la — yo montre "n/a" pou kounye a.
  */
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
 
@@ -39,7 +40,24 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnBoulKiSoti.setOnClickListener { showDrawResults() }
         binding.btnMizajou.setOnClickListener { showComingSoon() }
 
+        addDisplaySizeRow()
         loadAll()
+    }
+
+    // Gwosè ekran (lokal sou aparèy la, pa soti sou sèvè a)
+    private fun addDisplaySizeRow() {
+        val scale = UiScale.get(this)
+        val name = UiScale.OPTIONS.firstOrNull { it.first == scale }?.second ?: "Nòmal"
+        val rowBinding = ItemSettingsRowBinding.inflate(
+            LayoutInflater.from(this), binding.llSettingsContainer, false
+        )
+        rowBinding.tvLabel.text = "Gwosè ekran"
+        rowBinding.tvValue.text = "$name  ›"
+        rowBinding.tvValue.setTextColor(ContextCompat.getColor(this, R.color.pos_blue))
+        rowBinding.root.isClickable = true
+        rowBinding.root.isFocusable = true
+        rowBinding.root.setOnClickListener { UiScale.showPicker(this) }
+        binding.llSettingsContainer.addView(rowBinding.root)
     }
 
     private fun showComingSoon() {
@@ -84,6 +102,7 @@ class SettingsActivity : AppCompatActivity() {
                 val settingsMap = settingsList.associate { (it.key ?: "") to (it.value ?: "") }
 
                 binding.llSettingsContainer.removeAllViews()
+                addDisplaySizeRow()
 
                 // ---- Enfòmasyon jeneral ----
                 addRow("Bank", profile?.tenantName ?: "—")

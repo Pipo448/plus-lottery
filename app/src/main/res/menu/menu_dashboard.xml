@@ -11,6 +11,9 @@
         android:id="@+id/menuKont"
         android:title="Kont" />
     <item
+        android:id="@+id/menuGwoseEkran"
+        android:title="Gwosè ekran" />
+    <item
         android:id="@+id/menuDekonekte"
         android:title="Dekonekte" />
 </menu>

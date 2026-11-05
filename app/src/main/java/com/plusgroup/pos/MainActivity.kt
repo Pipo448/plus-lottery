@@ -15,7 +15,7 @@ import com.plusgroup.pos.databinding.ActivityMainBinding
 import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.SessionManager
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var printerManager: PrinterManager

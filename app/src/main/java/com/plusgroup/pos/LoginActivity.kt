@@ -13,7 +13,7 @@ import com.plusgroup.pos.util.DeviceIdHelper
 import com.plusgroup.pos.util.SessionManager
 import kotlinx.coroutines.launch
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var session: SessionManager

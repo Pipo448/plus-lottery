@@ -30,7 +30,7 @@ import java.util.Locale
  * fonksyonèl, chak youn ak filtè De/A + Tiraj pataje, epi yon bouton
  * print ki enprime rapò aktif la.
  */
-class ReportActivity : AppCompatActivity() {
+class ReportActivity : BaseActivity() {
 
     private lateinit var binding: ActivityReportBinding
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())

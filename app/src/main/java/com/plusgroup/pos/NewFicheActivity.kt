@@ -52,7 +52,7 @@ import java.text.DecimalFormat
  * l soumèt kòm yon NOUVO vant (nouvo fiche_number, pa yon modifikasyon
  * ansyen fich la).
  */
-class NewFicheActivity : AppCompatActivity() {
+class NewFicheActivity : BaseActivity() {
 
     private lateinit var binding: ActivityNewFicheBinding
 

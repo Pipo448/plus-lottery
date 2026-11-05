@@ -30,7 +30,7 @@ import java.text.DecimalFormat
  *   - Kont           → enfòmasyon ajan an + balans
  *   - Dekonekte      → konfime, efase sesyon an, retounen sou Login
  */
-class DashboardActivity : AppCompatActivity() {
+class DashboardActivity : BaseActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private val moneyFormat = DecimalFormat("#,##0.00")
@@ -109,6 +109,7 @@ class DashboardActivity : AppCompatActivity() {
                 R.id.menuTirajDisponib -> showTirajDisponib()
                 R.id.menuBoulKiSoti -> showBoulKiSoti()
                 R.id.menuKont -> showKont()
+                R.id.menuGwoseEkran -> com.plusgroup.pos.util.UiScale.showPicker(this)
                 R.id.menuDekonekte -> confirmLogout()
             }
             true
