@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Boul bolèt (navy): limyè anlè agoch pou efè 3D -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.35"
+                android:centerY="0.3"
+                android:gradientRadius="75%"
+                android:startColor="#5A4AA8"
+                android:centerColor="#2B1B6B"
+                android:endColor="#140A3D" />
+        </shape>
+    </item>
+    <item android:left="9dp" android:top="6dp" android:right="22dp" android:bottom="28dp">
+        <shape android:shape="oval">
+            <solid android:color="#33FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

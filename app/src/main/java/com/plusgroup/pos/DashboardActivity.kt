@@ -168,34 +168,7 @@ class DashboardActivity : BaseActivity() {
 
     /** Dènye boul ki soti pou chak tiraj ki gen rezilta. */
     private fun showBoulKiSoti() {
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getService(applicationContext)
-                val results = api.getDrawResults().body()?.data.orEmpty()
-
-                if (results.isEmpty()) {
-                    MaterialAlertDialogBuilder(this@DashboardActivity)
-                        .setTitle("Boul ki sòti")
-                        .setMessage("Pa gen rezilta disponib kounye a.")
-                        .setPositiveButton("OK", null)
-                        .show()
-                    return@launch
-                }
-
-                val rows = results.map { r ->
-                    val label = buildString {
-                        append(r.name ?: "—")
-                        if (!r.drawDate.isNullOrBlank()) append("\n").append(r.drawDate)
-                    }
-                    val numbers = listOf(r.winningNumber1, r.winningNumber2, r.winningNumber3)
-                        .joinToString("  ·  ") { it ?: "—" }
-                    label to numbers
-                }
-                showInfoDialog("Boul ki sòti", rows)
-            } catch (e: Exception) {
-                Toast.makeText(this@DashboardActivity, "Erè: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
+        com.plusgroup.pos.ui.DrawResultsSheet.show(this)
     }
 
     /** Enfòmasyon kont ajan an + balans. */

@@ -267,6 +267,8 @@ data class CompanySetting(
 data class DrawResult(
     val name: String? = null,
     val drawDate: String? = null,
+    val closeTime: String? = null,
+    val drawnAt: String? = null,
     val winningNumber1: String? = null,
     val winningNumber2: String? = null,
     val winningNumber3: String? = null,

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Yon kat rezilta: non tiraj + sesyon + lè, 3 boul, liy bolèt -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_result_card"
+    android:elevation="2dp"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDrawName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/pos_navy"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/tvSession"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_session_badge"
+            android:fontFamily="sans-serif-medium"
+            android:paddingStart="10dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="3dp"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvDrawWhen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:textColor="@color/pos_muted"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout style="@style/Widget.PlusPOS.BallColumn">
+            <TextView
+                android:id="@+id/tvBall1"
+                style="@style/Widget.PlusPOS.Ball"
+                android:background="@drawable/bg_ball_orange"
+                android:textSize="18sp" />
+            <TextView style="@style/Widget.PlusPOS.BallLabel" android:text="1e lo" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Widget.PlusPOS.BallColumn">
+            <TextView
+                android:id="@+id/tvBall2"
+                style="@style/Widget.PlusPOS.Ball"
+                android:background="@drawable/bg_ball_blue" />
+            <TextView style="@style/Widget.PlusPOS.BallLabel" android:text="2e lo" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Widget.PlusPOS.BallColumn">
+            <TextView
+                android:id="@+id/tvBall3"
+                style="@style/Widget.PlusPOS.Ball"
+                android:background="@drawable/bg_ball_navy" />
+            <TextView style="@style/Widget.PlusPOS.BallLabel" android:text="3e lo" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvBorlette"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_borlette_strip"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:letterSpacing="0.04"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp"
+        android:textColor="@color/pos_ink_soft"
+        android:textSize="13sp" />
+</LinearLayout>

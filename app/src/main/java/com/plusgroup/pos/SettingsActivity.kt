@@ -65,29 +65,7 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun showDrawResults() {
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getService(applicationContext)
-                val results = api.getDrawResults().body()?.data ?: emptyList()
-
-                if (results.isEmpty()) {
-                    Toast.makeText(this@SettingsActivity, "Pa gen rezilta disponib kounye a", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
-
-                val message = results.joinToString("\n\n") { r ->
-                    "${r.name} (${r.drawDate})\n${r.winningNumber1 ?: "—"} - ${r.winningNumber2 ?: "—"} - ${r.winningNumber3 ?: "—"}"
-                }
-
-                androidx.appcompat.app.AlertDialog.Builder(this@SettingsActivity)
-                    .setTitle("Boul Ki Soti")
-                    .setMessage(message)
-                    .setPositiveButton("OK", null)
-                    .show()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Erè: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
+        com.plusgroup.pos.ui.DrawResultsSheet.show(this)
     }
 
     private fun loadAll() {
