@@ -77,15 +77,25 @@ class DashboardActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        applyBoxRule()
         // Retou apre yon ti poz: renouvle token an DAVANS epi prechaje tiraj
         // yo, pou NOUVÈL FICH louvri touswit san ajan an pa rekonekte.
         lifecycleScope.launch {
             com.plusgroup.pos.network.ApiClient.keepTokenFresh(applicationContext)
             loadProfileAndBalance()
             launch { com.plusgroup.pos.util.DataCache.refresh(applicationContext) }
-            val unread = com.plusgroup.pos.ui.MessagesSheet.unreadCount(this@DashboardActivity)
-            if (unread >= 0) setMailBadge(unread)
+            if (com.plusgroup.pos.util.TenantRules.showBox) {
+                val unread = com.plusgroup.pos.ui.MessagesSheet.unreadCount(this@DashboardActivity)
+                if (unread >= 0) setMailBadge(unread)
+            }
         }
+    }
+
+    /** Mon compte → "Box": bwat mesaj (anvlòp) sou akèy la. */
+    private fun applyBoxRule() {
+        val on = com.plusgroup.pos.util.TenantRules.showBox
+        binding.btnMail.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE
+        if (!on) binding.tvMailBadge.visibility = android.view.View.GONE
     }
 
     private fun setMailBadge(count: Int) {
@@ -104,6 +114,7 @@ class DashboardActivity : BaseActivity() {
         showTenantLogo() // touswit ak sa ki sere sou aparèy la
         lifecycleScope.launch {
             TenantBranding.load(applicationContext, force = forceBranding)
+            applyBoxRule()
             showTenantLogo()
         }
         lifecycleScope.launch {

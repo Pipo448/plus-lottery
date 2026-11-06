@@ -136,6 +136,8 @@ data class SellFicheResult(
     // Fich plizyè tiraj: yon pati pou chak tiraj
     val drawCount: Int? = null,
     val draws: List<SoldDrawPart>? = null,
+    // "Entèripsyon limit" = non: boul ki pa t vann paske yo depase limit yo
+    val skipped: List<SkippedLine>? = null
 )
 
 data class SoldDrawPart(
@@ -312,4 +314,12 @@ data class DrawResult(
     val winningNumber1: String? = null,
     val winningNumber2: String? = null,
     val winningNumber3: String? = null,
+)
+
+/** Yon liy ki pa t vann paske boul la te rive nan limit li */
+data class SkippedLine(
+    val numero: String? = null,
+    val gameType: String? = null,
+    val amount: Double? = null,
+    val reason: String? = null,
 )

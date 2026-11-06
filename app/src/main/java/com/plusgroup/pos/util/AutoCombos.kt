@@ -51,10 +51,21 @@ object AutoCombos {
         if (withRevers) base.distinctBy { minOf(it, rev(it)) } else base
 
     /** Tout maryaj yo (san sa ki deja sou fich la). */
-    fun mariages(base: List<String>, withRevers: Boolean, existing: Collection<String> = emptyList()): List<String> {
+    fun mariages(
+        base: List<String>,
+        withRevers: Boolean,
+        existing: Collection<String> = emptyList(),
+        includeSame: Boolean = false, // "Boul pa boul": 25*25
+    ): List<String> {
         val skip = existing.map { mariageKey(it) }.toSet()
         val out = LinkedHashMap<String, String>()
         val base = families(base, withRevers)
+        if (includeSame) {
+            for (n in base) for (x in variants(n, withRevers)) {
+                val key = mariageKey("$x*$x")
+                if (key !in skip && key !in out) out[key] = "$x*$x"
+            }
+        }
         for (i in base.indices) for (j in i + 1 until base.size) {
             for (x in variants(base[i], withRevers)) for (y in variants(base[j], withRevers)) {
                 if (x == y) continue

@@ -24,6 +24,7 @@ import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.DeviceIdHelper
 import com.plusgroup.pos.util.AutoCombos
 import com.plusgroup.pos.util.FicheShare
+import com.plusgroup.pos.util.TenantRules
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import android.view.View
@@ -276,6 +277,21 @@ class NewFicheActivity : BaseActivity() {
             return
         }
         val names = openDraws.map { it.name ?: it.id }.toTypedArray()
+        if (!TenantRules.doubleDraw) {
+            // Mon compte → "Double tiraj" fèmen: yon sèl tiraj pa fich
+            val current = openDraws.indexOfFirst { d -> selectedDraws.firstOrNull()?.id == d.id }
+            AlertDialog.Builder(this)
+                .setTitle("CHWAZI TIRAJ")
+                .setSingleChoiceItems(names, current) { dlg, which ->
+                    selectedDraws.clear()
+                    selectedDraws.add(openDraws[which])
+                    onDrawsChanged()
+                    dlg.dismiss()
+                }
+                .setNegativeButton("Anile", null)
+                .show()
+            return
+        }
         val checked = BooleanArray(openDraws.size) { i -> selectedDraws.any { it.id == openDraws[i].id } }
         AlertDialog.Builder(this)
             .setTitle("CHWAZI TIRAJ (youn oswa plizyè)")
@@ -355,9 +371,12 @@ class NewFicheActivity : BaseActivity() {
             is QuickCategory.Grap -> (0..9).map { "$it$it$it" }
             is QuickCategory.Pick -> (0..9).map { d -> "$d${category.digit}" }
         }
+        // Grap = 000, 111… (3 chif) → Loto3; lòt yo → Borlette
+        val cat = if (category is QuickCategory.Grap) "LOTO3" else "BORLETTE"
+        if (!fits(cat, numbers.size)) return
         promptForPrice { price ->
             val drawName = drawsLabel()
-            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price, "BORLETTE")) }
+            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price, cat)) }
             refreshLinesList()
             refreshTotal()
         }
@@ -416,6 +435,7 @@ class NewFicheActivity : BaseActivity() {
             }
         }
 
+        if (!fits(category, 1)) return
         val drawName = drawsLabel()
         lines.add(FicheLine(drawName, numero, montant, category))
         binding.etBoulLa.text?.clear()
@@ -457,6 +477,7 @@ class NewFicheActivity : BaseActivity() {
             }
         }
         val price = currentPrice() ?: return
+        if (!fits(category, options.size)) return
         val drawName = drawsLabel()
         options.forEach { o -> lines.add(FicheLine(drawName, numero, price, category, "0$o")) }
         binding.etBoulLa.text?.clear()
@@ -474,6 +495,63 @@ class NewFicheActivity : BaseActivity() {
             return null
         }
         return price
+    }
+
+    // ==================== RÈG MON COMPTE ====================
+
+    /**
+     * Kantite maksimòm pa fich (Mon compte → Kantite maksimòm). 0 = pa gen limit.
+     * Retounen false (ak mesaj) si ajoute `adding` liy `category` ta depase.
+     */
+    private fun fits(category: String, adding: Int): Boolean {
+        val max = TenantRules.maxPerFiche(category)
+        if (max <= 0 || adding <= 0) return true
+        val have = lines.count { it.category.equals(category, ignoreCase = true) }
+        if (have + adding <= max) return true
+        val left = (max - have).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Twòp ${TenantRules.categoryLabel(category)}")
+            .setMessage(
+                "Yon fich pa ka gen plis pase $max ${TenantRules.categoryLabel(category)}.\n" +
+                    "Gen $have deja; ou ka ajoute $left ankò.\n\nFè yon lòt fich pou rès yo."
+            )
+            .setPositiveButton("OK", null)
+            .show()
+        return false
+    }
+
+    /** Montre / kache bouton yo dapre Mon compte. Rele l chak fwa ekran an parèt. */
+    private fun applyRules() {
+        fun vis(on: Boolean) = if (on) View.VISIBLE else View.GONE
+        binding.btnRevers.visibility = vis(TenantRules.showRevers)
+        binding.btnBPaire.visibility = vis(TenantRules.showPairGrap)
+        binding.btnGrap.visibility = vis(TenantRules.showPairGrap)
+        listOf(
+            binding.btnP0, binding.btnP1, binding.btnP2, binding.btnP3, binding.btnP4,
+            binding.btnP5, binding.btnP6, binding.btnP7, binding.btnP8, binding.btnP9,
+        ).forEach { it.visibility = vis(TenantRules.showPwent) }
+        binding.btnShare.visibility = vis(TenantRules.showShare)
+
+        // Double tiraj fèmen: kenbe yon sèl tiraj
+        if (!TenantRules.doubleDraw && selectedDraws.size > 1) {
+            val first = selectedDraws.first()
+            selectedDraws.clear()
+            selectedDraws.add(first)
+            onDrawsChanged()
+            Toast.makeText(this, "Yon sèl tiraj pa fich (Double tiraj fèmen)", Toast.LENGTH_SHORT).show()
+        }
+        refreshLinesList() // kreyon pri + MAuto / L4Auto
+    }
+
+    override fun onResume() {
+        super.onResume()
+        TenantBranding.ensureCached(applicationContext)
+        applyRules()
+        // Paramèt yo ka chanje sou web la: rafrechi (chak 2 minit maks) epi reaplike
+        lifecycleScope.launch {
+            TenantBranding.load(applicationContext)
+            applyRules()
+        }
     }
 
     // ==================== REVÈ ====================
@@ -495,6 +573,8 @@ class NewFicheActivity : BaseActivity() {
                 return
             }
             val price = currentPrice() ?: return
+            val revNeeded = AutoCombos.rev(typed) != typed
+            if (!fits("BORLETTE", if (revNeeded) 2 else 1)) return
             lines.add(FicheLine(drawName, typed, price, "BORLETTE"))
             val r = AutoCombos.rev(typed)
             val have = lines.filter { it.category == "BORLETTE" }.map { it.numero }
@@ -515,6 +595,7 @@ class NewFicheActivity : BaseActivity() {
             Toast.makeText(this, "Pa gen revè pou ajoute (tape yon boul 2 chif, oswa ajoute boul borlette anvan)", Toast.LENGTH_LONG).show()
             return
         }
+        if (!fits("BORLETTE", toAdd.size)) return
         toAdd.forEach { r ->
             val src = borlette.first { AutoCombos.rev(it.numero) == r }
             lines.add(FicheLine(src.drawName, r, src.price, "BORLETTE"))
@@ -532,7 +613,11 @@ class NewFicheActivity : BaseActivity() {
 
     /** MAuto / L4Auto parèt sèlman lè gen 2 boul oswa plis. */
     private fun updateAutoRow() {
-        binding.llAutoRow.visibility = if (baseBorlette().size >= 2) View.VISIBLE else View.GONE
+        val enough = baseBorlette().size >= 2
+        binding.btnMAuto.visibility = if (TenantRules.showMAuto) View.VISIBLE else View.GONE
+        binding.btnL4Auto.visibility = if (TenantRules.showL4Auto) View.VISIBLE else View.GONE
+        binding.llAutoRow.visibility =
+            if (enough && (TenantRules.showMAuto || TenantRules.showL4Auto)) View.VISIBLE else View.GONE
     }
 
     private fun defaultAutoPrice(): String =
@@ -550,6 +635,7 @@ class NewFicheActivity : BaseActivity() {
         title: String,
         toggles: List<Pair<String, Boolean>>,
         withOptions: Boolean,
+        defaultOptions: Set<Int> = setOf(1, 2, 3),
         generate: (List<Boolean>) -> List<String>,
         onAdd: (numbers: List<String>, options: List<Int>, price: Double) -> Unit,
     ) {
@@ -587,7 +673,7 @@ class NewFicheActivity : BaseActivity() {
             val cbs = (1..3).map { o ->
                 android.widget.CheckBox(this).apply {
                     text = "O$o"
-                    isChecked = true
+                    isChecked = o in defaultOptions
                     textSize = 15f
                     layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 }.also { row.addView(it) }
@@ -654,8 +740,9 @@ class NewFicheActivity : BaseActivity() {
             title = "Maryaj otomatik",
             toggles = listOf("Ak revè yo (32*12 → 32*21, 23*12, 23*21)" to true),
             withOptions = false,
-            generate = { t -> AutoCombos.mariages(base, withRevers = t[0], existing = existing) },
+            generate = { t -> AutoCombos.mariages(base, withRevers = t[0], existing = existing, includeSame = TenantRules.sameMariage) },
         ) { nums, _, price ->
+            if (!fits("MARIAGE", nums.size)) return@showAutoDialog
             val drawName = drawsLabel()
             nums.forEach { m -> lines.add(FicheLine(drawName, m, price, "MARIAGE")) }
             refreshLinesList()
@@ -675,8 +762,11 @@ class NewFicheActivity : BaseActivity() {
                 "Vire (3212 → 1232…)" to true,
             ),
             withOptions = true,
+            defaultOptions = TenantRules.l4AutoOptions,
             generate = { t -> AutoCombos.loto4(base, withRevers = t[0], withVire = t[1]) },
         ) { nums, opts, price ->
+            val fresh = nums.sumOf { num -> opts.count { o -> "$num:0$o" !in existing } }
+            if (!fits("LOTO4", fresh)) return@showAutoDialog
             val drawName = drawsLabel()
             var n = 0
             for (num in nums) for (o in opts) {
@@ -741,6 +831,12 @@ class NewFicheActivity : BaseActivity() {
             return
         }
 
+        val parts = numero.split("*")
+        if (parts.size == 2 && parts[0] == parts[1] && !TenantRules.sameMariage) {
+            Toast.makeText(this, "Maryaj ${numero} pa pèmèt: \"Boul pa boul\" fèmen nan Mon compte", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (!fits("MARIAGE", 1)) return
         val drawName = drawsLabel()
         lines.add(FicheLine(drawName, numero, montant, "MARIAGE"))
         binding.etBoulLa.text?.clear()
@@ -838,6 +934,7 @@ class NewFicheActivity : BaseActivity() {
             .setTitle(title)
             .setView(container)
             .setPositiveButton("VALIDER") { _, _ ->
+                if (!fits(category, checkBoxes.count { it.isChecked })) return@setPositiveButton
                 val drawName = drawsLabel()
                 var addedCount = 0
                 checkBoxes.forEachIndexed { i, cb ->
@@ -1018,6 +1115,8 @@ class NewFicheActivity : BaseActivity() {
                     refreshLinesList()
                     refreshTotal()
                 }
+                // Mon compte → "Ajan ka modifye lo"
+                rowBinding.btnEditLinePrice.visibility = if (TenantRules.canEditPrice) View.VISIBLE else View.GONE
                 rowBinding.btnEditLinePrice.setOnClickListener {
                     promptForPrice { newPrice ->
                         line.price = newPrice
@@ -1105,9 +1204,22 @@ class NewFicheActivity : BaseActivity() {
                     lastSold = result
                     lastSoldAt = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US).format(java.util.Date())
                     printCurrentFiche(result)
-                    Snackbar.make(binding.root, "Fich ${result.ficheNumber ?: ""} vann", Snackbar.LENGTH_LONG)
-                        .setAction("PATAJE") { shareLastFiche() }
-                        .show()
+                    val bar = Snackbar.make(binding.root, "Fich ${result.ficheNumber ?: ""} vann", Snackbar.LENGTH_LONG)
+                    if (TenantRules.showShare) bar.setAction("PATAJE") { shareLastFiche() }
+                    bar.show()
+                    // Entèripsyon limit = non: kèk boul pa t vann (limit) → di ajan an
+                    val skipped = result.skipped.orEmpty()
+                    if (skipped.isNotEmpty()) {
+                        MaterialAlertDialogBuilder(this@NewFicheActivity)
+                            .setTitle("${skipped.map { it.numero }.distinct().size} boul pa vann")
+                            .setMessage(
+                                "Boul sa yo rive nan limit yo, yo retire sou fich la:\n\n" +
+                                    skipped.joinToString("\n") { "• ${it.numero} — ${moneyFormat.format(it.amount ?: 0.0)}" } +
+                                    "\n\nRès fich la vann nòmalman."
+                            )
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
                     lines.clear()
                     binding.etBoulLa.text?.clear()
                     binding.etMontant.text?.clear()

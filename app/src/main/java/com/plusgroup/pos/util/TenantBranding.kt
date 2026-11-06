@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 object TenantBranding {
 
     private const val PREFS = "plus_pos_branding"
-    private const val REFRESH_MS = 5 * 60 * 1000L
+    private const val REFRESH_MS = 2 * 60 * 1000L
     private const val PRINT_WIDTH = 288 // ~ 3/4 papye 58 mm (384 pwen)
     private const val PRINT_MAX_HEIGHT = 150
 
@@ -37,6 +37,9 @@ object TenantBranding {
     @Volatile var vendeur: String? = null; private set
     @Volatile var branch: String? = null; private set
     @Volatile var printLogo: Boolean = true; private set
+
+    /** TOUT paramèt Mon compte → Paramètres (kle → valè). Wè TenantRules. */
+    @Volatile var settings: Map<String, String> = emptyMap(); private set
 
     @Volatile private var loadedAt = 0L
     @Volatile private var screenLogo: Bitmap? = null
@@ -79,7 +82,7 @@ object TenantBranding {
         val edit = prefs.edit()
             .putString("company_name", name)
             .putString("logo_url", url)
-        if (newTenant) edit.remove("phone").remove("address").remove("message").remove("vendeur").remove("branch")
+        if (newTenant) edit.remove("phone").remove("address").remove("message").remove("vendeur").remove("branch").remove("settings_json")
         edit.apply()
         if (newTenant) loadedAt = 0L
         if (url != oldUrl || (url.isNotBlank() && !logoFile(app).exists()) || (url.isBlank() && logoFile(app).exists())) {
@@ -114,6 +117,7 @@ object TenantBranding {
                 .putString("branch", profile?.branchName)
                 .putBoolean("print_logo", settings["logo_sou_fich"] != "non")
                 .putString("logo_url", logoUrl)
+                .putString("settings_json", com.google.gson.Gson().toJson(settings))
                 .apply()
 
             if (logoUrl != oldUrl || (logoUrl.isNotBlank() && !logoFile(app).exists()) || (logoUrl.isBlank() && logoFile(app).exists())) {
@@ -155,6 +159,15 @@ object TenantBranding {
         vendeur = prefs.getString("vendeur", null)
         branch = prefs.getString("branch", null)
         printLogo = prefs.getBoolean("print_logo", true)
+        settings = try {
+            val json = prefs.getString("settings_json", null)
+            if (json.isNullOrBlank()) emptyMap()
+            else com.google.gson.Gson().fromJson<Map<String, String>>(
+                json, object : com.google.gson.reflect.TypeToken<Map<String, String>>() {}.type,
+            ).orEmpty()
+        } catch (_: Exception) {
+            emptyMap()
+        }
         if (reloadImages || screenLogo == null) {
             val file = logoFile(context)
             screenLogo = if (file.exists()) decodeSampled(file, 512) else null

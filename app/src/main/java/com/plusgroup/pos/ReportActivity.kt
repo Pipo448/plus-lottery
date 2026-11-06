@@ -70,6 +70,10 @@ class ReportActivity : BaseActivity() {
         binding.btnPartiel.setOnClickListener { switchMode(ReportMode.PARTIEL) }
         binding.btnFTirage.setOnClickListener { switchMode(ReportMode.FIN_TIRAGE) }
         binding.btnFGagnant.setOnClickListener { switchMode(ReportMode.GAGNANT) }
+        // Mon compte → "Ajan wè fich ki genyen"
+        com.plusgroup.pos.util.TenantBranding.ensureCached(applicationContext)
+        binding.btnFGagnant.visibility =
+            if (com.plusgroup.pos.util.TenantRules.seeWinners) android.view.View.VISIBLE else android.view.View.GONE
         binding.btnTrasact.setOnClickListener { switchMode(ReportMode.TRASACT) }
         binding.btnFEliminer.setOnClickListener { switchMode(ReportMode.ELIMINE) }
 

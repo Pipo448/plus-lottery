@@ -266,14 +266,18 @@ object FicheDetailSheet {
                 dialog.dismiss(); cb(r)
             })
         }
-        actions.onPrint?.let { cb ->
+        // Mon compte → "Ajan ka re-enprime fich"
+        actions.onPrint?.takeIf { com.plusgroup.pos.util.TenantRules.canReprint }?.let { cb ->
             b.llFicheActions.addView(actionTile(activity, "Enprime", R.drawable.ic_print, "#1B0E52") { cb(r) })
         }
-        // Pataje fich la: WhatsApp, SMS, Telegram… (tout eta)
-        b.llFicheActions.addView(actionTile(activity, "Pataje", R.drawable.ic_share, "#16A34A") {
-            shareFiche(activity, r)
-        })
-        if (status == "active") {
+        // Pataje fich la: WhatsApp, SMS, Telegram… (Mon compte → "Pataje fich sou WhatsApp")
+        if (com.plusgroup.pos.util.TenantRules.showShare) {
+            b.llFicheActions.addView(actionTile(activity, "Pataje", R.drawable.ic_share, "#16A34A") {
+                shareFiche(activity, r)
+            })
+        }
+        // Elimine: sèlman nan X premye minit yo (Mon compte → minit pou anile)
+        if (status == "active" && withinCancelWindow(r.soldAt)) {
             b.llFicheActions.addView(actionTile(activity, "Elimine", R.drawable.ic_delete, "#E11D48") {
                 confirmCancel(activity, ficheNo, lines.size) {
                     dialog.dismiss()
@@ -404,31 +408,51 @@ object FicheDetailSheet {
             .show()
     }
 
+    /** Fich la toujou nan tan pou anile (menm règ ak backend lan; 0 = 5 minit). */
+    private fun withinCancelWindow(soldAt: String?): Boolean {
+        if (soldAt.isNullOrBlank()) return true
+        val minutes = com.plusgroup.pos.util.TenantRules.cancelMinutes.takeIf { it > 0 } ?: 5
+        return try {
+            val p = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+            val sold = p.parse(soldAt.take(19))?.time ?: return true
+            System.currentTimeMillis() - sold <= minutes * 60_000L
+        } catch (_: Exception) {
+            true // pa ka li dat la: kite backend lan deside
+        }
+    }
+
     private fun confirmCancel(activity: AppCompatActivity, ficheNo: String, lines: Int, onDone: () -> Unit) {
+        // Mon compte → "Anile san konfimasyon"
+        if (com.plusgroup.pos.util.TenantRules.cancelWithoutConfirm) {
+            doCancel(activity, ficheNo, onDone)
+            return
+        }
         MaterialAlertDialogBuilder(activity)
             .setTitle("Elimine fich la?")
             .setMessage("Tout $lines liy fich #$ficheNo ap anile. Aksyon sa a pa ka defèt.")
-            .setPositiveButton("Wi, elimine l") { _, _ ->
-                activity.lifecycleScope.launch {
-                    try {
-                        val res = ApiClient.getService(activity.applicationContext).cancelFiche(ficheNo)
-                        if (res.isSuccessful) {
-                            Toast.makeText(activity, "Fich elimine", Toast.LENGTH_SHORT).show()
-                            onDone()
-                        } else {
-                            MaterialAlertDialogBuilder(activity)
-                                .setTitle("Fich la pa ka elimine")
-                                .setMessage(ApiErrors.message(res, "Pa t ka anile fich la."))
-                                .setPositiveButton("OK", null)
-                                .show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(activity, "Erè rezo: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
+            .setPositiveButton("Wi, elimine l") { _, _ -> doCancel(activity, ficheNo, onDone) }
             .setNegativeButton("Non", null)
             .show()
+    }
+
+    private fun doCancel(activity: AppCompatActivity, ficheNo: String, onDone: () -> Unit) {
+        activity.lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(activity.applicationContext).cancelFiche(ficheNo)
+                if (res.isSuccessful) {
+                    Toast.makeText(activity, "Fich elimine", Toast.LENGTH_SHORT).show()
+                    onDone()
+                } else {
+                    MaterialAlertDialogBuilder(activity)
+                        .setTitle("Fich la pa ka elimine")
+                        .setMessage(ApiErrors.message(res, "Pa t ka anile fich la."))
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(activity, "Erè rezo: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun shareFiche(activity: AppCompatActivity, r: VerifyTicketResult) {

@@ -229,6 +229,7 @@ class BluetoothPrinterHelper {
         val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
         val lineCount = secs.sumOf { it.lines.size }
         write(ESC_INIT)
+        write(sizeMode()) // Mon compte → "Gwosè enprimant"
         write(alignCenter())
         if (logo != null) {
             write(rasterImage(logo))
@@ -238,18 +239,18 @@ class BluetoothPrinterHelper {
         write(textLine(companyName))
         write(boldOff())
         if (promoLine.isNotBlank()) write(textLine(promoLine))
-        if (phone.isNotBlank()) write(textLine("Tel: $phone"))
+        if (phone.isNotBlank()) write(textLine("${ReceiptLabels.tel}: $phone"))
         // Non ajan an anlè fich la
         if (vendeur.isNotBlank() && vendeur != "—") {
             write(boldOn())
-            write(textLine("Ajan: $vendeur"))
+            write(textLine("${ReceiptLabels.agent}: $vendeur"))
             write(boldOff())
         }
         write(textLine("Ticket: $dateTimeText"))
         write(feed(1))
         write(alignLeft())
-        write(textLine("Fiche: $ficheNumber"))
-        write(textLine(DASHES))
+        write(textLine("${ReceiptLabels.fiche}: $ficheNumber"))
+        write(textLine("-".repeat(ReceiptLabels.lineWidth)))
 
         secs.forEachIndexed { idx, sec ->
             if (idx > 0) write(feed(1))
@@ -257,13 +258,13 @@ class BluetoothPrinterHelper {
             write(textLine("${sec.drawName}: ${sec.drawTotal}"))
             write(boldOff())
             for ((code, numero, prix) in sec.lines) {
-                write(textLine(twoColumnLine("$code   $numero", prix)))
+                write(textLine(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth)))
             }
         }
 
-        write(textLine(DASHES))
-        if (secs.size > 1) write(textLine("${secs.size} tiraj"))
-        write(textLine(twoColumnLine("Total:  ${String.format("%03d", lineCount)}", grandTotal)))
+        write(textLine("-".repeat(ReceiptLabels.lineWidth)))
+        if (secs.size > 1) write(textLine(ReceiptLabels.draws(secs.size)))
+        write(textLine(twoColumnLine("${ReceiptLabels.total}:  ${String.format("%03d", lineCount)}", grandTotal, ReceiptLabels.lineWidth)))
         write(feed(1))
 
         write(alignCenter())
@@ -276,6 +277,13 @@ class BluetoothPrinterHelper {
             write(qrCode(qrData))
             write(feed(1))
         }
+        // Mon compte → "Kòd ba sou fich la"
+        ReceiptLabels.barcodeData(ficheNumber)?.let { code ->
+            write(alignCenter())
+            write(itfBarcode(code))
+            write(feed(1))
+        }
+        write(normalMode())
 
         write(feed(3))
         write(cutPaper())
@@ -363,6 +371,26 @@ class BluetoothPrinterHelper {
         out.write(byteArrayOf(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30))
         return out.toByteArray()
     }
+
+    // Kòd ba ITF (GS k m=70): wotè 80, lajè 2, chif yo enprime anba
+    private fun itfBarcode(digits: String): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        out.write(byteArrayOf(0x1D, 0x68, 80))          // GS h — wotè
+        out.write(byteArrayOf(0x1D, 0x77, 2))           // GS w — lajè
+        out.write(byteArrayOf(0x1D, 0x48, 2))           // GS H — tèks anba
+        out.write(byteArrayOf(0x1D, 0x6B, 70, digits.length.toByte()))
+        out.write(digits.toByteArray(Charsets.US_ASCII))
+        return out.toByteArray()
+    }
+
+    // Gwosè lèt: gwo = wotè doub (ESC ! 0x10), piti = font B (ESC M 1, ~42 karaktè)
+    private fun sizeMode(): ByteArray = when (com.plusgroup.pos.util.TenantRules.printSize) {
+        "gwo" -> byteArrayOf(0x1B, 0x21, 0x10)
+        "piti" -> byteArrayOf(0x1B, 0x4D, 0x01)
+        else -> byteArrayOf(0x1B, 0x21, 0x00)
+    }
+
+    private fun normalMode(): ByteArray = byteArrayOf(0x1B, 0x21, 0x00, 0x1B, 0x4D, 0x00)
 
     // --- Kòmand ESC/POS debaz ---
 
