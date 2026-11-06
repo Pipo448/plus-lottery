@@ -22,6 +22,12 @@ import com.plusgroup.pos.network.models.SellFicheResult
 import com.plusgroup.pos.util.ApiErrors
 import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.DeviceIdHelper
+import com.plusgroup.pos.util.AutoCombos
+import com.plusgroup.pos.util.FicheShare
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import android.view.View
+import android.view.inputmethod.EditorInfo
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
@@ -85,6 +91,10 @@ class NewFicheActivity : BaseActivity() {
     private var pendingFicheNumber: String? = null
     private var pendingSignature: String? = null
 
+    // Dènye fich ki VANN (pou bouton Pataje a: WhatsApp, SMS…)
+    private var lastSold: SellFicheResult? = null
+    private var lastSoldAt: String? = null
+
     private val moneyFormat = DecimalFormat("#,##0.00")
     private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
 
@@ -107,14 +117,15 @@ class NewFicheActivity : BaseActivity() {
             refreshLinesList()
             refreshTotal()
         }
-        binding.btnShare.setOnClickListener {
-            Toast.makeText(this, "Pataje — byento", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnShare.setOnClickListener { shareLastFiche() }
         binding.btnPrint.setOnClickListener { submitFiche() }
         binding.btnEditGameLabel.setOnClickListener { showGamePicker() }
 
         binding.tvChwaziTiraj.setOnClickListener { showDrawPicker() }
 
+        binding.btnRevers.setOnClickListener { doRevers() }
+        binding.btnMAuto.setOnClickListener { showMAutoDialog() }
+        binding.btnL4Auto.setOnClickListener { showL4AutoDialog() }
         binding.btnBPaire.setOnClickListener { addQuickCategory(QuickCategory.B_PAIRE) }
         binding.btnGrap.setOnClickListener { addQuickCategory(QuickCategory.GRAP) }
         binding.btnP0.setOnClickListener { addQuickCategory(QuickCategory.pick(0)) }
@@ -131,20 +142,29 @@ class NewFicheActivity : BaseActivity() {
         binding.btnLoto4.setOnClickListener { showLoto4OptionsDialog() }
         binding.btnLoto5.setOnClickListener { showLoto5OptionsDialog() }
 
+        // 4 / 5 chif: yon sèl klik → Maryaj oswa opsyon 1, 2, 3 (oswa tou 3)
         binding.btnChooseMariage.setOnClickListener { addMariageLine() }
-        binding.btnChooseLoto4.setOnClickListener { showLoto4OptionsDialog() }
+        binding.btnOpt1.setOnClickListener { addLotoOptions(listOf(1)) }
+        binding.btnOpt2.setOnClickListener { addLotoOptions(listOf(2)) }
+        binding.btnOpt3.setOnClickListener { addLotoOptions(listOf(3)) }
+        binding.btnOptAll.setOnClickListener { addLotoOptions(listOf(1, 2, 3)) }
 
         binding.etBoulLa.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
-                val len = s?.toString()?.trim()?.length ?: 0
-                binding.llMariageLoto4Chooser.visibility =
-                    if (len == 4) android.view.View.VISIBLE else android.view.View.GONE
+                updateQuickChooser(s?.toString().orEmpty().trim())
             }
         })
 
         binding.btnAntre.setOnClickListener { addManualLine() }
+        // Klavye a: "Fini" sou chan pri a = ANTRE
+        binding.etMontant.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                addManualLine()
+                true
+            } else false
+        }
 
         loadDrawsAndGames()
         refreshTotal()
@@ -383,10 +403,13 @@ class NewFicheActivity : BaseActivity() {
             2 -> "BORLETTE"
             3 -> "LOTO3"
             4 -> {
-                Toast.makeText(this, "4 chif: chwazi \"Mariage\" oswa \"Loto4\" anba a", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "4 chif: klike \"Maryaj\" oswa yon opsyon Loto4 (O1, O2, O3) anba a", Toast.LENGTH_LONG).show()
                 return
             }
-            5 -> "LOTO5"
+            5 -> {
+                Toast.makeText(this, "5 chif: klike yon opsyon Loto5 (O1, O2, O3) anba a", Toast.LENGTH_LONG).show()
+                return
+            }
             else -> {
                 Toast.makeText(this, "Nimewo dwe 2, 3, 4, oswa 5 chif", Toast.LENGTH_SHORT).show()
                 return
@@ -396,8 +419,306 @@ class NewFicheActivity : BaseActivity() {
         val drawName = drawsLabel()
         lines.add(FicheLine(drawName, numero, montant, category))
         binding.etBoulLa.text?.clear()
+        binding.etBoulLa.requestFocus()
         refreshLinesList()
         refreshTotal()
+    }
+
+    // ==================== CHWA RAPID 4 / 5 CHIF ====================
+
+    /** 4 chif → [Maryaj] L4 [O1][O2][O3][1·2·3]  ·  5 chif → L5 [O1][O2][O3][1·2·3] */
+    private fun updateQuickChooser(typed: String) {
+        val digits = typed.all { it.isDigit() }
+        when {
+            digits && typed.length == 4 -> {
+                binding.llMariageLoto4Chooser.visibility = View.VISIBLE
+                binding.btnChooseMariage.visibility = View.VISIBLE
+                binding.tvQuickPrefix.text = "L4"
+            }
+            digits && typed.length == 5 -> {
+                binding.llMariageLoto4Chooser.visibility = View.VISIBLE
+                binding.btnChooseMariage.visibility = View.GONE
+                binding.tvQuickPrefix.text = "L5"
+            }
+            else -> binding.llMariageLoto4Chooser.visibility = View.GONE
+        }
+    }
+
+    /** Ajoute boul 4 oswa 5 chif la ak opsyon yo chwazi a (menm pri a pou chak). */
+    private fun addLotoOptions(options: List<Int>) {
+        if (!requireDrawSelected()) return
+        val numero = binding.etBoulLa.text.toString().trim()
+        val category = when {
+            numero.matches(Regex("^\\d{4}$")) -> "LOTO4"
+            numero.matches(Regex("^\\d{5}$")) -> "LOTO5"
+            else -> {
+                Toast.makeText(this, "Tape 4 chif (Loto4) oswa 5 chif (Loto5)", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+        val price = currentPrice() ?: return
+        val drawName = drawsLabel()
+        options.forEach { o -> lines.add(FicheLine(drawName, numero, price, category, "0$o")) }
+        binding.etBoulLa.text?.clear()
+        binding.etBoulLa.requestFocus()
+        refreshLinesList()
+        refreshTotal()
+    }
+
+    /** Pri ki nan chan "Pri" a, oswa null (ak mesaj) si l pa bon. */
+    private fun currentPrice(): Double? {
+        val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
+        if (price == null || price <= 0) {
+            Toast.makeText(this, "Antre pri a anvan", Toast.LENGTH_SHORT).show()
+            binding.etMontant.requestFocus()
+            return null
+        }
+        return price
+    }
+
+    // ==================== REVÈ ====================
+
+    /**
+     * REVÈ: si "Boul la" gen 2 chif (35) → 35 ak 53 ak pri a.
+     * Si chan an vid → revè tout boul borlette ki deja sou fich la, chak ak
+     * MENM pri ak boul pa l la. Pa double, pa revè pou 00, 11… Apre sa ajan
+     * an ka chanje pri chak liy ak kreyon an.
+     */
+    private fun doRevers() {
+        if (!requireDrawSelected()) return
+        val typed = binding.etBoulLa.text.toString().trim()
+        val drawName = drawsLabel()
+
+        if (typed.isNotEmpty()) {
+            if (!typed.matches(Regex("^\\d{2}$"))) {
+                Toast.makeText(this, "Revè: boul 2 chif sèlman (egz. 35 → 53)", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val price = currentPrice() ?: return
+            lines.add(FicheLine(drawName, typed, price, "BORLETTE"))
+            val r = AutoCombos.rev(typed)
+            val have = lines.filter { it.category == "BORLETTE" }.map { it.numero }
+            val added = if (r != typed && r !in have.dropLast(1)) {
+                lines.add(FicheLine(drawName, r, price, "BORLETTE")); true
+            } else false
+            binding.etBoulLa.text?.clear()
+            binding.etBoulLa.requestFocus()
+            refreshLinesList()
+            refreshTotal()
+            Toast.makeText(this, if (added) "$typed + $r" else "$typed (pa gen lòt revè)", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val borlette = lines.filter { it.category == "BORLETTE" }
+        val toAdd = AutoCombos.reversesToAdd(borlette.map { it.numero })
+        if (toAdd.isEmpty()) {
+            Toast.makeText(this, "Pa gen revè pou ajoute (tape yon boul 2 chif, oswa ajoute boul borlette anvan)", Toast.LENGTH_LONG).show()
+            return
+        }
+        toAdd.forEach { r ->
+            val src = borlette.first { AutoCombos.rev(it.numero) == r }
+            lines.add(FicheLine(src.drawName, r, src.price, "BORLETTE"))
+        }
+        refreshLinesList()
+        refreshTotal()
+        Toast.makeText(this, "${toAdd.size} revè ajoute: ${toAdd.joinToString(", ")}", Toast.LENGTH_SHORT).show()
+    }
+
+    // ==================== MAuto / L4Auto ====================
+
+    /** Boul borlette (2 chif) diferan ki sou fich la. */
+    private fun baseBorlette(): List<String> =
+        AutoCombos.baseNumbers(lines.filter { it.category == "BORLETTE" }.map { it.numero })
+
+    /** MAuto / L4Auto parèt sèlman lè gen 2 boul oswa plis. */
+    private fun updateAutoRow() {
+        binding.llAutoRow.visibility = if (baseBorlette().size >= 2) View.VISIBLE else View.GONE
+    }
+
+    private fun defaultAutoPrice(): String =
+        binding.etMontant.text.toString().trim().takeIf { (it.toDoubleOrNull() ?: 0.0) > 0 }
+            ?: lines.lastOrNull { it.category == "BORLETTE" }?.price?.let { moneyFormat.format(it).replace(",", "") }
+            ?: ""
+
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    /**
+     * Dyalòg komen MAuto / L4Auto: pri + chwa yo + apèsi (kantite, total,
+     * premye nimewo yo). "Ajoute" aktif sèlman si gen omwen 1 liy.
+     */
+    private fun showAutoDialog(
+        title: String,
+        toggles: List<Pair<String, Boolean>>,
+        withOptions: Boolean,
+        generate: (List<Boolean>) -> List<String>,
+        onAdd: (numbers: List<String>, options: List<Int>, price: Double) -> Unit,
+    ) {
+        if (!requireDrawSelected()) return
+        val base = baseBorlette()
+        if (base.size < 2) {
+            Toast.makeText(this, "Ajoute omwen 2 boul borlette anvan", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(dp(22), dp(8), dp(22), 0)
+        }
+        box.addView(TextView(this).apply {
+            text = "Boul yo: ${base.joinToString("  ")}"
+            textSize = 14f
+            setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.pos_ink_soft))
+        })
+        val priceInput = android.widget.EditText(this).apply {
+            hint = "Pri pou chak liy"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setText(defaultAutoPrice())
+            textSize = 18f
+        }
+        box.addView(priceInput)
+        val switches = toggles.map { (label, on) ->
+            com.google.android.material.switchmaterial.SwitchMaterial(this).apply {
+                text = label
+                isChecked = on
+                textSize = 15f
+            }.also { box.addView(it) }
+        }
+        val optionBoxes = if (withOptions) {
+            val row = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.HORIZONTAL }
+            val cbs = (1..3).map { o ->
+                android.widget.CheckBox(this).apply {
+                    text = "O$o"
+                    isChecked = true
+                    textSize = 15f
+                    layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }.also { row.addView(it) }
+            }
+            box.addView(row)
+            cbs
+        } else emptyList()
+        val preview = TextView(this).apply {
+            textSize = 14f
+            setPadding(0, dp(10), 0, dp(4))
+            setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.pos_navy))
+        }
+        box.addView(preview)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton("Ajoute", null)
+            .setNegativeButton("Anile", null)
+            .create()
+
+        fun state(): Triple<List<String>, List<Int>, Double?> {
+            val nums = generate(switches.map { it.isChecked })
+            val opts = if (withOptions) optionBoxes.mapIndexedNotNull { i, cb -> if (cb.isChecked) i + 1 else null } else listOf(0)
+            return Triple(nums, opts, priceInput.text.toString().trim().toDoubleOrNull()?.takeIf { it > 0 })
+        }
+        fun refresh() {
+            val (nums, opts, price) = state()
+            val count = nums.size * opts.size
+            val sample = nums.take(12).joinToString("  ") + if (nums.size > 12) "  …" else ""
+            preview.text = if (count == 0) "Okenn liy — chanje chwa yo." else buildString {
+                append("$count liy")
+                if (withOptions) append(" (${nums.size} nimewo × ${opts.size} opsyon)")
+                if (price != null) append("  ·  Total ${moneyFormat.format(count * price)}")
+                append("\n").append(sample)
+            }
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = count in 1..500 && price != null
+            if (count > 500) preview.append("\nTwòp liy (500 maksimòm) — retire kèk chwa.")
+        }
+        switches.forEach { it.setOnCheckedChangeListener { _, _ -> refresh() } }
+        optionBoxes.forEach { it.setOnCheckedChangeListener { _, _ -> refresh() } }
+        priceInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) = refresh()
+        })
+        dialog.setOnShowListener {
+            refresh()
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val (nums, opts, price) = state()
+                if (price == null || nums.isEmpty() || opts.isEmpty()) return@setOnClickListener
+                onAdd(nums, opts, price)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    /** MAuto: marye boul yo 2 pa 2 (ak revè yo si l aktive). */
+    private fun showMAutoDialog() {
+        val base = baseBorlette()
+        val existing = lines.filter { it.category == "MARIAGE" }.map { it.numero }
+        showAutoDialog(
+            title = "Maryaj otomatik",
+            toggles = listOf("Ak revè yo (32*12 → 32*21, 23*12, 23*21)" to true),
+            withOptions = false,
+            generate = { t -> AutoCombos.mariages(base, withRevers = t[0], existing = existing) },
+        ) { nums, _, price ->
+            val drawName = drawsLabel()
+            nums.forEach { m -> lines.add(FicheLine(drawName, m, price, "MARIAGE")) }
+            refreshLinesList()
+            refreshTotal()
+            Toast.makeText(this, "${nums.size} maryaj ajoute — modifye oswa efase sa w pa vle", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** L4Auto: 4 chif ak chak pè boul (revè + vire), nan opsyon yo chwazi yo. */
+    private fun showL4AutoDialog() {
+        val base = baseBorlette()
+        val existing = lines.filter { it.category == "LOTO4" }.map { "${it.numero}:${it.optionLabel}" }.toSet()
+        showAutoDialog(
+            title = "Loto4 otomatik",
+            toggles = listOf(
+                "Ak revè yo (3212 → 3221, 2312, 2321)" to true,
+                "Vire (3212 → 1232…)" to true,
+            ),
+            withOptions = true,
+            generate = { t -> AutoCombos.loto4(base, withRevers = t[0], withVire = t[1]) },
+        ) { nums, opts, price ->
+            val drawName = drawsLabel()
+            var n = 0
+            for (num in nums) for (o in opts) {
+                if ("$num:0$o" in existing) continue
+                lines.add(FicheLine(drawName, num, price, "LOTO4", "0$o"))
+                n++
+            }
+            refreshLinesList()
+            refreshTotal()
+            Toast.makeText(this, "$n liy Loto4 ajoute — modifye oswa efase sa w pa vle", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ==================== PATAJE (WhatsApp, SMS…) ====================
+
+    private fun shareLastFiche() {
+        val sold = lastSold
+        if (sold == null) {
+            Toast.makeText(
+                this,
+                if (lines.isEmpty()) "Vann yon fich anvan pou w ka pataje l" else "Enprime (vann) fich la anvan, epi pataje l",
+                Toast.LENGTH_LONG,
+            ).show()
+            return
+        }
+        val fallbackDraw = sold.drawName
+        val shareLines = sold.lines.orEmpty().map { l ->
+            FicheShare.Line(
+                drawName = l.drawName ?: fallbackDraw,
+                code = codeFor(l.gameType) + (l.option?.trimStart('0')?.takeIf { it.isNotEmpty() }?.let { " O$it" } ?: ""),
+                numero = l.numero ?: "",
+                amount = l.amount ?: 0.0,
+            )
+        }
+        val text = FicheShare.buildText(
+            ficheNumber = sold.ficheNumber ?: "—",
+            dateText = lastSoldAt,
+            agent = TenantBranding.vendeur,
+            lines = shareLines,
+            total = sold.total ?: shareLines.sumOf { it.amount },
+        )
+        FicheShare.share(this, text)
     }
 
     // ==================== MARIAGE ====================
@@ -423,6 +744,7 @@ class NewFicheActivity : BaseActivity() {
         val drawName = drawsLabel()
         lines.add(FicheLine(drawName, numero, montant, "MARIAGE"))
         binding.etBoulLa.text?.clear()
+        binding.etBoulLa.requestFocus()
         refreshLinesList()
         refreshTotal()
     }
@@ -707,6 +1029,7 @@ class NewFicheActivity : BaseActivity() {
                 binding.llLinesContainer.addView(rowBinding.root)
             }
         }
+        updateAutoRow()
     }
 
     private fun refreshTotal() {
@@ -779,7 +1102,12 @@ class NewFicheActivity : BaseActivity() {
                     pendingFicheNumber = null
                     pendingSignature = null
 
+                    lastSold = result
+                    lastSoldAt = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US).format(java.util.Date())
                     printCurrentFiche(result)
+                    Snackbar.make(binding.root, "Fich ${result.ficheNumber ?: ""} vann", Snackbar.LENGTH_LONG)
+                        .setAction("PATAJE") { shareLastFiche() }
+                        .show()
                     lines.clear()
                     binding.etBoulLa.text?.clear()
                     binding.etMontant.text?.clear()

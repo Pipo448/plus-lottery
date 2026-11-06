@@ -152,6 +152,8 @@ data class SoldLine(
     val gameType: String? = null,
     val option: String? = null,
     val amount: Double? = null,
+    // Fich plizyè tiraj: tiraj liy sa a (pou pataje / resi pa seksyon)
+    val drawName: String? = null,
 )
 
 data class SellTicketResponse(

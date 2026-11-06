@@ -275,6 +275,13 @@
                 android:orientation="horizontal"
                 android:paddingBottom="4dp">
 
+                <!-- REVÈ: 35 → 53 (menm pri a) -->
+                <Button
+                    android:id="@+id/btnRevers"
+                    style="@style/Widget.PlusPOS.Button.Chip"
+                    android:text="Revè"
+                    app:backgroundTint="@color/pos_navy" />
+
                 <Button
                     android:id="@+id/btnBPaire"
                     style="@style/Widget.PlusPOS.Button.Chip"
@@ -370,6 +377,37 @@
             </LinearLayout>
         </HorizontalScrollView>
 
+        <!-- Parèt SÈLMAN lè gen 2 boul borlette oswa plis sou fich la -->
+        <LinearLayout
+            android:id="@+id/llAutoRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="4dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/btnMAuto"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="MAuto"
+                android:textColor="@color/pos_on_amber"
+                app:backgroundTint="@color/pos_amber" />
+
+            <Button
+                android:id="@+id/btnL4Auto"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="L4Auto"
+                app:backgroundTint="@color/pos_green" />
+        </LinearLayout>
+
         <!-- 2 gwo chan: Boul la / Pri -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -388,8 +426,11 @@
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:hint="Boul la"
+                android:imeOptions="actionNext"
                 android:importantForAutofill="no"
                 android:inputType="number"
+                android:maxLength="5"
+                android:nextFocusForward="@id/etMontant"
                 android:textColor="@color/pos_ink"
                 android:textColorHint="#94A3B8"
                 android:textSize="22sp" />
@@ -403,6 +444,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:hint="Pri"
+                android:imeOptions="actionDone"
                 android:importantForAutofill="no"
                 android:inputType="numberDecimal"
                 android:textColor="@color/pos_ink"
@@ -410,11 +452,13 @@
                 android:textSize="22sp" />
         </LinearLayout>
 
-        <!-- Parèt SÈLMAN lè 4 chif tape nan "Boul la" -->
+        <!-- Parèt SÈLMAN lè 4 oswa 5 chif tape nan "Boul la":
+             yon sèl klik → Maryaj, oswa opsyon 1 / 2 / 3 (oswa tou 3) -->
         <LinearLayout
             android:id="@+id/llMariageLoto4Chooser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingTop="10dp"
             android:visibility="gone">
@@ -423,20 +467,71 @@
                 android:id="@+id/btnChooseMariage"
                 style="@style/Widget.PlusPOS.Button.Soft"
                 android:layout_width="0dp"
+                android:layout_height="46dp"
                 android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="Mariage"
+                android:layout_weight="1.4"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:text="Maryaj"
                 android:textColor="@color/pos_on_amber"
                 app:backgroundTint="@color/pos_amber" />
 
+            <TextView
+                android:id="@+id/tvQuickPrefix"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:fontFamily="sans-serif-black"
+                android:text="L4"
+                android:textColor="@color/pos_blue"
+                android:textSize="15sp" />
+
             <Button
-                android:id="@+id/btnChooseLoto4"
+                android:id="@+id/btnOpt1"
                 style="@style/Widget.PlusPOS.Button.Soft"
                 android:layout_width="0dp"
-                android:layout_marginStart="6dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:text="Loto4"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="O1"
                 app:backgroundTint="@color/pos_blue" />
+
+            <Button
+                android:id="@+id/btnOpt2"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="O2"
+                app:backgroundTint="@color/pos_blue" />
+
+            <Button
+                android:id="@+id/btnOpt3"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="O3"
+                app:backgroundTint="@color/pos_blue" />
+
+            <Button
+                android:id="@+id/btnOptAll"
+                style="@style/Widget.PlusPOS.Button.Soft"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1.3"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="1·2·3"
+                app:backgroundTint="@color/pos_navy" />
         </LinearLayout>
 
         <Button

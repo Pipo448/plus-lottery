@@ -269,6 +269,10 @@ object FicheDetailSheet {
         actions.onPrint?.let { cb ->
             b.llFicheActions.addView(actionTile(activity, "Enprime", R.drawable.ic_print, "#1B0E52") { cb(r) })
         }
+        // Pataje fich la: WhatsApp, SMS, Telegram… (tout eta)
+        b.llFicheActions.addView(actionTile(activity, "Pataje", R.drawable.ic_share, "#16A34A") {
+            shareFiche(activity, r)
+        })
         if (status == "active") {
             b.llFicheActions.addView(actionTile(activity, "Elimine", R.drawable.ic_delete, "#E11D48") {
                 confirmCancel(activity, ficheNo, lines.size) {
@@ -425,6 +429,26 @@ object FicheDetailSheet {
             }
             .setNegativeButton("Non", null)
             .show()
+    }
+
+    private fun shareFiche(activity: AppCompatActivity, r: VerifyTicketResult) {
+        val shareLines = r.lines.orEmpty().map { l ->
+            com.plusgroup.pos.util.FicheShare.Line(
+                drawName = l.drawName ?: r.drawName,
+                code = gameCode(l.gameType, l.numero, l.option),
+                numero = l.numero ?: "",
+                amount = l.amount ?: 0.0,
+            )
+        }
+        val text = com.plusgroup.pos.util.FicheShare.buildText(
+            ficheNumber = formatFicheNo(r.ficheNumber ?: r.ticketNumber ?: "—"),
+            dateText = prettyDateTime(r.soldAt),
+            agent = r.agent,
+            lines = shareLines,
+            total = r.betAmount ?: shareLines.sumOf { it.amount },
+            statusLabel = FicheStatus.label(r.status),
+        )
+        com.plusgroup.pos.util.FicheShare.share(activity, text)
     }
 
     // ==================== Ti zouti ====================
