@@ -3,15 +3,23 @@ package com.plusgroup.pos.network.models
 data class LoginRequest(
     val username: String,
     val password: String,
-    // Kòd sèvè (bank) ajan an chwazi a — koneksyon an fèt sèlman sou bank sa a
+    // Bolèt aparèy la mare ak li (DEVICE ID), si APK a konnen l
     val tenantSlug: String? = null,
 )
 
 /** Yon bank nan lis sèvè APK a (GET /public/servers). */
-data class PublicServer(
+/** Yon SÈVÈ nan lis "CHAJE SÈVÈ" a */
+data class AppServer(
     val code: String? = null,
     val name: String? = null,
-    val displayName: String? = null,
+    val apiUrl: String? = null,
+)
+
+/** Repons GET public/device/{code}: bolèt aparèy la mare ak li */
+data class DeviceInfo(
+    val registered: Boolean? = null,
+    val tenantSlug: String? = null,
+    val tenantName: String? = null,
     val logo: String? = null,
     val active: Boolean? = null,
 )

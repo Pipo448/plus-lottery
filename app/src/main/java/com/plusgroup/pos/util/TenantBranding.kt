@@ -66,9 +66,10 @@ object TenantBranding {
     }
 
     /**
-     * Ajan an chwazi yon sèvè (bank) sou ekran login nan: sere non ak logo
-     * bank lan TOUSWIT (anvan konekte), pou akèy la ak fich yo.
-     * newTenant = true → efase enfòmasyon ansyen bank lan (telefòn, adrès...).
+     * Ekran login nan rekonèt bolèt la ak DEVICE ID a: sere non ak logo
+     * bolèt la TOUSWIT (anvan konekte), pou akèy la ak fich yo.
+     * newTenant = true → efase enfòmasyon ansyen bolèt la (telefòn, adrès...).
+     * name = null + logoUrl = null → retounen sou logo Plus Group.
      */
     suspend fun setServer(context: Context, name: String?, logoUrl: String?, newTenant: Boolean) {
         val app = context.applicationContext
@@ -81,8 +82,8 @@ object TenantBranding {
         if (newTenant) edit.remove("phone").remove("address").remove("message").remove("vendeur").remove("branch")
         edit.apply()
         if (newTenant) loadedAt = 0L
-        if (url != oldUrl || (url.isNotBlank() && !logoFile(app).exists())) {
-            downloadLogo(app, url)
+        if (url != oldUrl || (url.isNotBlank() && !logoFile(app).exists()) || (url.isBlank() && logoFile(app).exists())) {
+            downloadLogo(app, url) // url vid → efase logo ansyen bolèt la
         }
         restoreFromPrefs(app, reloadImages = true)
     }
@@ -115,7 +116,7 @@ object TenantBranding {
                 .putString("logo_url", logoUrl)
                 .apply()
 
-            if (logoUrl != oldUrl || (logoUrl.isNotBlank() && !logoFile(app).exists())) {
+            if (logoUrl != oldUrl || (logoUrl.isNotBlank() && !logoFile(app).exists()) || (logoUrl.isBlank() && logoFile(app).exists())) {
                 downloadLogo(app, logoUrl)
             }
             loadedAt = System.currentTimeMillis()

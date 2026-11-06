@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- LOGIN — vèsyon 3 (design "swa"). ID yo pa chanje. -->
+<!-- LOGIN — design v3 "swa" + SÈVÈ (tankou "LOAD SERVEUR" SGL) + DEVICE ID. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -15,43 +15,118 @@
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="24dp"
-        android:paddingTop="56dp"
+        android:paddingTop="20dp"
         android:paddingEnd="24dp"
         android:paddingBottom="24dp">
 
+        <!-- CHAJE SÈVÈ: pran lis sèvè yo sou sèvè santral la -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLoadServers"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="end"
+            android:fontFamily="sans-serif-medium"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:letterSpacing="0.06"
+            android:paddingStart="16dp"
+            android:paddingEnd="18dp"
+            android:text="CHAJE SÈVÈ"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            app:backgroundTint="@color/pos_blue"
+            app:cornerRadius="22dp"
+            app:icon="@drawable/ic_refresh"
+            app:iconPadding="8dp"
+            app:iconSize="18dp"
+            app:iconTint="@android:color/white" />
+
+        <!-- Logo + non BOLÈT la (rekonèt ak DEVICE ID). San bolèt: logo Plus Group. -->
         <FrameLayout
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:layout_marginTop="18dp"
             android:background="@drawable/bg_logo_tile"
             android:elevation="6dp"
-            android:padding="8dp">
+            android:padding="10dp">
 
             <ImageView
+                android:id="@+id/ivServerLogo"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="Logo"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_launcher" />
+                android:src="@mipmap/ic_launcher_plus" />
         </FrameLayout>
 
         <TextView
+            android:id="@+id/tvServerName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="14dp"
+            android:ellipsize="end"
             android:fontFamily="sans-serif-black"
-            android:text="Plus"
+            android:gravity="center"
+            android:maxLines="2"
+            android:text="PLUS GROUP"
             android:textColor="@color/pos_navy"
-            android:textSize="34sp" />
+            android:textSize="24sp" />
 
         <TextView
+            android:id="@+id/tvServerHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="28dp"
             android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.35"
-            android:text="POS"
+            android:letterSpacing="0.3"
+            android:text="LOTTERY"
             android:textColor="@color/pos_blue"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
+
+        <!-- Sèvè: klike pou chwazi / chanje sèvè a -->
+        <LinearLayout
+            android:id="@+id/btnChooseServer"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_input"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Sèvè :"
+                android:textColor="@color/pos_ink"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvServerSelected"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:text="SÈVÈ 1"
+                android:textColor="@color/pos_blue"
+                android:textSize="17sp" />
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_down"
+                app:tint="@color/pos_muted" />
+        </LinearLayout>
 
         <!-- Kat login -->
         <LinearLayout
@@ -124,7 +199,7 @@
                 app:backgroundTint="@color/pos_blue" />
         </LinearLayout>
 
-        <!-- Device ID -->
+        <!-- DEVICE ID: admin lan mete l sou ajan an pou mare aparèy la -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -132,13 +207,15 @@
             android:background="@drawable/bg_card_glass"
             android:gravity="center"
             android:orientation="vertical"
+            android:paddingStart="12dp"
             android:paddingTop="14dp"
+            android:paddingEnd="12dp"
             android:paddingBottom="14dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Device ID"
+                android:text="DEVICE ID"
                 android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
 
             <TextView
@@ -150,15 +227,28 @@
                 android:letterSpacing="0.04"
                 android:textColor="@color/pos_red"
                 android:textIsSelectable="true"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                tools:text="3218bb5334cec2d5" />
+                tools:text="f25019dc5e727181" />
+
+            <TextView
+                android:id="@+id/tvDeviceStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:textColor="@color/pos_muted"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="✓ Aparèy rekonèt"
+                tools:visibility="visible" />
         </LinearLayout>
 
         <TextView
+            android:id="@+id/tvVersion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="24dp"
             android:text="Version 1.0.0 @PlusGroup"
             android:textColor="@color/pos_muted"
             android:textSize="12sp" />

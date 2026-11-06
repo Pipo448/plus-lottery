@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.plusgroup.pos.network.models.RefreshRequest
+import com.plusgroup.pos.util.ServerConfig
 import com.plusgroup.pos.util.SessionManager
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -20,15 +21,25 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // Chanje URL sa a si backend ou deplwaye sou yon lòt adrès.
-    private const val BASE_URL = "https://plusgroup-lottery-api.onrender.com/api/v1/"
+    // Adrès la soti nan SÈVÈ ajan an chwazi a (ServerConfig). Pa default:
+    // SÈVÈ 1 (sèvè santral la). Lè ajan an chanje sèvè, Retrofit rebati.
+    @Volatile private var retrofit: Retrofit? = null
+    @Volatile private var currentBase: String? = null
 
-    private var retrofit: Retrofit? = null
+    private fun baseUrl(context: Context): String = currentBase ?: ServerConfig.apiUrl(context)
+
+    /** Rele l apre ajan an chanje sèvè: pwochen demann yo ale sou nouvo adrès la. */
+    fun reset() {
+        retrofit = null
+        currentBase = null
+    }
 
     fun getService(context: Context): ApiService {
-        if (retrofit == null) {
+        val wanted = ServerConfig.apiUrl(context.applicationContext)
+        if (retrofit == null || wanted != currentBase) {
             val session = SessionManager(context.applicationContext)
 
+            val appContext = context.applicationContext
             val authInterceptor = Interceptor { chain ->
                 val token = session.getToken()
                 val request = chain.request().newBuilder()
@@ -49,11 +60,12 @@ object ApiClient {
                 .writeTimeout(45, TimeUnit.SECONDS)
                 .addInterceptor(authInterceptor)
                 .addInterceptor(logging)
-                .authenticator(TokenRefreshAuthenticator(session))
+                .authenticator(TokenRefreshAuthenticator(session, appContext))
                 .build()
 
+            currentBase = wanted
             retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(wanted)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
@@ -81,11 +93,11 @@ object ApiClient {
         object NetworkError : RefreshResult()
     }
 
-    internal fun refreshTokens(session: SessionManager, refreshToken: String): RefreshResult = try {
+    internal fun refreshTokens(session: SessionManager, refreshToken: String, context: Context): RefreshResult = try {
         val body = Gson().toJson(RefreshRequest(refreshToken))
             .toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url(BASE_URL + "auth/refresh")
+            .url(baseUrl(context) + "auth/refresh")
             .post(body)
             .build()
         plainClient.newCall(request).execute().use { res ->
@@ -127,7 +139,7 @@ object ApiClient {
             val current = session.getToken() ?: return@synchronized
             if (current != token) return@synchronized
             val refresh = session.getRefreshToken() ?: return@synchronized
-            if (refreshTokens(session, refresh) == RefreshResult.Rejected) session.clear()
+            if (refreshTokens(session, refresh, context.applicationContext) == RefreshResult.Rejected) session.clear()
         }
     }
 
@@ -139,6 +151,7 @@ object ApiClient {
      */
     private class TokenRefreshAuthenticator(
         private val session: SessionManager,
+        private val context: Context,
     ) : Authenticator {
 
         override fun authenticate(route: Route?, response: Response): Request? {
@@ -158,7 +171,7 @@ object ApiClient {
                 }
 
                 val refresh = session.getRefreshToken() ?: return null
-                return when (val result = refreshTokens(session, refresh)) {
+                return when (val result = refreshTokens(session, refresh, context)) {
                     is RefreshResult.Ok -> response.request.newBuilder()
                         .header("Authorization", "Bearer ${result.accessToken}")
                         .build()

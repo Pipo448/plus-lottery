@@ -38,12 +38,14 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body body: LoginRequest): Response<LoginResponse>
 
-    // ----- Sèvè (bank) — piblik, anvan login -----
-    @GET("public/servers")
-    suspend fun getServers(): Response<ApiListResponse<com.plusgroup.pos.network.models.PublicServer>>
+    // ----- Anvan login (piblik) — menm pwosesis ak "LOAD SERVEUR" SGL -----
+    /** Lis SÈVÈ yo: toujou sou sèvè santral la (URL konplè) */
+    @GET
+    suspend fun getAppServers(@retrofit2.http.Url url: String): Response<ApiListResponse<com.plusgroup.pos.network.models.AppServer>>
 
-    @GET("public/servers/{code}")
-    suspend fun getServer(@retrofit2.http.Path("code") code: String): Response<ApiDataResponse<com.plusgroup.pos.network.models.PublicServer>>
+    /** DEVICE ID sa a se pou ki bolèt sou sèvè a (non + logo) */
+    @GET("public/device/{code}")
+    suspend fun lookupDevice(@retrofit2.http.Path("code") code: String): Response<ApiDataResponse<com.plusgroup.pos.network.models.DeviceInfo>>
 
     @POST("agent/register-device")
     suspend fun registerDevice(@Body body: RegisterDeviceRequest): Response<ApiMessageResponse>
