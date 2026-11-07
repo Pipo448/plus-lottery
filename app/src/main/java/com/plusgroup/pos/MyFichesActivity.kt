@@ -219,12 +219,14 @@ class MyFichesActivity : BaseActivity() {
     // ==================== IMPRIME (reenprime menm fich la egzakteman) ====================
 
     private fun printFicheSummary(fiche: FicheSummary) {
+        fun codeOf(l: com.plusgroup.pos.network.models.FicheLineSummary): String =
+            if (com.plusgroup.pos.util.FreeMariage.isFree(l.gameType)) com.plusgroup.pos.util.FreeMariage.CODE
+            else shortCodeFor(categoryLabelFor(l.numero ?: ""))
+        fun amountOf(l: com.plusgroup.pos.network.models.FicheLineSummary): String =
+            com.plusgroup.pos.util.FreeMariage.amountText(l.gameType, l.betAmount, moneyFormat)
+
         val printLines = fiche.lines?.map { line ->
-            Triple(
-                shortCodeFor(categoryLabelFor(line.numero ?: "")),
-                line.numero ?: "—",
-                moneyFormat.format(line.betAmount ?: 0.0),
-            )
+            Triple(codeOf(line), line.numero ?: "—", amountOf(line))
         } ?: emptyList()
 
         // Fich plizyè tiraj: yon seksyon pou chak tiraj (menm jan ak premye resi a)
@@ -234,7 +236,7 @@ class MyFichesActivity : BaseActivity() {
                 drawName = name,
                 drawTotal = moneyFormat.format(ls.sumOf { it.betAmount ?: 0.0 }),
                 lines = ls.map { l ->
-                    Triple(shortCodeFor(categoryLabelFor(l.numero ?: "")), l.numero ?: "—", moneyFormat.format(l.betAmount ?: 0.0))
+                    Triple(codeOf(l), l.numero ?: "—", amountOf(l))
                 },
             )
         } else null

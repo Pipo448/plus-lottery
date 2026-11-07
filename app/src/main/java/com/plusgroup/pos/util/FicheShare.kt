@@ -23,6 +23,7 @@ object FicheShare {
         val code: String,       // BO, L3, MA, L4 O1…
         val numero: String,
         val amount: Double,
+        val free: Boolean = false, // maryaj gratis → "GRATIS"
     )
 
     private val money = DecimalFormat("#,##0.00")
@@ -58,7 +59,9 @@ object FicheShare {
         byDraw.entries.forEachIndexed { i, (draw, items) ->
             if (i > 0) sb.append('\n')
             sb.append(draw.uppercase().take(WIDTH)).append('\n')
-            items.forEach { l -> sb.append(row("${l.code} ${l.numero}", money.format(l.amount))).append('\n') }
+            items.forEach { l ->
+                sb.append(row("${l.code} ${l.numero}", if (l.free) FreeMariage.LABEL else money.format(l.amount))).append('\n')
+            }
             if (byDraw.size > 1) sb.append(row("", "= " + money.format(items.sumOf { it.amount }))).append('\n')
         }
         sb.append("-".repeat(WIDTH)).append('\n')

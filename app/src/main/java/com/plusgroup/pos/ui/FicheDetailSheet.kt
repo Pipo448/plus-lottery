@@ -327,7 +327,7 @@ object FicheDetailSheet {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
         row.addView(TextView(activity).apply {
-            text = money.format(l.amount ?: 0.0)
+            text = com.plusgroup.pos.util.FreeMariage.amountText(l.gameType, l.amount, money)
             textSize = 15f
             setTextColor(ContextCompat.getColor(activity, R.color.pos_ink_soft))
         })
@@ -462,6 +462,7 @@ object FicheDetailSheet {
                 code = gameCode(l.gameType, l.numero, l.option),
                 numero = l.numero ?: "",
                 amount = l.amount ?: 0.0,
+                free = com.plusgroup.pos.util.FreeMariage.isFree(l.gameType),
             )
         }
         val text = com.plusgroup.pos.util.FicheShare.buildText(
@@ -482,6 +483,7 @@ object FicheDetailSheet {
             "borlette" -> "BO"
             "loto3" -> "L3"
             "mariage" -> "MA"
+            com.plusgroup.pos.util.FreeMariage.TYPE -> com.plusgroup.pos.util.FreeMariage.CODE
             "loto4" -> "L4"
             "loto5" -> "L5"
             else -> when {
@@ -499,6 +501,7 @@ object FicheDetailSheet {
     private fun gameColor(gameType: String?, numero: String?): Int = when (gameCode(gameType, numero, null)) {
         "BO" -> Color.parseColor("#2563EB")
         "MA" -> Color.parseColor("#C2570A")
+        "MG" -> Color.parseColor("#DB2777")
         "L3" -> Color.parseColor("#7C3AED")
         "L4" -> Color.parseColor("#0F766E")
         "L5" -> Color.parseColor("#BE123C")

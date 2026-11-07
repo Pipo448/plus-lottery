@@ -830,6 +830,7 @@ class NewFicheActivity : BaseActivity() {
             FicheShare.Line(
                 drawName = l.drawName ?: fallbackDraw,
                 code = codeFor(l.gameType) + (l.option?.trimStart('0')?.takeIf { it.isNotEmpty() }?.let { " O$it" } ?: ""),
+                free = com.plusgroup.pos.util.FreeMariage.isFree(l.gameType),
                 numero = l.numero ?: "",
                 amount = l.amount ?: 0.0,
             )
@@ -1030,6 +1031,7 @@ class NewFicheActivity : BaseActivity() {
         "loto4" -> "L4"
         "loto5" -> "L5"
         "mariage" -> "MA"
+        com.plusgroup.pos.util.FreeMariage.TYPE -> com.plusgroup.pos.util.FreeMariage.CODE
         else -> (gameType ?: "").take(2).uppercase()
     }
 
@@ -1051,13 +1053,16 @@ class NewFicheActivity : BaseActivity() {
         // Fich plizyè tiraj: yon seksyon pou chak tiraj sou MENM resi a
         fun toPrint(l: com.plusgroup.pos.network.models.SoldLine): Triple<String, String, String> {
             val numero = if (!l.option.isNullOrBlank()) "${l.numero} (O${l.option.trimStart('0')})" else (l.numero ?: "")
-            return Triple(codeFor(l.gameType), numero, moneyFormat.format(l.amount ?: 0.0))
+            return Triple(codeFor(l.gameType), numero, com.plusgroup.pos.util.FreeMariage.amountText(l.gameType, l.amount, moneyFormat))
         }
+        // Maryaj gratis yo (backend lan mete yo nan result.lines, ak drawName chak tiraj)
+        val freeLines = soldLines.filter { com.plusgroup.pos.util.FreeMariage.isFree(it.gameType) }
         val sections = result.draws?.takeIf { it.size > 1 }?.map { part ->
             com.plusgroup.pos.printer.ReceiptSection(
                 drawName = part.drawName ?: "—",
                 drawTotal = moneyFormat.format(part.total ?: part.lines.orEmpty().sumOf { it.amount ?: 0.0 }),
-                lines = part.lines.orEmpty().map { toPrint(it) },
+                lines = (part.lines.orEmpty().filterNot { com.plusgroup.pos.util.FreeMariage.isFree(it.gameType) } +
+                    freeLines.filter { it.drawName == part.drawName }).map { toPrint(it) },
             )
         }
 
@@ -1065,10 +1070,7 @@ class NewFicheActivity : BaseActivity() {
         val dateTimeText = dateFormat.format(java.util.Date())
 
         // Resi a enprime SA BACKEND LAN ANREJISTRE (pa sa ki te sou ekran an)
-        val printLines: List<Triple<String, String, String>> = soldLines.map { line ->
-            val numero = if (!line.option.isNullOrBlank()) "${line.numero} (O${line.option.trimStart('0')})" else (line.numero ?: "")
-            Triple(codeFor(line.gameType), numero, moneyFormat.format(line.amount ?: 0.0))
-        }
+        val printLines: List<Triple<String, String, String>> = soldLines.map { toPrint(it) }
 
         lifecycleScope.launch {
             // Non, telefòn, adrès, mesaj ak logo: Mon compte → Paramètres.
@@ -1240,7 +1242,12 @@ class NewFicheActivity : BaseActivity() {
                     lastSold = result
                     lastSoldAt = java.text.SimpleDateFormat("dd/MMM/yyyy hh:mm a", java.util.Locale.US).format(java.util.Date())
                     printCurrentFiche(result)
-                    val bar = Snackbar.make(binding.root, "Fich ${result.ficheNumber ?: ""} vann", Snackbar.LENGTH_LONG)
+                    val freeCount = result.lines.orEmpty()
+                        .filter { com.plusgroup.pos.util.FreeMariage.isFree(it.gameType) }
+                        .map { it.numero }.distinct().size
+                    val soldText = "Fich ${result.ficheNumber ?: ""} vann" +
+                        (if (freeCount > 0) " + $freeCount maryaj gratis" else "")
+                    val bar = Snackbar.make(binding.root, soldText, Snackbar.LENGTH_LONG)
                     if (TenantRules.showShare) bar.setAction("PATAJE") { shareLastFiche() }
                     bar.show()
                     // Entèripsyon limit = non: kèk boul pa t vann (limit) → di ajan an
