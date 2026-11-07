@@ -50,6 +50,8 @@ class LoginActivity : BaseActivity() {
 
         binding.btnLogin.setOnClickListener { handleLogin() }
         binding.btnLoadServers.setOnClickListener { loadServers(openPicker = true) }
+        // Lang: Kreyòl / Français (sere sou aparèy la)
+        bindLangSwitch()
         binding.btnChooseServer.setOnClickListener {
             if (ServerConfig.cachedList(this).isEmpty()) loadServers(openPicker = true) else showServerPicker()
         }
@@ -58,6 +60,18 @@ class LoginActivity : BaseActivity() {
         TenantBranding.ensureCached(applicationContext)
         showBranding()
         checkDevice()
+    }
+
+    private fun bindLangSwitch() {
+        val fr = com.plusgroup.pos.util.Lang.isFr(this)
+        val on = androidx.core.content.ContextCompat.getColor(this, R.color.pl_ink)
+        val off = androidx.core.content.ContextCompat.getColor(this, R.color.pl_white)
+        binding.btnLangKr.setBackgroundResource(if (!fr) R.drawable.pl_bg_lang_on else 0)
+        binding.btnLangFr.setBackgroundResource(if (fr) R.drawable.pl_bg_lang_on else 0)
+        binding.btnLangKr.setTextColor(if (!fr) on else off)
+        binding.btnLangFr.setTextColor(if (fr) on else off)
+        binding.btnLangKr.setOnClickListener { com.plusgroup.pos.util.Lang.set(this, "ht") }
+        binding.btnLangFr.setOnClickListener { com.plusgroup.pos.util.Lang.set(this, "fr") }
     }
 
     // ==================== SÈVÈ ====================
@@ -116,7 +130,7 @@ class LoginActivity : BaseActivity() {
             if (list == null || list.isEmpty()) {
                 Toast.makeText(
                     this@LoginActivity,
-                    "Pa t ka chaje lis sèvè yo. Verifye entènèt la epi eseye ankò.",
+                    com.plusgroup.pos.util.Lang.tr("Pa t ka chaje lis sèvè yo. Verifye entènèt la epi eseye ankò."),
                     Toast.LENGTH_LONG,
                 ).show()
                 if (openPicker && ServerConfig.cachedList(this@LoginActivity).isNotEmpty()) showServerPicker()
@@ -144,10 +158,10 @@ class LoginActivity : BaseActivity() {
         val names = list.map { it.name }.toTypedArray()
         var picked = list.indexOfFirst { it.code == current.code }
         MaterialAlertDialogBuilder(this)
-            .setTitle("Chwazi sèvè ou")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Chwazi sèvè ou"))
             .setSingleChoiceItems(names, picked) { _, which -> picked = which }
-            .setPositiveButton("OK") { _, _ -> list.getOrNull(picked)?.let { selectServer(it) } }
-            .setNegativeButton("Anile", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK")) { _, _ -> list.getOrNull(picked)?.let { selectServer(it) } }
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 

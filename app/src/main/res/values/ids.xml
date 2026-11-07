@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mak pou Lang.kt konnen li deja ap veye yon TextView -->
+    <item name="tag_lang_watch" type="id" />
+</resources>

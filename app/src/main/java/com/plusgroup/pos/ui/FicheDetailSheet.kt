@@ -119,6 +119,7 @@ object FicheDetailSheet {
         val dialog = BottomSheetDialog(activity)
         val b = SheetFicheDetailBinding.inflate(LayoutInflater.from(activity))
         dialog.setContentView(b.root)
+        com.plusgroup.pos.util.Lang.apply(b.root)
         dialog.setOnShowListener {
             val sheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
                 ?: return@setOnShowListener
@@ -382,9 +383,9 @@ object FicheDetailSheet {
 
     private fun confirmPay(activity: AppCompatActivity, ficheNo: String, amount: Double, onDone: () -> Unit) {
         MaterialAlertDialogBuilder(activity)
-            .setTitle("Peye fich la?")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Peye fich la?"))
             .setMessage("Ou pral peye ${money.format(amount)} HTG pou fich #$ficheNo.\nFich la pa ka peye yon dezyèm fwa.")
-            .setPositiveButton("Wi, peye") { _, _ ->
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("Wi, peye")) { _, _ ->
                 activity.lifecycleScope.launch {
                     try {
                         val res = ApiClient.getService(activity.applicationContext).payFiche(ficheNo)
@@ -394,9 +395,9 @@ object FicheDetailSheet {
                             onDone()
                         } else {
                             MaterialAlertDialogBuilder(activity)
-                                .setTitle("Fich la pa ka peye")
+                                .setTitle(com.plusgroup.pos.util.Lang.tr("Fich la pa ka peye"))
                                 .setMessage(ApiErrors.message(res, "Pa t ka peye fich la."))
-                                .setPositiveButton("OK", null)
+                                .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
                                 .show()
                         }
                     } catch (e: Exception) {
@@ -404,7 +405,7 @@ object FicheDetailSheet {
                     }
                 }
             }
-            .setNegativeButton("Non", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Non"), null)
             .show()
     }
 
@@ -428,10 +429,10 @@ object FicheDetailSheet {
             return
         }
         MaterialAlertDialogBuilder(activity)
-            .setTitle("Elimine fich la?")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Elimine fich la?"))
             .setMessage("Tout $lines liy fich #$ficheNo ap anile. Aksyon sa a pa ka defèt.")
-            .setPositiveButton("Wi, elimine l") { _, _ -> doCancel(activity, ficheNo, onDone) }
-            .setNegativeButton("Non", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("Wi, elimine l")) { _, _ -> doCancel(activity, ficheNo, onDone) }
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Non"), null)
             .show()
     }
 
@@ -440,13 +441,13 @@ object FicheDetailSheet {
             try {
                 val res = ApiClient.getService(activity.applicationContext).cancelFiche(ficheNo)
                 if (res.isSuccessful) {
-                    Toast.makeText(activity, "Fich elimine", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, com.plusgroup.pos.util.Lang.tr("Fich elimine"), Toast.LENGTH_SHORT).show()
                     onDone()
                 } else {
                     MaterialAlertDialogBuilder(activity)
-                        .setTitle("Fich la pa ka elimine")
+                        .setTitle(com.plusgroup.pos.util.Lang.tr("Fich la pa ka elimine"))
                         .setMessage(ApiErrors.message(res, "Pa t ka anile fich la."))
-                        .setPositiveButton("OK", null)
+                        .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
                         .show()
                 }
             } catch (e: Exception) {

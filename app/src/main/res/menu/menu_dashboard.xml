@@ -14,6 +14,9 @@
         android:id="@+id/menuGwoseEkran"
         android:title="Gwosè ekran" />
     <item
+        android:id="@+id/menuLang"
+        android:title="Lang / Langue" />
+    <item
         android:id="@+id/menuDekonekte"
         android:title="Dekonekte" />
 </menu>

@@ -38,6 +38,7 @@ object DrawResultsSheet {
         val dialog = BottomSheetDialog(activity)
         val b = SheetDrawResultsBinding.inflate(LayoutInflater.from(activity))
         dialog.setContentView(b.root)
+        com.plusgroup.pos.util.Lang.apply(b.root)
 
         // Fèy la pran prèske tout ekran an
         dialog.setOnShowListener {

@@ -40,31 +40,72 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- CHAJE SÈVÈ: pran lis sèvè yo sou sèvè santral la -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLoadServers"
-                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="42dp"
-                android:layout_gravity="end"
-                android:fontFamily="@font/pl_barlow_extrabold"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:letterSpacing="0.06"
-                android:paddingStart="14dp"
-                android:paddingEnd="16dp"
-                android:text="CHAJE SÈVÈ"
-                android:textColor="@color/pl_white"
-                android:textSize="13sp"
-                app:backgroundTint="@color/pl_white_12"
-                app:cornerRadius="14dp"
-                app:icon="@drawable/pl_ic_refresh"
-                app:iconPadding="8dp"
-                app:iconSize="16dp"
-                app:iconTint="@color/pl_gold_400"
-                app:rippleColor="@color/pl_white_22"
-                app:strokeColor="@color/pl_white_22"
-                app:strokeWidth="1dp" />
+            <!-- Anlè: lang (KR | FR) agoch, CHAJE SÈVÈ adwat -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:background="@drawable/pl_bg_lang_box"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/btnLangKr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:minWidth="42dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:fontFamily="@font/pl_barlow_extrabold"
+                        android:text="KR"
+                        android:textColor="@color/pl_white"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btnLangFr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:minWidth="42dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:fontFamily="@font/pl_barlow_extrabold"
+                        android:text="FR"
+                        android:textColor="@color/pl_white"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- CHAJE SÈVÈ: pran lis sèvè yo sou sèvè santral la -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLoadServers"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    android:layout_gravity="end"
+                    android:fontFamily="@font/pl_barlow_extrabold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:letterSpacing="0.06"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="16dp"
+                    android:text="CHAJE SÈVÈ"
+                    android:textColor="@color/pl_white"
+                    android:textSize="13sp"
+                    app:backgroundTint="@color/pl_white_12"
+                    app:cornerRadius="14dp"
+                    app:icon="@drawable/pl_ic_refresh"
+                    app:iconPadding="8dp"
+                    app:iconSize="16dp"
+                    app:iconTint="@color/pl_gold_400"
+                    app:rippleColor="@color/pl_white_22"
+                    app:strokeColor="@color/pl_white_22"
+                    app:strokeWidth="1dp" />
+            </FrameLayout>
 
             <!-- Logo Plus Lotterie (oswa logo bolèt la nan yon kare blan) -->
             <ImageView

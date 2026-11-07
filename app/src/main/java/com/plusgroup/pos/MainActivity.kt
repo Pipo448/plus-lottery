@@ -38,7 +38,7 @@ class MainActivity : BaseActivity() {
             if (printerManager.isReady()) {
                 printerManager.printTestReceipt()
             } else {
-                Toast.makeText(this, "Enprimant pa konekte toujou", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Enprimant pa konekte toujou"), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -88,7 +88,7 @@ class MainActivity : BaseActivity() {
         if (devices.isEmpty()) {
             Toast.makeText(
                 this,
-                "Pa gen aparèy Bluetooth pè. Al nan Paramèt > Bluetooth pou pè enprimant ou anvan.",
+                com.plusgroup.pos.util.Lang.tr("Pa gen aparèy Bluetooth pè. Al nan Paramèt > Bluetooth pou pè enprimant ou anvan."),
                 Toast.LENGTH_LONG,
             ).show()
             return
@@ -96,7 +96,7 @@ class MainActivity : BaseActivity() {
 
         val names = devices.map { it.name ?: it.address }.toTypedArray()
         AlertDialog.Builder(this)
-            .setTitle("Chwazi enprimant Bluetooth")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Chwazi enprimant Bluetooth"))
             .setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, names)) { _, which ->
                 val selected = devices[which]
                 Toast.makeText(this, "Ap konekte ak ${selected.name}...", Toast.LENGTH_SHORT).show()
@@ -111,7 +111,7 @@ class MainActivity : BaseActivity() {
                     }
                 }.start()
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 

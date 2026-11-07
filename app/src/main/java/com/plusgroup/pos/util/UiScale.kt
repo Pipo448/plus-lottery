@@ -61,7 +61,7 @@ object UiScale {
         val checked = OPTIONS.indexOfFirst { it.first == currentScale }.let { if (it < 0) 2 else it }
 
         MaterialAlertDialogBuilder(activity)
-            .setTitle("Gwosè ekran")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Gwosè ekran"))
             .setSingleChoiceItems(labels, checked) { dialog, which ->
                 dialog.dismiss()
                 val chosen = OPTIONS[which].first
@@ -72,7 +72,7 @@ object UiScale {
                 activity.startActivity(intent)
                 activity.finish()
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 }

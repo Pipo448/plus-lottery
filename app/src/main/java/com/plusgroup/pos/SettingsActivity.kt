@@ -62,7 +62,7 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun showComingSoon() {
-        Toast.makeText(this, "Byento", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Byento"), Toast.LENGTH_SHORT).show()
     }
 
     private fun showDrawResults() {

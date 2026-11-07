@@ -195,7 +195,7 @@ class NewFicheActivity : BaseActivity() {
             } else if (openDraws.isEmpty()) {
                 Toast.makeText(
                     this@NewFicheActivity,
-                    "Pa t ka chaje tiraj yo. Verifye entènèt la.",
+                    com.plusgroup.pos.util.Lang.tr("Pa t ka chaje tiraj yo. Verifye entènèt la."),
                     Toast.LENGTH_LONG,
                 ).show()
             }
@@ -258,7 +258,7 @@ class NewFicheActivity : BaseActivity() {
                 refreshTotal()
 
                 if (rawLines.isNotEmpty()) {
-                    Toast.makeText(this, "Fich chaje — ajoute/retire liy si w vle, epi enprime", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Fich chaje — ajoute/retire liy si w vle, epi enprime"), Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this, "Erè chaje ansyen fich la: ${e.message}", Toast.LENGTH_LONG).show()
@@ -277,7 +277,7 @@ class NewFicheActivity : BaseActivity() {
 
     private fun showDrawPicker() {
         if (openDraws.isEmpty()) {
-            Toast.makeText(this, "Pa gen tiraj ouvè kounye a", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen tiraj ouvè kounye a"), Toast.LENGTH_SHORT).show()
             return
         }
         val names = openDraws.map { it.name ?: it.id }.toTypedArray()
@@ -285,27 +285,27 @@ class NewFicheActivity : BaseActivity() {
             // Mon compte → "Double tiraj" fèmen: yon sèl tiraj pa fich
             val current = openDraws.indexOfFirst { d -> selectedDraws.firstOrNull()?.id == d.id }
             AlertDialog.Builder(this)
-                .setTitle("CHWAZI TIRAJ")
+                .setTitle(com.plusgroup.pos.util.Lang.tr("CHWAZI TIRAJ"))
                 .setSingleChoiceItems(names, current) { dlg, which ->
                     selectedDraws.clear()
                     selectedDraws.add(openDraws[which])
                     onDrawsChanged()
                     dlg.dismiss()
                 }
-                .setNegativeButton("Anile", null)
+                .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
                 .show()
             return
         }
         val checked = BooleanArray(openDraws.size) { i -> selectedDraws.any { it.id == openDraws[i].id } }
         AlertDialog.Builder(this)
-            .setTitle("CHWAZI TIRAJ (youn oswa plizyè)")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("CHWAZI TIRAJ (youn oswa plizyè)"))
             .setMultiChoiceItems(names, checked) { _, which, isChecked -> checked[which] = isChecked }
-            .setPositiveButton("OK") { _, _ ->
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK")) { _, _ ->
                 selectedDraws.clear()
                 openDraws.forEachIndexed { i, d -> if (checked[i]) selectedDraws.add(d) }
                 onDrawsChanged()
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 
@@ -338,18 +338,18 @@ class NewFicheActivity : BaseActivity() {
 
     private fun showGamePicker() {
         if (activeGames.isEmpty()) {
-            Toast.makeText(this, "Pa gen kategori jwèt disponib", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen kategori jwèt disponib"), Toast.LENGTH_SHORT).show()
             return
         }
         val names = activeGames.map { it.name ?: it.id }.toTypedArray()
         AlertDialog.Builder(this)
-            .setTitle("CHWAZI KATEGORI")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("CHWAZI KATEGORI"))
             .setSingleChoiceItems(names, -1) { dialog, which ->
                 selectedGame = activeGames[which]
                 binding.tvFicheLabel.text = (selectedGame?.name ?: "BORLETTE").uppercase()
                 dialog.dismiss()
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 
@@ -390,17 +390,17 @@ class NewFicheActivity : BaseActivity() {
         val input = android.widget.EditText(this)
         input.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
         AlertDialog.Builder(this)
-            .setTitle("Pri pou chak boul")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Pri pou chak boul"))
             .setView(input)
-            .setPositiveButton("OK") { _, _ ->
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK")) { _, _ ->
                 val price = input.text.toString().toDoubleOrNull()
                 if (price == null || price <= 0) {
-                    Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon pri valab"), Toast.LENGTH_SHORT).show()
                 } else {
                     onPrice(price)
                 }
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 
@@ -413,12 +413,12 @@ class NewFicheActivity : BaseActivity() {
         val montantText = binding.etMontant.text.toString().trim()
 
         if (numero.isEmpty()) {
-            Toast.makeText(this, "Antre yon nimewo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon nimewo"), Toast.LENGTH_SHORT).show()
             return
         }
         val montant = montantText.toDoubleOrNull()
         if (montant == null || montant <= 0) {
-            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon pri valab"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -426,15 +426,15 @@ class NewFicheActivity : BaseActivity() {
             2 -> "BORLETTE"
             3 -> "LOTO3"
             4 -> {
-                Toast.makeText(this, "4 chif: klike \"Maryaj\" oswa yon opsyon Loto4 (O1, O2, O3) anba a", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("4 chif: klike \"Maryaj\" oswa yon opsyon Loto4 (O1, O2, O3) anba a"), Toast.LENGTH_LONG).show()
                 return
             }
             5 -> {
-                Toast.makeText(this, "5 chif: klike yon opsyon Loto5 (O1, O2, O3) anba a", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("5 chif: klike yon opsyon Loto5 (O1, O2, O3) anba a"), Toast.LENGTH_LONG).show()
                 return
             }
             else -> {
-                Toast.makeText(this, "Nimewo dwe 2, 3, 4, oswa 5 chif", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Nimewo dwe 2, 3, 4, oswa 5 chif"), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -480,7 +480,7 @@ class NewFicheActivity : BaseActivity() {
             numero.matches(Regex("^\\d{4}$")) -> "LOTO4"
             numero.matches(Regex("^\\d{5}$")) -> "LOTO5"
             else -> {
-                Toast.makeText(this, "Tape 4 chif (Loto4) oswa 5 chif (Loto5)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Tape 4 chif (Loto4) oswa 5 chif (Loto5)"), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -498,7 +498,7 @@ class NewFicheActivity : BaseActivity() {
     private fun currentPrice(): Double? {
         val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
         if (price == null || price <= 0) {
-            Toast.makeText(this, "Antre pri a anvan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre pri a anvan"), Toast.LENGTH_SHORT).show()
             binding.etMontant.requestFocus()
             return null
         }
@@ -554,7 +554,7 @@ class NewFicheActivity : BaseActivity() {
                 "Yon fich pa ka gen plis pase $max ${TenantRules.categoryLabel(category)}.\n" +
                     "Gen $have deja; ou ka ajoute $left ankò.\n\nFè yon lòt fich pou rès yo."
             )
-            .setPositiveButton("OK", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
             .show()
         return false
     }
@@ -577,7 +577,7 @@ class NewFicheActivity : BaseActivity() {
             selectedDraws.clear()
             selectedDraws.add(first)
             onDrawsChanged()
-            Toast.makeText(this, "Yon sèl tiraj pa fich (Double tiraj fèmen)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Yon sèl tiraj pa fich (Double tiraj fèmen)"), Toast.LENGTH_SHORT).show()
         }
         refreshLinesList() // kreyon pri + MAuto / L4Auto
     }
@@ -610,7 +610,7 @@ class NewFicheActivity : BaseActivity() {
 
         if (typed.isNotEmpty()) {
             if (!typed.matches(Regex("^\\d{2}$"))) {
-                Toast.makeText(this, "Revè: boul 2 chif sèlman (egz. 35 → 53)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Revè: boul 2 chif sèlman (egz. 35 → 53)"), Toast.LENGTH_SHORT).show()
                 return
             }
             val price = currentPrice() ?: return
@@ -631,7 +631,7 @@ class NewFicheActivity : BaseActivity() {
         val borlette = lines.filter { it.category == "BORLETTE" }
         val toAdd = AutoCombos.reversesToAdd(borlette.map { it.numero })
         if (toAdd.isEmpty()) {
-            Toast.makeText(this, "Pa gen revè pou ajoute (tape yon boul 2 chif, oswa ajoute boul borlette anvan)", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen revè pou ajoute (tape yon boul 2 chif, oswa ajoute boul borlette anvan)"), Toast.LENGTH_LONG).show()
             return
         }
         if (!fits("BORLETTE", toAdd.size)) return
@@ -681,7 +681,7 @@ class NewFicheActivity : BaseActivity() {
         if (!requireDrawSelected()) return
         val base = baseBorlette()
         if (base.size < 2) {
-            Toast.makeText(this, "Ajoute omwen 2 boul borlette anvan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Ajoute omwen 2 boul borlette anvan"), Toast.LENGTH_SHORT).show()
             return
         }
         val box = android.widget.LinearLayout(this).apply {
@@ -730,8 +730,8 @@ class NewFicheActivity : BaseActivity() {
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(title)
             .setView(android.widget.ScrollView(this).apply { addView(box) })
-            .setPositiveButton("Ajoute", null)
-            .setNegativeButton("Anile", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("Ajoute"), null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .create()
 
         fun state(): Triple<List<String>, List<Int>, Double?> {
@@ -862,12 +862,12 @@ class NewFicheActivity : BaseActivity() {
             rawInput.matches(Regex("^\\d{4}$")) -> rawInput.substring(0, 2) + "*" + rawInput.substring(2, 4)
             rawInput.matches(Regex("^\\d{2}\\*\\d{2}$")) -> rawInput
             else -> {
-                Toast.makeText(this, "Antre 4 chif (egzanp 2532) pou Mariage", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre 4 chif (egzanp 2532) pou Mariage"), Toast.LENGTH_LONG).show()
                 return
             }
         }
         if (montant == null || montant <= 0) {
-            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon pri valab"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -893,11 +893,11 @@ class NewFicheActivity : BaseActivity() {
         val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
         if (!numero.matches(Regex("^\\d{4}$"))) {
-            Toast.makeText(this, "Antre yon nimewo 4 chif pou Loto4", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon nimewo 4 chif pou Loto4"), Toast.LENGTH_SHORT).show()
             return
         }
         if (price == null || price <= 0) {
-            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon pri valab"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -923,11 +923,11 @@ class NewFicheActivity : BaseActivity() {
         val price = binding.etMontant.text.toString().trim().toDoubleOrNull()
 
         if (!numero.matches(Regex("^\\d{5}$"))) {
-            Toast.makeText(this, "Antre yon nimewo 5 chif pou Loto5", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon nimewo 5 chif pou Loto5"), Toast.LENGTH_SHORT).show()
             return
         }
         if (price == null || price <= 0) {
-            Toast.makeText(this, "Antre yon pri valab", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre yon pri valab"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -973,7 +973,7 @@ class NewFicheActivity : BaseActivity() {
         AlertDialog.Builder(this)
             .setTitle(title)
             .setView(container)
-            .setPositiveButton("VALIDER") { _, _ ->
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("VALIDER")) { _, _ ->
                 val newOnes = checkBoxes.indices.count { i ->
                     checkBoxes[i].isChecked && findLine(drawsLabel(), options[i].second, category, options[i].third) == null
                 }
@@ -988,20 +988,20 @@ class NewFicheActivity : BaseActivity() {
                     }
                 }
                 if (addedCount == 0) {
-                    Toast.makeText(this, "Ou pa koche okenn opsyon", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Ou pa koche okenn opsyon"), Toast.LENGTH_SHORT).show()
                 } else {
                     binding.etBoulLa.text?.clear()
                     refreshLinesList()
                     refreshTotal()
                 }
             }
-            .setNegativeButton("ANNULER", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("ANNULER"), null)
             .show()
     }
 
     private fun requireDrawSelected(): Boolean {
         if (selectedDraws.isEmpty()) {
-            Toast.makeText(this, "Chwazi yon Tiraj anvan ou ka vann", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Chwazi yon Tiraj anvan ou ka vann"), Toast.LENGTH_LONG).show()
             return false
         }
         return true
@@ -1049,7 +1049,7 @@ class NewFicheActivity : BaseActivity() {
     private fun printCurrentFiche(result: SellFicheResult) {
         val soldLines = result.lines.orEmpty()
         if (soldLines.isEmpty()) {
-            Toast.makeText(this, "Pa gen liy pou enprime", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen liy pou enprime"), Toast.LENGTH_SHORT).show()
             return
         }
         val ficheNumber = result.ficheNumber ?: "—"
@@ -1095,7 +1095,7 @@ class NewFicheActivity : BaseActivity() {
                     if (!printerManager.isReady()) {
                         Toast.makeText(
                             this@NewFicheActivity,
-                            "Fich la VANN, men enprimant lan pa konekte. Konekte l epi reenprime fich la nan \"Fich mwen yo\".",
+                            com.plusgroup.pos.util.Lang.tr("Fich la VANN, men enprimant lan pa konekte. Konekte l epi reenprime fich la nan \"Fich mwen yo\"."),
                             Toast.LENGTH_LONG,
                         ).show()
                         return@runOnUiThread
@@ -1115,7 +1115,7 @@ class NewFicheActivity : BaseActivity() {
                         qrData = ficheNumber,
                         sections = sections,
                     )
-                    Toast.makeText(this@NewFicheActivity, "Fich enprime avèk siksè!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@NewFicheActivity, com.plusgroup.pos.util.Lang.tr("Fich enprime avèk siksè!"), Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch { TenantBranding.load(applicationContext) }
                 }
             }
@@ -1231,15 +1231,15 @@ class NewFicheActivity : BaseActivity() {
         val game = selectedGame
 
         if (draws.isEmpty()) {
-            Toast.makeText(this, "Chwazi yon tiraj anvan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Chwazi yon tiraj anvan"), Toast.LENGTH_SHORT).show()
             return
         }
         if (game == null) {
-            Toast.makeText(this, "Pa gen jwèt disponib", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen jwèt disponib"), Toast.LENGTH_SHORT).show()
             return
         }
         if (lines.isEmpty()) {
-            Toast.makeText(this, "Ajoute omwen yon liy anvan w enprime", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Ajoute omwen yon liy anvan w enprime"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -1306,7 +1306,7 @@ class NewFicheActivity : BaseActivity() {
                                     skipped.joinToString("\n") { "• ${it.numero} — ${moneyFormat.format(it.amount ?: 0.0)}" } +
                                     "\n\nRès fich la vann nòmalman."
                             )
-                            .setPositiveButton("OK", null)
+                            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
                             .show()
                     }
                     lines.clear()
@@ -1315,7 +1315,7 @@ class NewFicheActivity : BaseActivity() {
                     refreshLinesList()
                     refreshTotal()
                     if (result.replay == true) {
-                        Toast.makeText(this@NewFicheActivity, "Fich sa a te deja vann — n ap enprime l.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@NewFicheActivity, com.plusgroup.pos.util.Lang.tr("Fich sa a te deja vann — n ap enprime l."), Toast.LENGTH_LONG).show()
                     }
                     return@launch
                 }
@@ -1352,9 +1352,9 @@ class NewFicheActivity : BaseActivity() {
 
     private fun showSaleError(message: String) {
         AlertDialog.Builder(this)
-            .setTitle("Fich la pa vann")
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Fich la pa vann"))
             .setMessage(message)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
             .show()
     }
 }

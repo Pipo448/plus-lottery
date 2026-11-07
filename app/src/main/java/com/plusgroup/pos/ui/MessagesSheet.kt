@@ -41,6 +41,7 @@ object MessagesSheet {
         val dialog = BottomSheetDialog(activity)
         val b = SheetMessagesBinding.inflate(LayoutInflater.from(activity))
         dialog.setContentView(b.root)
+        com.plusgroup.pos.util.Lang.apply(b.root)
         dialog.setOnShowListener {
             val sheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
                 ?: return@setOnShowListener

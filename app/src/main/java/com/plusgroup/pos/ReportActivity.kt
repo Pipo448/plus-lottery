@@ -545,7 +545,7 @@ class ReportActivity : BaseActivity() {
 
     private fun printCurrentReport() {
         if (printBodyFields.isEmpty()) {
-            Toast.makeText(this, "Pa gen anyen pou enprime", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen anyen pou enprime"), Toast.LENGTH_SHORT).show()
             return
         }
         lifecycleScope.launch {
@@ -553,7 +553,7 @@ class ReportActivity : BaseActivity() {
             printerManager.connect {
                 runOnUiThread {
                     if (!printerManager.isReady()) {
-                        Toast.makeText(this@ReportActivity, "Enprimant pa konekte.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@ReportActivity, com.plusgroup.pos.util.Lang.tr("Enprimant pa konekte."), Toast.LENGTH_LONG).show()
                         return@runOnUiThread
                     }
                     // Ajan an enprime anlè (menm jan ak fich yo): pa repete l anba
@@ -572,7 +572,7 @@ class ReportActivity : BaseActivity() {
                         footerFields = printFooterFields,
                         agent = cachedVendeur ?: "",
                     )
-                    Toast.makeText(this@ReportActivity, "Rapò voye bay enprimant lan", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReportActivity, com.plusgroup.pos.util.Lang.tr("Rapò voye bay enprimant lan"), Toast.LENGTH_SHORT).show()
                 }
             }
         }

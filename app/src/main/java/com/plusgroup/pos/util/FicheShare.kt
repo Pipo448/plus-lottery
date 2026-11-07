@@ -86,7 +86,7 @@ object FicheShare {
                     else -> copy(activity, text)
                 }
             }
-            .setNegativeButton("Anile", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Anile"), null)
             .show()
     }
 
@@ -119,6 +119,6 @@ object FicheShare {
     private fun copy(activity: AppCompatActivity, text: String) {
         val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         cm?.setPrimaryClip(ClipData.newPlainText("Fich", text))
-        Toast.makeText(activity, "Tèks fich la kopye", Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, com.plusgroup.pos.util.Lang.tr("Tèks fich la kopye"), Toast.LENGTH_SHORT).show()
     }
 }

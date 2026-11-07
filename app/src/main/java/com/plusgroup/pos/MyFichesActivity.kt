@@ -247,7 +247,7 @@ class MyFichesActivity : BaseActivity() {
             printerManager.connect {
                 runOnUiThread {
                     if (!printerManager.isReady()) {
-                        Toast.makeText(this@MyFichesActivity, "Enprimant pa konekte.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MyFichesActivity, com.plusgroup.pos.util.Lang.tr("Enprimant pa konekte."), Toast.LENGTH_LONG).show()
                         return@runOnUiThread
                     }
                     printerManager.printFicheReceipt(
@@ -265,7 +265,7 @@ class MyFichesActivity : BaseActivity() {
                         qrData = fiche.ficheNumber ?: fiche.ticketNumber,
                         sections = sections,
                     )
-                    Toast.makeText(this@MyFichesActivity, "Fich voye bay enprimant lan", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MyFichesActivity, com.plusgroup.pos.util.Lang.tr("Fich voye bay enprimant lan"), Toast.LENGTH_SHORT).show()
                 }
             }
         }

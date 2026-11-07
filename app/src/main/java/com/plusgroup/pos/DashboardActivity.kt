@@ -158,12 +158,14 @@ class DashboardActivity : BaseActivity() {
     private fun showMainMenu() {
         val popup = PopupMenu(this, binding.btnMenu, Gravity.END)
         popup.menuInflater.inflate(R.menu.menu_dashboard, popup.menu)
+        com.plusgroup.pos.util.Lang.menu(this, popup.menu)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.menuTirajDisponib -> showTirajDisponib()
                 R.id.menuBoulKiSoti -> showBoulKiSoti()
                 R.id.menuKont -> showKont()
                 R.id.menuGwoseEkran -> com.plusgroup.pos.util.UiScale.showPicker(this)
+                R.id.menuLang -> showLangPicker()
                 R.id.menuDekonekte -> confirmLogout()
             }
             true
@@ -181,9 +183,9 @@ class DashboardActivity : BaseActivity() {
 
                 if (draws.isEmpty()) {
                     MaterialAlertDialogBuilder(this@DashboardActivity)
-                        .setTitle("Tiraj disponib")
-                        .setMessage("Pa gen tiraj ouvè kounye a.")
-                        .setPositiveButton("OK", null)
+                        .setTitle(com.plusgroup.pos.util.Lang.tr("Tiraj disponib"))
+                        .setMessage(com.plusgroup.pos.util.Lang.tr("Pa gen tiraj ouvè kounye a."))
+                        .setPositiveButton(com.plusgroup.pos.util.Lang.tr("OK"), null)
                         .show()
                     return@launch
                 }
@@ -196,7 +198,7 @@ class DashboardActivity : BaseActivity() {
                             .putExtra("PREFILL_DRAW_NAME", names[which])
                         startActivity(intent)
                     }
-                    .setNegativeButton("Fèmen", null)
+                    .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Fèmen"), null)
                     .show()
             } catch (e: Exception) {
                 Toast.makeText(this@DashboardActivity, "Erè chaje tiraj yo: ${e.message}", Toast.LENGTH_LONG).show()
@@ -218,7 +220,7 @@ class DashboardActivity : BaseActivity() {
                 val balance = api.getBalance().body()?.data
 
                 val rows = listOf(
-                    "Non" to (profile?.fullName ?: "—"),
+                    "Non konplè" to (profile?.fullName ?: "—"),
                     "Idantifyan" to (profile?.username ?: "—"),
                     "Bank" to (profile?.tenantName ?: "—"),
                     "Succursal" to (profile?.branchName ?: "—"),
@@ -237,11 +239,26 @@ class DashboardActivity : BaseActivity() {
         }
     }
 
+    /** Kreyòl / Français — tout APK a chanje touswit. */
+    private fun showLangPicker() {
+        val codes = arrayOf("ht", "fr")
+        val names = arrayOf("Kreyòl", "Français")
+        val cur = codes.indexOf(com.plusgroup.pos.util.Lang.get(this)).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Lang / Langue"))
+            .setSingleChoiceItems(names, cur) { d, which ->
+                d.dismiss()
+                com.plusgroup.pos.util.Lang.set(this, codes[which])
+            }
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Fèmen"), null)
+            .show()
+    }
+
     private fun confirmLogout() {
         MaterialAlertDialogBuilder(this)
-            .setTitle("Dekonekte")
-            .setMessage("Ou vle dekonekte sou aparèy sa a?")
-            .setPositiveButton("Wi, dekonekte") { _, _ ->
+            .setTitle(com.plusgroup.pos.util.Lang.tr("Dekonekte"))
+            .setMessage(com.plusgroup.pos.util.Lang.tr("Ou vle dekonekte sou aparèy sa a?"))
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("Wi, dekonekte")) { _, _ ->
                 SessionManager(this).clear()
                 val loginIntent = Intent(this, LoginActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -249,7 +266,7 @@ class DashboardActivity : BaseActivity() {
                 startActivity(loginIntent)
                 finish()
             }
-            .setNegativeButton("Non", null)
+            .setNegativeButton(com.plusgroup.pos.util.Lang.tr("Non"), null)
             .show()
     }
 
@@ -267,10 +284,11 @@ class DashboardActivity : BaseActivity() {
         (body.llInfoRows.getChildAt(body.llInfoRows.childCount - 1) as? LinearLayout)
             ?.let { last -> if (last.childCount > 1) last.getChildAt(1).visibility = android.view.View.GONE }
 
+        com.plusgroup.pos.util.Lang.apply(body.root)
         MaterialAlertDialogBuilder(this)
-            .setTitle(title)
+            .setTitle(com.plusgroup.pos.util.Lang.tr(title))
             .setView(body.root)
-            .setPositiveButton("Fèmen", null)
+            .setPositiveButton(com.plusgroup.pos.util.Lang.tr("Fèmen"), null)
             .show()
     }
 }

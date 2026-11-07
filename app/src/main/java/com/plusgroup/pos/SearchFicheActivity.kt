@@ -74,7 +74,7 @@ class SearchFicheActivity : BaseActivity() {
     private fun searchTicket() {
         val raw = binding.etTicket.text.toString().trim()
         if (raw.isEmpty()) {
-            Toast.makeText(this, "Antre nimewo fich la, oswa peze SCAN", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Antre nimewo fich la, oswa peze SCAN"), Toast.LENGTH_SHORT).show()
             return
         }
         openFiche(extractFicheNumber(raw))
