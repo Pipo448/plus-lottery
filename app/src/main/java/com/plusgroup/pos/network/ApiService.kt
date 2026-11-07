@@ -14,6 +14,7 @@ import com.plusgroup.pos.network.models.FinTirageReport
 import com.plusgroup.pos.network.models.GagnantReport
 import com.plusgroup.pos.network.models.TransactionLine
 import com.plusgroup.pos.network.models.FicheSummary
+import com.plusgroup.pos.network.models.FreeMariageInfo
 import com.plusgroup.pos.network.models.LotteryGame
 import com.plusgroup.pos.network.models.LoginRequest
 import com.plusgroup.pos.network.models.LoginResponse
@@ -148,6 +149,10 @@ interface ApiService {
     // "Paramèt" — Prime pa ajan, boul bloke pa ajan, paramèt tenant antye
     @GET("agent/prime")
     suspend fun getPrime(): Response<ApiDataResponse<AgentPrime>>
+
+    // Maryaj gratis (pou montre yo sou ekran vant lan)
+    @GET("agent/mariage-gratis")
+    suspend fun getFreeMariageInfo(): Response<ApiDataResponse<FreeMariageInfo>>
 
     @GET("agent/blocked-numbers")
     suspend fun getBlockedNumbers(): Response<ApiListResponse<BlockedNumber>>

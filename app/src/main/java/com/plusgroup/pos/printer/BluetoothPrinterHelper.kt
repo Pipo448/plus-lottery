@@ -227,7 +227,6 @@ class BluetoothPrinterHelper {
         sections: List<ReceiptSection>? = null,
     ) {
         val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
-        val lineCount = secs.sumOf { it.lines.size }
         write(ESC_INIT)
         write(sizeMode()) // Mon compte → "Gwosè enprimant"
         write(alignCenter())
@@ -254,9 +253,8 @@ class BluetoothPrinterHelper {
 
         secs.forEachIndexed { idx, sec ->
             if (idx > 0) write(feed(1))
-            write(boldOn())
-            write(textLine("${sec.drawName}: ${sec.drawTotal}"))
-            write(boldOff())
+            // Non tiraj la sèlman (total la parèt yon sèl fwa anba)
+            write(textLine(sec.drawName))
             for ((code, numero, prix) in sec.lines) {
                 write(textLine(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth)))
             }
@@ -264,7 +262,12 @@ class BluetoothPrinterHelper {
 
         write(textLine("-".repeat(ReceiptLabels.lineWidth)))
         if (secs.size > 1) write(textLine(ReceiptLabels.draws(secs.size)))
-        write(textLine(twoColumnLine("${ReceiptLabels.total}:  ${String.format("%03d", lineCount)}", grandTotal, ReceiptLabels.lineWidth)))
+        // TOTAL: sèl montan anba a, an gra + wotè doub
+        write(boldOn())
+        write(byteArrayOf(0x1B, 0x21, 0x18)) // gra + wotè doub
+        write(textLine(twoColumnLine(ReceiptLabels.total, grandTotal, ReceiptLabels.lineWidth)))
+        write(sizeMode())
+        write(boldOff())
         write(feed(1))
 
         write(alignCenter())

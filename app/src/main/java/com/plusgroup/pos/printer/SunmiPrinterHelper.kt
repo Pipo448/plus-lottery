@@ -262,7 +262,6 @@ class SunmiPrinterHelper(private val context: Context) {
     ) {
         // Fich plizyè tiraj: yon seksyon pou chak tiraj
         val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
-        val lineCount = secs.sumOf { it.lines.size }
         val svc = woyouService ?: run {
             Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
             return
@@ -324,7 +323,8 @@ class SunmiPrinterHelper(private val context: Context) {
                         svc.lineWrap(1, null)
                         pause()
                     }
-                    svc.printTextWithFont("${sec.drawName}: ${sec.drawTotal}\n", null, fs(26f), null)
+                    // Non tiraj la sèlman (total la parèt yon sèl fwa anba)
+                    svc.printTextWithFont("${sec.drawName}\n", null, fs(26f), null)
                     pause()
                     for ((code, numero, prix) in sec.lines) {
                         svc.printTextWithFont(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
@@ -338,7 +338,12 @@ class SunmiPrinterHelper(private val context: Context) {
                     svc.printTextWithFont(ReceiptLabels.draws(secs.size) + "\n", null, fs(24f), null)
                     pause()
                 }
-                svc.printTextWithFont(twoColumnLine("${ReceiptLabels.total}:  ${String.format("%03d", lineCount)}", grandTotal, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
+                // TOTAL: sèl montan anba a, an gra epi pi gwo pase rès tèks la
+                try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x01), null) } catch (_: Exception) {}
+                pause()
+                svc.printTextWithFont(twoColumnLine(ReceiptLabels.total, grandTotal, totalWidth()) + "\n", null, fs(32f), null)
+                pause()
+                try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x00), null) } catch (_: Exception) {}
                 pause()
                 svc.lineWrap(1, null)
                 pause()
@@ -485,6 +490,9 @@ class SunmiPrinterHelper(private val context: Context) {
     // BluetoothPrinterHelper, sipoze lajè ~32 karaktè).
     /** Gwosè lèt dapre Mon compte → "Gwosè enprimant" (piti / nòmal / gwo). */
     private fun fs(v: Float): Float = v * com.plusgroup.pos.util.TenantRules.printScale
+
+    /** Kantite karaktè sou liy TOTAL la (font 32 olye de 24 → mwens karaktè). */
+    private fun totalWidth(): Int = (ReceiptLabels.lineWidth * 24) / 32
 
     private fun twoColumnLine(left: String, right: String, width: Int = 32): String {
         val space = width - left.length - right.length

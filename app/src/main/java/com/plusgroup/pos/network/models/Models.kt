@@ -111,6 +111,19 @@ data class SellFicheRequest(
     val gameId: String,
     val deviceCode: String?,
     val lines: List<SellFicheLine>,
+    // Maryaj gratis ajan an wè sou ekran an ("12*45") — backend lan verifye yo
+    val freeMariages: List<String>? = null,
+)
+
+// Maryaj gratis: règ yo (Konfigirasyon → Mariage gratuit) + si yo aktif pou ajan sa a
+data class FreeMariageInfo(
+    val enabled: Boolean? = null,
+    val rules: List<FreeMariageRule>? = null,
+)
+
+data class FreeMariageRule(
+    val thresholdAmount: Double? = null,
+    val freeCount: Int? = null,
 )
 
 data class SellFicheLine(

@@ -86,6 +86,10 @@ class NewFicheActivity : BaseActivity() {
 
     private val lines = mutableListOf<FicheLine>()
 
+    // Maryaj gratis fich la gen dwa (Konfigirasyon → Mariage gratuit): yo
+    // parèt sou ekran an anba boul yo epi yo voye ak vant lan.
+    private val freeMariages = mutableListOf<String>()
+
     // Dènye demann ki pa t konfime (rezo koupe). Si ajan an re-eseye ak
     // EGZAKTEMAN menm fich la, nou re-voye menm ID yo → pa gen doub vant.
     private var pendingRequestId: String? = null
@@ -386,7 +390,7 @@ class NewFicheActivity : BaseActivity() {
         val input = android.widget.EditText(this)
         input.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
         AlertDialog.Builder(this)
-            .setTitle("Pri pou chak nimewo")
+            .setTitle("Pri pou chak boul")
             .setView(input)
             .setPositiveButton("OK") { _, _ ->
                 val price = input.text.toString().toDoubleOrNull()
@@ -585,7 +589,9 @@ class NewFicheActivity : BaseActivity() {
         // Paramèt yo ka chanje sou web la: rafrechi (chak 2 minit maks) epi reaplike
         lifecycleScope.launch {
             TenantBranding.load(applicationContext)
+            com.plusgroup.pos.util.FreeMariage.load(applicationContext)
             applyRules()
+            refreshTotal()
         }
     }
 
@@ -1037,7 +1043,7 @@ class NewFicheActivity : BaseActivity() {
 
     /** Siyati fich la: si li chanje, se yon NOUVO vant (nouvo requestId). */
     private fun currentSignature(gameId: String): String =
-        selectedDraws.joinToString(",") { it.id } + "|" + gameId + "|" + lines.joinToString(";") { "${it.category}:${it.numero}:${it.optionLabel}:${it.price}" }
+        selectedDraws.joinToString(",") { it.id } + "|" + gameId + "|" + lines.joinToString(";") { "${it.category}:${it.numero}:${it.optionLabel}:${it.price}" } + "|" + freeMariages.joinToString(",")
 
     // ==================== ENPRIME FICH LA ====================
     private fun printCurrentFiche(result: SellFicheResult) {
@@ -1118,9 +1124,13 @@ class NewFicheActivity : BaseActivity() {
 
     // ==================== LIS LIY ====================
 
+    /** Maryaj ki deja sou fich la (pou maryaj gratis yo pa repete yo). */
+    private fun mariagesOnFiche(): List<String> = lines.filter { it.category == "MARIAGE" }.map { it.numero }
+
     private fun refreshLinesList() {
         binding.llLinesContainer.removeAllViews()
         val inflater = LayoutInflater.from(this)
+        com.plusgroup.pos.util.FreeMariage.sync(freeMariages, lines.sumOf { it.price }, mariagesOnFiche())
 
         val categoriesInOrder = LinkedHashSet<String>()
         lines.forEach { categoriesInOrder.add(it.category) }
@@ -1153,7 +1163,7 @@ class NewFicheActivity : BaseActivity() {
                     refreshLinesList()
                     refreshTotal()
                 }
-                // Mon compte → "Ajan ka modifye lo"
+                // Mon compte → "Ajan ka modifye pri boul yo"
                 rowBinding.btnEditLinePrice.visibility = if (TenantRules.canEditPrice) View.VISIBLE else View.GONE
                 rowBinding.btnEditLinePrice.setOnClickListener {
                     promptForPrice { newPrice ->
@@ -1166,16 +1176,51 @@ class NewFicheActivity : BaseActivity() {
                 binding.llLinesContainer.addView(rowBinding.root)
             }
         }
+
+        // ---------- MARYAJ GRATIS (menm jan ak boul yo, pri = GRATIS) ----------
+        if (freeMariages.isNotEmpty()) {
+            binding.llLinesContainer.addView(TextView(this).apply {
+                text = "MARYAJ GRATIS"
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                textSize = 14f
+                setTextColor(android.graphics.Color.parseColor("#DB2777"))
+                setPadding(0, 16, 0, 4)
+            })
+            freeMariages.forEachIndexed { index, pair ->
+                val rowBinding = ItemFicheLineBinding.inflate(inflater, binding.llLinesContainer, false)
+                rowBinding.tvLineTiraj.text = drawsLabel()
+                val nDraws = rowBinding.tvLineTiraj.text.count { it == '\n' } + 1
+                rowBinding.tvLineTiraj.maxLines = nDraws.coerceAtMost(6)
+                rowBinding.tvLineTiraj.textSize = if (nDraws > 1) 13f else 16f
+                rowBinding.tvLineBoul.text = pair
+                rowBinding.tvLineOption.text = ""
+                rowBinding.tvLineKob.text = com.plusgroup.pos.util.FreeMariage.LABEL
+                rowBinding.tvLineKob.setTextColor(android.graphics.Color.parseColor("#DB2777"))
+                rowBinding.btnEditLinePrice.visibility = View.GONE
+                // Bouton efase a → tire yon lòt maryaj o aza (pa ka retire yon gratis)
+                rowBinding.btnDeleteLine.contentDescription = "Chanje maryaj gratis la"
+                rowBinding.btnDeleteLine.setImageResource(R.drawable.ic_refresh)
+                rowBinding.btnDeleteLine.imageTintList =
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#DB2777"))
+                rowBinding.btnDeleteLine.setOnClickListener {
+                    com.plusgroup.pos.util.FreeMariage.reroll(freeMariages, index, mariagesOnFiche())
+                    refreshLinesList()
+                }
+                binding.llLinesContainer.addView(rowBinding.root)
+            }
+        }
         updateAutoRow()
     }
 
     private fun refreshTotal() {
         val total = lines.sumOf { it.price }
+        com.plusgroup.pos.util.FreeMariage.sync(freeMariages, total, mariagesOnFiche())
         val n = selectedDraws.size
+        val free = if (freeMariages.isNotEmpty()) "  +${freeMariages.size} maryaj gratis" else ""
         binding.tvTotal.text = if (n > 1) {
-            "Total: ${moneyFormat.format(total)} × $n tiraj = ${moneyFormat.format(total * n)}"
+            "Total: ${moneyFormat.format(total)} × $n tiraj = ${moneyFormat.format(total * n)}$free"
         } else {
-            "Total: ${moneyFormat.format(total)}"
+            "Total: ${moneyFormat.format(total)}$free"
         }
     }
 
@@ -1223,6 +1268,7 @@ class NewFicheActivity : BaseActivity() {
                     amount = line.price,
                 )
             },
+            freeMariages = freeMariages.toList().takeIf { it.isNotEmpty() },
         )
 
         binding.btnPrint.isEnabled = false
