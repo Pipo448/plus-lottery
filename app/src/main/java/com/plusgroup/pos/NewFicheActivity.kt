@@ -248,7 +248,7 @@ class NewFicheActivity : BaseActivity() {
                     val numero = (raw["numero"] as? String)?.trim() ?: return@forEach
                     val price = (raw["price"] as? Double) ?: 0.0
                     if (numero.isEmpty() || price <= 0) return@forEach
-                    lines.add(FicheLine(drawName, numero, price, categoryForNumero(numero)))
+                    addOrMerge(FicheLine(drawName, numero, price, categoryForNumero(numero)))
                 }
                 refreshLinesList()
                 refreshTotal()
@@ -373,10 +373,10 @@ class NewFicheActivity : BaseActivity() {
         }
         // Grap = 000, 111… (3 chif) → Loto3; lòt yo → Borlette
         val cat = if (category is QuickCategory.Grap) "LOTO3" else "BORLETTE"
-        if (!fits(cat, numbers.size)) return
+        if (!fits(cat, countNew(cat, numbers))) return
         promptForPrice { price ->
             val drawName = drawsLabel()
-            numbers.forEach { num -> lines.add(FicheLine(drawName, num, price, cat)) }
+            numbers.forEach { num -> addOrMerge(FicheLine(drawName, num, price, cat)) }
             refreshLinesList()
             refreshTotal()
         }
@@ -435,9 +435,13 @@ class NewFicheActivity : BaseActivity() {
             }
         }
 
-        if (!fits(category, 1)) return
+        if (!fits(category, countNew(category, listOf(numero)))) return
         val drawName = drawsLabel()
-        lines.add(FicheLine(drawName, numero, montant, category))
+        val before = findLine(drawName, numero, category, null)?.price
+        addOrMerge(FicheLine(drawName, numero, montant, category))
+        if (before != null) {
+            Toast.makeText(this, "$numero: ${moneyFormat.format(before)} + ${moneyFormat.format(montant)} = ${moneyFormat.format(before + montant)}", Toast.LENGTH_SHORT).show()
+        }
         binding.etBoulLa.text?.clear()
         binding.etBoulLa.requestFocus()
         refreshLinesList()
@@ -477,9 +481,9 @@ class NewFicheActivity : BaseActivity() {
             }
         }
         val price = currentPrice() ?: return
-        if (!fits(category, options.size)) return
+        if (!fits(category, options.count { o -> findLine(drawsLabel(), numero, category, "0$o") == null })) return
         val drawName = drawsLabel()
-        options.forEach { o -> lines.add(FicheLine(drawName, numero, price, category, "0$o")) }
+        options.forEach { o -> addOrMerge(FicheLine(drawName, numero, price, category, "0$o")) }
         binding.etBoulLa.text?.clear()
         binding.etBoulLa.requestFocus()
         refreshLinesList()
@@ -495,6 +499,37 @@ class NewFicheActivity : BaseActivity() {
             return null
         }
         return price
+    }
+
+    // ==================== MENM BOUL = MENM LIY ====================
+
+    /** Liy ki deja sou fich la pou menm tiraj, menm boul, menm jwèt, menm opsyon. */
+    private fun findLine(drawName: String, numero: String, category: String, option: String?): FicheLine? =
+        lines.firstOrNull {
+            it.drawName == drawName && it.numero == numero &&
+                it.category.equals(category, ignoreCase = true) &&
+                (it.optionLabel ?: "") == (option ?: "")
+        }
+
+    /**
+     * Si boul la deja sou fich la (menm tiraj / jwèt / opsyon), ajoute kòb la
+     * sou MENM liy lan (25 + 25 = 50) olye pou l parèt de fwa. Sinon, nouvo liy.
+     * Retounen true si se te yon fizyon.
+     */
+    private fun addOrMerge(line: FicheLine): Boolean {
+        val existing = findLine(line.drawName, line.numero, line.category, line.optionLabel)
+        if (existing != null) {
+            existing.price = Math.round((existing.price + line.price) * 100) / 100.0
+            return true
+        }
+        lines.add(line)
+        return false
+    }
+
+    /** Konbyen nan boul sa yo ki ta fè NOUVO liy (lòt yo jis ogmante kòb yo). */
+    private fun countNew(category: String, numeros: List<String>, option: String? = null): Int {
+        val drawName = drawsLabel()
+        return numeros.distinct().count { findLine(drawName, it, category, option) == null }
     }
 
     // ==================== RÈG MON COMPTE ====================
@@ -573,13 +608,11 @@ class NewFicheActivity : BaseActivity() {
                 return
             }
             val price = currentPrice() ?: return
-            val revNeeded = AutoCombos.rev(typed) != typed
-            if (!fits("BORLETTE", if (revNeeded) 2 else 1)) return
-            lines.add(FicheLine(drawName, typed, price, "BORLETTE"))
             val r = AutoCombos.rev(typed)
-            val have = lines.filter { it.category == "BORLETTE" }.map { it.numero }
-            val added = if (r != typed && r !in have.dropLast(1)) {
-                lines.add(FicheLine(drawName, r, price, "BORLETTE")); true
+            if (!fits("BORLETTE", countNew("BORLETTE", listOf(typed, r).distinct()))) return
+            addOrMerge(FicheLine(drawName, typed, price, "BORLETTE"))
+            val added = if (r != typed) {
+                addOrMerge(FicheLine(drawName, r, price, "BORLETTE")); true
             } else false
             binding.etBoulLa.text?.clear()
             binding.etBoulLa.requestFocus()
@@ -598,7 +631,7 @@ class NewFicheActivity : BaseActivity() {
         if (!fits("BORLETTE", toAdd.size)) return
         toAdd.forEach { r ->
             val src = borlette.first { AutoCombos.rev(it.numero) == r }
-            lines.add(FicheLine(src.drawName, r, src.price, "BORLETTE"))
+            addOrMerge(FicheLine(src.drawName, r, src.price, "BORLETTE"))
         }
         refreshLinesList()
         refreshTotal()
@@ -744,7 +777,7 @@ class NewFicheActivity : BaseActivity() {
         ) { nums, _, price ->
             if (!fits("MARIAGE", nums.size)) return@showAutoDialog
             val drawName = drawsLabel()
-            nums.forEach { m -> lines.add(FicheLine(drawName, m, price, "MARIAGE")) }
+            nums.forEach { m -> addOrMerge(FicheLine(drawName, m, price, "MARIAGE")) }
             refreshLinesList()
             refreshTotal()
             Toast.makeText(this, "${nums.size} maryaj ajoute — modifye oswa efase sa w pa vle", Toast.LENGTH_SHORT).show()
@@ -771,7 +804,7 @@ class NewFicheActivity : BaseActivity() {
             var n = 0
             for (num in nums) for (o in opts) {
                 if ("$num:0$o" in existing) continue
-                lines.add(FicheLine(drawName, num, price, "LOTO4", "0$o"))
+                addOrMerge(FicheLine(drawName, num, price, "LOTO4", "0$o"))
                 n++
             }
             refreshLinesList()
@@ -836,9 +869,9 @@ class NewFicheActivity : BaseActivity() {
             Toast.makeText(this, "Maryaj ${numero} pa pèmèt: \"Boul pa boul\" fèmen nan Mon compte", Toast.LENGTH_LONG).show()
             return
         }
-        if (!fits("MARIAGE", 1)) return
+        if (!fits("MARIAGE", countNew("MARIAGE", listOf(numero)))) return
         val drawName = drawsLabel()
-        lines.add(FicheLine(drawName, numero, montant, "MARIAGE"))
+        addOrMerge(FicheLine(drawName, numero, montant, "MARIAGE"))
         binding.etBoulLa.text?.clear()
         binding.etBoulLa.requestFocus()
         refreshLinesList()
@@ -934,13 +967,16 @@ class NewFicheActivity : BaseActivity() {
             .setTitle(title)
             .setView(container)
             .setPositiveButton("VALIDER") { _, _ ->
-                if (!fits(category, checkBoxes.count { it.isChecked })) return@setPositiveButton
+                val newOnes = checkBoxes.indices.count { i ->
+                    checkBoxes[i].isChecked && findLine(drawsLabel(), options[i].second, category, options[i].third) == null
+                }
+                if (!fits(category, newOnes)) return@setPositiveButton
                 val drawName = drawsLabel()
                 var addedCount = 0
                 checkBoxes.forEachIndexed { i, cb ->
                     if (cb.isChecked) {
                         val (_, numero, optionLabel) = options[i]
-                        lines.add(FicheLine(drawName, numero, price, category, optionLabel))
+                        addOrMerge(FicheLine(drawName, numero, price, category, optionLabel))
                         addedCount++
                     }
                 }
