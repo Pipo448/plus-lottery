@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:maxLines="1"
                 android:textColor="@color/pos_navy"
                 android:textSize="16sp" />
@@ -50,7 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_pill_solid"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:paddingStart="10dp"
                 android:paddingTop="2dp"
                 android:paddingEnd="10dp"
@@ -90,7 +90,7 @@
             android:id="@+id/tvCardMise"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/pl_barlow_bold"
             android:textColor="@color/pos_ink"
             android:textSize="16sp" />
 
@@ -98,7 +98,7 @@
             android:id="@+id/tvCardGain"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-black"
+            android:fontFamily="@font/pl_barlow_black_italic"
             android:textColor="@color/pos_green"
             android:textSize="14sp"
             android:visibility="gone" />

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ti animasyon "peze": bouton an rapetisi 3% -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator android:propertyName="scaleX" android:valueTo="0.97" android:duration="110" android:valueType="floatType" />
+            <objectAnimator android:propertyName="scaleY" android:valueTo="0.97" android:duration="110" android:valueType="floatType" />
+            <objectAnimator android:propertyName="translationZ" android:valueTo="0" android:duration="110" android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator android:propertyName="scaleX" android:valueTo="1.0" android:duration="160" android:valueType="floatType" />
+            <objectAnimator android:propertyName="scaleY" android:valueTo="1.0" android:duration="160" android:valueType="floatType" />
+            <objectAnimator android:propertyName="translationZ" android:valueTo="8" android:duration="160" android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

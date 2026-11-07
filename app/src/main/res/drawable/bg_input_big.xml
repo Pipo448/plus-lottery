@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Gwo kare "Boul la" / "Pri" nan Nouvèl Fich -->
+<!-- Chan tèks: kad ble lè w ap ekri ladan l -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/pos_surface" />
-            <corners android:radius="16dp" />
+            <corners android:radius="14dp" />
             <stroke android:width="2dp" android:color="@color/pos_blue" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FAFCFF" />
-            <corners android:radius="16dp" />
-            <stroke android:width="1.5dp" android:color="#94A3B8" />
+            <solid android:color="#FFF7F9FD" />
+            <corners android:radius="14dp" />
+            <stroke android:width="1.5dp" android:color="@color/pos_stroke" />
         </shape>
     </item>
 </selector>

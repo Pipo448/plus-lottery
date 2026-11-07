@@ -71,14 +71,23 @@ class LoginActivity : BaseActivity() {
         showSelectedServer()
         val known = ServerConfig.deviceTenant(this) != null
         val logo = if (known) TenantBranding.logo(this) else null
-        if (logo != null) binding.ivServerLogo.setImageBitmap(logo)
-        else binding.ivServerLogo.setImageResource(R.mipmap.ic_launcher_plus)
+        if (logo != null) {
+            // Logo bolèt la nan yon ti kare blan sou antèt ble a
+            val pad = (10 * resources.displayMetrics.density).toInt()
+            binding.ivServerLogo.setBackgroundResource(R.drawable.bg_logo_tile)
+            binding.ivServerLogo.setPadding(pad, pad, pad, pad)
+            binding.ivServerLogo.setImageBitmap(logo)
+        } else {
+            binding.ivServerLogo.background = null
+            binding.ivServerLogo.setPadding(0, 0, 0, 0)
+            binding.ivServerLogo.setImageResource(R.drawable.pl_logo_plus_lotterie)
+        }
         if (known && !TenantBranding.companyName.isNullOrBlank()) {
             binding.tvServerName.text = TenantBranding.companyName
-            binding.tvServerHint.text = "PLUS GROUP LOTTERY"
+            binding.tvServerHint.text = "PLUS LOTTERIE"
         } else {
-            binding.tvServerName.text = "PLUS GROUP"
-            binding.tvServerHint.text = "LOTTERY"
+            binding.tvServerName.text = "Jwe, Tcheke, Genyen !"
+            binding.tvServerHint.text = "PLUS GROUP"
         }
     }
 

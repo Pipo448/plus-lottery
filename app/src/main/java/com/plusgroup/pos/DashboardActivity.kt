@@ -52,7 +52,10 @@ class DashboardActivity : BaseActivity() {
         // Konekte enprimant lan depi app la louvri: premye fich la soti touswit
         com.plusgroup.pos.printer.PrinterManager(applicationContext).connect()
 
-        binding.btnRefresh.setOnClickListener { loadProfileAndBalance(forceBranding = true) }
+        binding.btnRefresh.setOnClickListener { v ->
+            v.animate().rotationBy(360f).setDuration(500).start()
+            loadProfileAndBalance(forceBranding = true)
+        }
 
         binding.btnNouvelFich.setOnClickListener {
             startActivity(Intent(this, NewFicheActivity::class.java))
@@ -67,6 +70,9 @@ class DashboardActivity : BaseActivity() {
             startActivity(Intent(this, ReportActivity::class.java))
         }
 
+        // Tab aktif la (Bolèt) parèt an lò ak ti liy anba l
+        binding.tabBolet.isSelected = true
+        binding.tabParamet.isSelected = false
         binding.tabBolet.setOnClickListener { /* Nou deja la */ }
         binding.tabParamet.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -103,11 +109,20 @@ class DashboardActivity : BaseActivity() {
         binding.tvMailBadge.text = if (count > 9) "9+" else count.toString()
     }
 
-    // Logo tenant lan (Mon compte → Paramètres). San logo: logo Plus la rete.
+    // Logo tenant lan (Mon compte → Paramètres) parèt nan yon ti kare blan
+    // sou antèt ble a. San logo: logo Plus Lotterie a rete.
     private fun showTenantLogo() {
         val logo = TenantBranding.logo(this)
-        if (logo != null) binding.ivLogo.setImageBitmap(logo)
-        else binding.ivLogo.setImageResource(R.drawable.ic_launcher)
+        if (logo != null) {
+            val pad = (8 * resources.displayMetrics.density).toInt()
+            binding.ivLogo.setBackgroundResource(R.drawable.bg_logo_tile)
+            binding.ivLogo.setPadding(pad, pad, pad, pad)
+            binding.ivLogo.setImageBitmap(logo)
+        } else {
+            binding.ivLogo.background = null
+            binding.ivLogo.setPadding(0, 0, 0, 0)
+            binding.ivLogo.setImageResource(R.drawable.pl_logo_plus_lotterie)
+        }
     }
 
     private fun loadProfileAndBalance(forceBranding: Boolean = false) {

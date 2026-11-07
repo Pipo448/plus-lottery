@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Kat blan transparan pou kontni ki chita sou vag yo -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <corners android:radius="20dp" />
-    <solid android:color="@color/pos_surface_glass" />
-    <stroke android:width="1dp" android:color="#80FFFFFF" />
+    <solid android:color="#F2FFFFFF" />
+    <stroke android:width="1dp" android:color="#140B1630" />
 </shape>

@@ -40,21 +40,21 @@ object FicheStatus {
     }
 
     fun color(status: String?): Int = when (status) {
-        "active" -> Color.parseColor("#2563EB")
-        "winner" -> Color.parseColor("#16A34A")
-        "paid" -> Color.parseColor("#0B8FD8")
+        "active" -> Color.parseColor("#1F63FF")
+        "winner" -> Color.parseColor("#0F8A3A")
+        "paid" -> Color.parseColor("#7C3AED")
         "lost" -> Color.parseColor("#64748B")
-        "cancelled" -> Color.parseColor("#E11D48")
-        else -> Color.parseColor("#1B0E52")
+        "cancelled" -> Color.parseColor("#D80F22")
+        else -> Color.parseColor("#071A4A")
     }
 
     /** Antèt la: vèsyon fonse koulè estati a */
     fun headerColor(status: String?): Int = when (status) {
-        "winner" -> Color.parseColor("#0F7A36")
-        "paid" -> Color.parseColor("#086AA3")
+        "winner" -> Color.parseColor("#0A6A2C")
+        "paid" -> Color.parseColor("#5B21B6")
         "lost" -> Color.parseColor("#3F4B5E")
-        "cancelled" -> Color.parseColor("#9F1239")
-        else -> Color.parseColor("#1B0E52")
+        "cancelled" -> Color.parseColor("#A50A19")
+        else -> Color.parseColor("#071A4A")
     }
 
     fun tint(color: Int, alpha: Int = 0x22): Int = (color and 0x00FFFFFF) or (alpha shl 24)
@@ -238,7 +238,7 @@ object FicheDetailSheet {
         b.tvFicheTotalMise.text = "${money.format(totalMise)} HTG"
         b.tvFicheTotalGain.text = if (totalGain > 0) "+${money.format(totalGain)}" else money.format(0.0)
         b.tvFicheTotalGain.setTextColor(
-            if (totalGain > 0) Color.parseColor("#16A34A") else ContextCompat.getColor(activity, R.color.pos_muted)
+            if (totalGain > 0) Color.parseColor("#0F8A3A") else ContextCompat.getColor(activity, R.color.pos_muted)
         )
 
         b.tvFicheNote.visibility = View.VISIBLE
@@ -254,7 +254,7 @@ object FicheDetailSheet {
         // ----- Aksyon -----
         b.llFicheActions.removeAllViews()
         if (status == "winner") {
-            b.llFicheActions.addView(actionTile(activity, "PEYE ${money.format(totalGain)}", R.drawable.ic_clipboard, "#16A34A", filled = true) {
+            b.llFicheActions.addView(actionTile(activity, "PEYE ${money.format(totalGain)}", R.drawable.ic_clipboard, "#0F8A3A", filled = true) {
                 confirmPay(activity, ficheNo, totalGain) {
                     actions.onChanged?.invoke()
                     load(activity, dialog, b, ficheNo, actions)
@@ -262,23 +262,23 @@ object FicheDetailSheet {
             }, LinearLayout.LayoutParams(0, dp(activity, 64), 2f).withMargins(activity))
         }
         actions.onReplay?.let { cb ->
-            b.llFicheActions.addView(actionTile(activity, "Rejwe", R.drawable.ic_refresh, "#2563EB") {
+            b.llFicheActions.addView(actionTile(activity, "Rejwe", R.drawable.ic_refresh, "#1F63FF") {
                 dialog.dismiss(); cb(r)
             })
         }
         // Mon compte → "Ajan ka re-enprime fich"
         actions.onPrint?.takeIf { com.plusgroup.pos.util.TenantRules.canReprint }?.let { cb ->
-            b.llFicheActions.addView(actionTile(activity, "Enprime", R.drawable.ic_print, "#1B0E52") { cb(r) })
+            b.llFicheActions.addView(actionTile(activity, "Enprime", R.drawable.ic_print, "#071A4A") { cb(r) })
         }
         // Pataje fich la: WhatsApp, SMS, Telegram… (Mon compte → "Pataje fich sou WhatsApp")
         if (com.plusgroup.pos.util.TenantRules.showShare) {
-            b.llFicheActions.addView(actionTile(activity, "Pataje", R.drawable.ic_share, "#16A34A") {
+            b.llFicheActions.addView(actionTile(activity, "Pataje", R.drawable.ic_share, "#0F8A3A") {
                 shareFiche(activity, r)
             })
         }
         // Elimine: sèlman nan X premye minit yo (Mon compte → minit pou anile)
         if (status == "active" && withinCancelWindow(r.soldAt)) {
-            b.llFicheActions.addView(actionTile(activity, "Elimine", R.drawable.ic_delete, "#E11D48") {
+            b.llFicheActions.addView(actionTile(activity, "Elimine", R.drawable.ic_delete, "#D80F22") {
                 confirmCancel(activity, ficheNo, lines.size) {
                     dialog.dismiss()
                     actions.onChanged?.invoke()
@@ -320,7 +320,7 @@ object FicheDetailSheet {
             text = l.numero ?: "—"
             textSize = 19f
             typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
-            setTextColor(if (won) Color.parseColor("#0F7A36") else ContextCompat.getColor(activity, R.color.pos_navy))
+            setTextColor(if (won) Color.parseColor("#0A6A2C") else ContextCompat.getColor(activity, R.color.pos_navy))
             letterSpacing = 0.04f
             setPadding((10 * d).toInt(), 0, 0, 0)
             if (cancelled) paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
@@ -345,14 +345,14 @@ object FicheDetailSheet {
                     else -> "Genyen" + if (l.status == "paid") " · peye" else ""
                 }
                 textSize = 12f
-                setTextColor(if (cancelled) Color.parseColor("#E11D48") else Color.parseColor("#16A34A"))
+                setTextColor(if (cancelled) Color.parseColor("#D80F22") else Color.parseColor("#0F8A3A"))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             if (won) sub.addView(TextView(activity).apply {
                 text = "+${money.format(l.prize ?: 0.0)}"
                 textSize = 15f
                 typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
-                setTextColor(Color.parseColor("#16A34A"))
+                setTextColor(Color.parseColor("#0F8A3A"))
             })
             wrap.addView(sub)
         }
@@ -499,13 +499,13 @@ object FicheDetailSheet {
     }
 
     private fun gameColor(gameType: String?, numero: String?): Int = when (gameCode(gameType, numero, null)) {
-        "BO" -> Color.parseColor("#2563EB")
+        "BO" -> Color.parseColor("#1F63FF")
         "MA" -> Color.parseColor("#C2570A")
         "MG" -> Color.parseColor("#DB2777")
         "L3" -> Color.parseColor("#7C3AED")
         "L4" -> Color.parseColor("#0F766E")
         "L5" -> Color.parseColor("#BE123C")
-        else -> Color.parseColor("#1B0E52")
+        else -> Color.parseColor("#071A4A")
     }
 
     fun formatFicheNo(n: String): String =

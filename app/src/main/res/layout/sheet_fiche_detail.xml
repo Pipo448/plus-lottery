@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:fontFamily="sans-serif-black"
+                android:fontFamily="@font/pl_barlow_black_italic"
                 android:maxLines="1"
                 android:textColor="@color/pos_on_color"
                 android:textSize="21sp" />
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_pill_solid"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:paddingStart="12dp"
                 android:paddingTop="4dp"
                 android:paddingEnd="12dp"
@@ -158,7 +158,7 @@
                             android:id="@+id/tvFicheTotalMise"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-medium"
+                            android:fontFamily="@font/pl_barlow_bold"
                             android:textColor="@color/pos_navy"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -176,7 +176,7 @@
                             android:id="@+id/tvFicheTotalGain"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-black"
+                            android:fontFamily="@font/pl_barlow_black_italic"
                             android:textColor="@color/pos_green"
                             android:textSize="22sp" />
                     </LinearLayout>

@@ -34,6 +34,7 @@ class SettingsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.btnBack.setOnClickListener { finish() }
 
         binding.btnKont.setOnClickListener { showComingSoon() }
         binding.btnTiraj.setOnClickListener { showComingSoon() }

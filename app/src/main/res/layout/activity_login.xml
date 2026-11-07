@@ -1,257 +1,290 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- LOGIN — design v3 "swa" + SÈVÈ (tankou "LOAD SERVEUR" SGL) + DEVICE ID. -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  LOGIN — vèsyon 4 "Plus Lotterie": menm antèt ble fonse ak riban wouj ak akèy la,
+  logo Plus Lotterie (oswa logo bolèt la si aparèy la rekonèt), kat blan pou
+  koneksyon an, bouton wouj KONEKTE, ak DEVICE ID anba a.
+  ID ak tip view yo menm jan ak anvan: LoginActivity.kt pa bezwen chanje.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_wave_blue"
-    android:fillViewport="true"
-    android:overScrollMode="never">
+    android:background="@drawable/bg_wave_blue">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingTop="20dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="24dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
-        <!-- CHAJE SÈVÈ: pran lis sèvè yo sou sèvè santral la -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLoadServers"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            android:layout_gravity="end"
-            android:fontFamily="sans-serif-medium"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:letterSpacing="0.06"
-            android:paddingStart="16dp"
-            android:paddingEnd="18dp"
-            android:text="CHAJE SÈVÈ"
-            android:textColor="@android:color/white"
-            android:textSize="13sp"
-            app:backgroundTint="@color/pos_blue"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_refresh"
-            app:iconPadding="8dp"
-            app:iconSize="18dp"
-            app:iconTint="@android:color/white" />
-
-        <!-- Logo + non BOLÈT la (rekonèt ak DEVICE ID). San bolèt: logo Plus Group. -->
         <FrameLayout
-            android:layout_width="112dp"
-            android:layout_height="112dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_logo_tile"
-            android:elevation="6dp"
-            android:padding="10dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/pl_bg_header" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- CHAJE SÈVÈ: pran lis sèvè yo sou sèvè santral la -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLoadServers"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:layout_gravity="end"
+                android:fontFamily="@font/pl_barlow_extrabold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:letterSpacing="0.06"
+                android:paddingStart="14dp"
+                android:paddingEnd="16dp"
+                android:text="CHAJE SÈVÈ"
+                android:textColor="@color/pl_white"
+                android:textSize="13sp"
+                app:backgroundTint="@color/pl_white_12"
+                app:cornerRadius="14dp"
+                app:icon="@drawable/pl_ic_refresh"
+                app:iconPadding="8dp"
+                app:iconSize="16dp"
+                app:iconTint="@color/pl_gold_400"
+                app:rippleColor="@color/pl_white_22"
+                app:strokeColor="@color/pl_white_22"
+                app:strokeWidth="1dp" />
+
+            <!-- Logo Plus Lotterie (oswa logo bolèt la nan yon kare blan) -->
             <ImageView
                 android:id="@+id/ivServerLogo"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="190dp"
+                android:layout_height="112dp"
+                android:layout_marginTop="2dp"
+                android:adjustViewBounds="true"
                 android:contentDescription="Logo"
+                android:elevation="2dp"
                 android:scaleType="fitCenter"
-                android:src="@mipmap/ic_launcher_plus" />
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/tvServerName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-black"
-            android:gravity="center"
-            android:maxLines="2"
-            android:text="PLUS GROUP"
-            android:textColor="@color/pos_navy"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/tvServerHint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.3"
-            android:text="LOTTERY"
-            android:textColor="@color/pos_blue"
-            android:textSize="12sp" />
-
-        <!-- Sèvè: klike pou chwazi / chanje sèvè a -->
-        <LinearLayout
-            android:id="@+id/btnChooseServer"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/bg_input"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="12dp">
+                android:src="@drawable/pl_logo_plus_lotterie" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="Sèvè :"
-                android:textColor="@color/pos_ink"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tvServerSelected"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-black"
-                android:maxLines="1"
-                android:text="SÈVÈ 1"
-                android:textColor="@color/pos_blue"
-                android:textSize="17sp" />
-
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_chevron_down"
-                app:tint="@color/pos_muted" />
-        </LinearLayout>
-
-        <!-- Kat login -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_card_rounded"
-            android:elevation="8dp"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:text="Konekte nan kont ou"
-                android:textAppearance="@style/TextAppearance.PlusPOS.Title"
-                android:textSize="18sp" />
-
-            <EditText
-                android:id="@+id/etUsername"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginBottom="12dp"
-                android:autofillHints="username"
-                android:background="@drawable/bg_input"
-                android:drawableStart="@drawable/ic_user"
-                android:drawablePadding="12dp"
-                android:hint="Idantifyan"
-                android:inputType="text"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/pos_ink"
-                android:textColorHint="#94A3B8"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginBottom="6dp"
-                android:autofillHints="password"
-                android:background="@drawable/bg_input"
-                android:drawableStart="@drawable/ic_lock"
-                android:drawablePadding="12dp"
-                android:hint="Modpas"
-                android:inputType="textPassword"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/pos_ink"
-                android:textColorHint="#94A3B8"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tvError"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:textColor="@color/pos_red"
-                android:textSize="13sp"
-                android:visibility="gone"
-                tools:text="Erè egzanp" />
-
-            <Button
-                android:id="@+id/btnLogin"
-                style="@style/Widget.PlusPOS.Button.Pill"
-                android:layout_width="match_parent"
-                android:layout_marginTop="14dp"
-                android:text="Konekte"
-                app:backgroundTint="@color/pos_blue" />
-        </LinearLayout>
-
-        <!-- DEVICE ID: admin lan mete l sou ajan an pou mare aparèy la -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:background="@drawable/bg_card_glass"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingTop="14dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DEVICE ID"
-                android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
-
-            <TextView
-                android:id="@+id/tvDeviceIdValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:fontFamily="monospace"
-                android:letterSpacing="0.04"
-                android:textColor="@color/pos_red"
-                android:textIsSelectable="true"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:text="f25019dc5e727181" />
-
-            <TextView
-                android:id="@+id/tvDeviceStatus"
+                android:id="@+id/tvServerName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/pl_barlow_black_italic"
                 android:gravity="center"
+                android:maxLines="2"
+                android:text="Jwe, Tcheke, Genyen !"
+                android:textColor="@color/pl_white"
+                android:textSize="24sp" />
+
+            <TextView
+                android:id="@+id/tvServerHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/pl_barlow_bold"
+                android:letterSpacing="0.3"
+                android:text="PLUS GROUP"
+                android:textColor="@color/pl_gold_400"
+                android:textSize="12sp" />
+
+            <!-- Kat koneksyon -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:background="@drawable/pl_bg_card_white"
+                android:elevation="10dp"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Konekte"
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Title"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="16dp"
+                    android:text="Mete idantifyan ak modpas ou."
+                    android:textColor="@color/pos_muted"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/pl_bg_brand_line" />
+
+                <!-- Sèvè: klike pou chwazi / chanje sèvè a -->
+                <LinearLayout
+                    android:id="@+id/btnChooseServer"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_input"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/pl_barlow_bold"
+                        android:text="Sèvè :"
+                        android:textColor="@color/pos_ink_soft"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvServerSelected"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/pl_barlow_extrabold"
+                        android:maxLines="1"
+                        android:text="SÈVÈ 1"
+                        android:textColor="@color/pos_blue"
+                        android:textSize="17sp" />
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_chevron_down"
+                        app:tint="@color/pos_muted" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/etUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginBottom="12dp"
+                    android:autofillHints="username"
+                    android:background="@drawable/bg_input"
+                    android:drawableStart="@drawable/ic_user"
+                    android:drawablePadding="12dp"
+                    android:hint="Idantifyan"
+                    android:inputType="text"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/pos_ink"
+                    android:textColorHint="#8A94AD"
+                    android:textSize="16sp" />
+
+                <EditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginBottom="6dp"
+                    android:autofillHints="password"
+                    android:background="@drawable/bg_input"
+                    android:drawableStart="@drawable/ic_lock"
+                    android:drawablePadding="12dp"
+                    android:hint="Modpas"
+                    android:inputType="textPassword"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/pos_ink"
+                    android:textColorHint="#8A94AD"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:textColor="@color/pos_red"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Erè egzanp" />
+
+                <Button
+                    android:id="@+id/btnLogin"
+                    style="@style/Widget.PlusPOS.Button.Pill"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="14dp"
+                    android:text="Konekte"
+                    app:backgroundTint="@color/pos_red" />
+            </LinearLayout>
+
+            <!-- DEVICE ID: admin lan mete l sou ajan an pou mare aparèy la -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_card_glass"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="12dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DEVICE ID"
+                    android:textAppearance="@style/TextAppearance.PlusPOS.Label" />
+
+                <TextView
+                    android:id="@+id/tvDeviceIdValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="monospace"
+                    android:letterSpacing="0.04"
+                    android:textColor="@color/pos_red"
+                    android:textIsSelectable="true"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="f25019dc5e727181" />
+
+                <TextView
+                    android:id="@+id/tvDeviceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/pos_muted"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="✓ Aparèy rekonèt"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Version 1.0.0 @PlusGroup"
                 android:textColor="@color/pos_muted"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:text="✓ Aparèy rekonèt"
-                tools:visibility="visible" />
+                android:textSize="12sp" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvVersion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Version 1.0.0 @PlusGroup"
-            android:textColor="@color/pos_muted"
-            android:textSize="12sp" />
-
-    </LinearLayout>
-</ScrollView>
+        </FrameLayout>
+    </ScrollView>
+</FrameLayout>

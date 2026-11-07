@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Koub anba antèt la (koulè plen sèlman → mache sou Android 5+) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp" android:height="300dp"
+    android:viewportWidth="360" android:viewportHeight="300">
+    <!-- limyè dyagonal -->
+    <path android:pathData="M-20,215 L170,140"
+        android:strokeColor="#8082BEFF" android:strokeWidth="2.5" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <path android:pathData="M210,40 L380,-20"
+        android:strokeColor="#4082BEFF" android:strokeWidth="1.5" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <!-- fon klè anba koub la -->
+    <path android:pathData="M0,268 C150,300 285,292 360,252 L360,300 L0,300 Z"
+        android:fillColor="#FFEEF2FA" />
+    <!-- riban wouj la -->
+    <path android:pathData="M0,280 C150,312 285,304 360,262"
+        android:strokeColor="#FFD80F22" android:strokeWidth="7" android:fillColor="#00000000" />
+</vector>

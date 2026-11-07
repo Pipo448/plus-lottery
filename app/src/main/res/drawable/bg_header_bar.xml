@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <gradient
-        android:angle="0"
-        android:startColor="#475569"
-        android:endColor="#64748B" />
+<!-- Ba kolòn (Tiraj / Boul / Kòb) — ble fonse Plus Lotterie -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="#FF0B2A74" android:endColor="#FF123A9E" />
 </shape>

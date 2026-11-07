@@ -85,7 +85,7 @@ object MessagesSheet {
     private fun card(activity: AppCompatActivity, m: AgentMessage): View {
         val d = activity.resources.displayMetrics.density
         val important = m.important == true
-        val accent = if (important) Color.parseColor("#E11D48") else Color.parseColor("#2563EB")
+        val accent = if (important) Color.parseColor("#D80F22") else Color.parseColor("#1F63FF")
 
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -112,7 +112,7 @@ object MessagesSheet {
             text = m.title ?: "—"
             textSize = 16f
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            setTextColor(if (important) Color.parseColor("#9F1239") else ContextCompat.getColor(activity, R.color.pos_navy))
+            setTextColor(if (important) Color.parseColor("#A50A19") else ContextCompat.getColor(activity, R.color.pos_navy))
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
         if (important) {

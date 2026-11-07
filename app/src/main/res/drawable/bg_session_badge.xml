@@ -2,5 +2,5 @@
 <!-- Koulè a chanje nan kòd la (Maten / Midi / Swa) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <corners android:radius="999dp" />
-    <solid android:color="#1A1E7FD8" />
+    <solid android:color="#1A1F63FF" />
 </shape>

@@ -11,40 +11,39 @@
     android:background="@drawable/bg_wave_blue"
     android:orientation="vertical">
 
-    <!-- En-tèt -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="@color/pos_surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+    <!-- Ba anlè: ble fonse Plus Lotterie -->
+    <LinearLayout style="@style/Widget.PlusPOS.AppBar">
 
         <ImageButton
             android:id="@+id/btnBack"
-            style="@style/Widget.PlusPOS.IconButton"
-            android:background="@drawable/bg_icon_blue"
+            style="@style/Widget.PlusPOS.AppBarIcon"
             android:contentDescription="Retounen"
-            android:src="@drawable/ic_back"
-            android:tint="@color/pos_blue" />
+            android:src="@drawable/ic_back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
             android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Rapport"
-            android:textAppearance="@style/TextAppearance.PlusPOS.Title" />
+            android:textAppearance="@style/TextAppearance.PlusPOS.AppBarTitle" />
 
         <ImageButton
             android:id="@+id/btnPrintReport"
-            style="@style/Widget.PlusPOS.IconButton"
-            android:background="@drawable/bg_icon_amber"
+            style="@style/Widget.PlusPOS.AppBarIcon"
+            android:background="@drawable/pl_bg_icon_btn_gold"
             android:contentDescription="Enprime rapò"
             android:src="@drawable/ic_print"
-            android:tint="@color/pos_amber_deep" />
+            android:tint="@color/pl_ink" />
     </LinearLayout>
+
+    <!-- Ti liy koulè Plus Lotterie anba ba a -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@drawable/pl_bg_brand_line" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -249,7 +248,7 @@
                     android:id="@+id/tvBalanceValue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/pl_barlow_bold"
                     android:gravity="center"
                     android:text=""
                     android:textColor="@color/pos_red"
@@ -299,7 +298,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/pl_barlow_bold"
                     android:gravity="center"
                     android:textColor="@color/pos_red"
                     android:textSize="14sp" />

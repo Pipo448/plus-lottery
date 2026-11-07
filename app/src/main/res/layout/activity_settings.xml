@@ -1,11 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PARAMÈT — vèsyon 3 (design "swa"). ID yo pa chanje. -->
+<!-- PARAMÈT — vèsyon 4 "Plus Lotterie": ba ble anlè + bouton degrade. ID yo pa chanje. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_wave_blue"
     android:orientation="vertical">
+
+    <!-- Ba anlè: ble fonse Plus Lotterie -->
+    <LinearLayout style="@style/Widget.PlusPOS.AppBar">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            style="@style/Widget.PlusPOS.AppBarIcon"
+            android:contentDescription="Retounen"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Paramèt"
+            android:textAppearance="@style/TextAppearance.PlusPOS.AppBarTitle" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@drawable/pl_bg_brand_line" />
 
     <!-- Bouton aksyon anlè -->
     <LinearLayout
@@ -73,8 +98,8 @@
         android:id="@+id/tvVersion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/pos_navy"
-        android:fontFamily="sans-serif-medium"
+        android:background="@color/pl_navy_800"
+        android:fontFamily="@font/pl_barlow_bold"
         android:gravity="center"
         android:letterSpacing="0.04"
         android:padding="9dp"

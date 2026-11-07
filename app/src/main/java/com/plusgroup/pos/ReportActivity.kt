@@ -251,7 +251,7 @@ class ReportActivity : BaseActivity() {
                 val bal = r?.balance ?: 0.0
                 binding.tvBalanceValue.text = moneyFormat.format(bal)
                 binding.tvBalanceValue.setTextColor(
-                    Color.parseColor(if (bal >= 0) "#1B0E52" else "#E11D48")
+                    Color.parseColor(if (bal >= 0) "#071A4A" else "#D80F22")
                 )
                 binding.tvBalanceLabel.text = if (bal >= 0) "BALANS POU REMÈT" else "BANK LAN DWE AJAN AN"
 

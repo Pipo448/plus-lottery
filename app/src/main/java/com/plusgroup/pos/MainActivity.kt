@@ -25,6 +25,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.btnBack.setOnClickListener { finish() }
 
         session = SessionManager(this)
         printerManager = PrinterManager(this)

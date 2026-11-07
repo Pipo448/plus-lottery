@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ba ble fonse anlè ekran yo (menm koulè ak antèt akèy la). Mache sou Android 5+. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="0" android:startColor="#FF071A4A" android:centerColor="#FF0B2A74" android:endColor="#FF123A9E" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="0.85" android:centerY="0" android:gradientRadius="60%"
+                android:startColor="#661D55E0" android:endColor="#001D55E0" />
+        </shape>
+    </item>
+</layer-list>

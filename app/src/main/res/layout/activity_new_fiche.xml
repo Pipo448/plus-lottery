@@ -12,36 +12,47 @@
     android:background="@drawable/bg_wave_blue"
     android:orientation="vertical">
 
-    <!-- En-tèt: retounen / efase tout / pataje / enprime -->
+    <!-- Ba anlè ble fonse: retounen / efase tout / pataje / enprime -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@color/pos_surface"
+        android:background="@drawable/pl_bg_appbar"
         android:paddingStart="12dp"
         android:paddingEnd="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            style="@style/Widget.PlusPOS.IconButton"
+            style="@style/Widget.PlusPOS.AppBarIcon"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/bg_icon_blue"
             android:contentDescription="Retounen"
-            android:src="@drawable/ic_back"
-            android:tint="@color/pos_blue" />
+            android:src="@drawable/ic_back" />
 
         <ImageButton
             android:id="@+id/btnClearAll"
-            style="@style/Widget.PlusPOS.IconButton"
+            style="@style/Widget.PlusPOS.AppBarIcon"
             android:layout_centerVertical="true"
             android:layout_marginStart="10dp"
             android:layout_toEndOf="@id/btnBack"
-            android:background="@drawable/bg_icon_red"
+            android:background="@drawable/pl_bg_icon_btn_red"
             android:contentDescription="Efase tout"
-            android:src="@drawable/ic_delete"
-            android:tint="@color/pos_red" />
+            android:src="@drawable/ic_delete" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_toStartOf="@+id/llHeadActions"
+            android:layout_toEndOf="@id/btnClearAll"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Fich"
+            android:textAppearance="@style/TextAppearance.PlusPOS.AppBarTitle" />
 
         <LinearLayout
+            android:id="@+id/llHeadActions"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
@@ -50,22 +61,26 @@
 
             <ImageButton
                 android:id="@+id/btnShare"
-                style="@style/Widget.PlusPOS.IconButton"
-                android:background="@drawable/bg_icon_green"
+                style="@style/Widget.PlusPOS.AppBarIcon"
+                android:background="@drawable/pl_bg_icon_btn_green"
                 android:contentDescription="Pataje"
-                android:src="@drawable/ic_share"
-                android:tint="@color/pos_green" />
+                android:src="@drawable/ic_share" />
 
             <ImageButton
                 android:id="@+id/btnPrint"
-                style="@style/Widget.PlusPOS.IconButton"
+                style="@style/Widget.PlusPOS.AppBarIcon"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_icon_amber"
+                android:background="@drawable/pl_bg_icon_btn_gold"
                 android:contentDescription="Enprime"
                 android:src="@drawable/ic_print"
-                android:tint="@color/pos_amber_deep" />
+                android:tint="@color/pl_ink" />
         </LinearLayout>
     </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@drawable/pl_bg_brand_line" />
 
     <!-- Ba kolòn: Tiraj / Boul / Kòb -->
     <LinearLayout
@@ -85,7 +100,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/pl_barlow_extrabold"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
             android:text="Tiraj"
@@ -96,7 +111,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/pl_barlow_bold"
             android:gravity="center"
             android:text="Boul"
             android:textColor="@color/pos_on_color"
@@ -106,7 +121,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/pl_barlow_bold"
             android:gravity="center"
             android:text="Kòb"
             android:textColor="@color/pos_on_color"
@@ -146,7 +161,7 @@
                         android:id="@+id/tvFicheLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-medium"
+                        android:fontFamily="@font/pl_barlow_bold"
                         android:letterSpacing="0.06"
                         android:text="BORLETTE"
                         android:textColor="@color/pos_ink"
@@ -200,7 +215,7 @@
             android:id="@+id/tvTotal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/pl_barlow_bold"
             android:gravity="center"
             android:paddingBottom="6dp"
             android:text="Total: 0.00"
@@ -219,7 +234,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_badge"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:gravity="center"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
@@ -423,7 +438,7 @@
                 android:layout_marginEnd="12dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_input_big"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:gravity="center"
                 android:hint="Boul la"
                 android:imeOptions="actionNext"
@@ -441,7 +456,7 @@
                 android:layout_height="58dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_input_big"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/pl_barlow_bold"
                 android:gravity="center"
                 android:hint="Pri"
                 android:imeOptions="actionDone"
@@ -481,7 +496,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
-                android:fontFamily="sans-serif-black"
+                android:fontFamily="@font/pl_barlow_black_italic"
                 android:text="L4"
                 android:textColor="@color/pos_blue"
                 android:textSize="15sp" />
@@ -541,7 +556,7 @@
             android:layout_height="54dp"
             android:layout_marginTop="14dp"
             android:text="Antre"
-            app:backgroundTint="@color/pos_sky"
+            app:backgroundTint="@color/pos_blue"
             app:cornerRadius="16dp" />
     </LinearLayout>
 </LinearLayout>

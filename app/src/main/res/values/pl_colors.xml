@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Koulè Plus Lotterie (menm ak sit la) -->
+<resources>
+    <color name="pl_navy_950">#FF040F33</color>
+    <color name="pl_navy_900">#FF071A4A</color>
+    <color name="pl_navy_800">#FF0B2A74</color>
+    <color name="pl_navy_700">#FF123A9E</color>
+    <color name="pl_blue_500">#FF1D55E0</color>
+    <color name="pl_red_600">#FFD80F22</color>
+    <color name="pl_gold_500">#FFFFC21A</color>
+    <color name="pl_gold_400">#FFFFD84D</color>
+    <color name="pl_white">#FFFFFFFF</color>
+    <color name="pl_ink">#FF0B1630</color>
+    <color name="pl_ink_value">#FF071A4A</color>
+    <color name="pl_ink_label">#FF4A5672</color>
+    <color name="pl_divider">#FFE1E6F0</color>
+    <color name="pl_bg_light">#FFEEF2FA</color>
+    <color name="pl_white_12">#1FFFFFFF</color>
+    <color name="pl_white_22">#38FFFFFF</color>
+</resources>

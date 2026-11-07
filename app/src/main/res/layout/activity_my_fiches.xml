@@ -6,31 +6,30 @@
     android:background="@drawable/bg_wave_blue"
     android:orientation="vertical">
 
-    <!-- En-tèt -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="@color/pos_surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+    <!-- Ba anlè: ble fonse Plus Lotterie -->
+    <LinearLayout style="@style/Widget.PlusPOS.AppBar">
 
         <ImageButton
             android:id="@+id/btnBack"
-            style="@style/Widget.PlusPOS.IconButton"
-            android:background="@drawable/bg_icon_blue"
+            style="@style/Widget.PlusPOS.AppBarIcon"
             android:contentDescription="Retounen"
-            android:src="@drawable/ic_back"
-            android:tint="@color/pos_blue" />
+            android:src="@drawable/ic_back" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Mes fiches"
-            android:textAppearance="@style/TextAppearance.PlusPOS.Title" />
+            android:textAppearance="@style/TextAppearance.PlusPOS.AppBarTitle" />
     </LinearLayout>
+
+    <!-- Ti liy koulè Plus Lotterie anba ba a -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@drawable/pl_bg_brand_line" />
 
     <!-- Filtè dat -->
     <LinearLayout

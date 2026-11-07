@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 4 gwo bouton aksyon yo.
+         parent="" sou chak style: konsa ikòn ak tèks yo PA eritye "clickable",
+         maj ak elevasyon bouton an (sinon yon klik sou ikòn nan pa ta mache). -->
+    <style name="PL.ActionButton" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:stateListAnimator">@animator/pl_press_scale</item>
+    </style>
+    <style name="PL.ActionButton.Icon" parent="">
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="PL.ActionButton.Label" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:fontFamily">@font/pl_barlow_extrabold</item>
+        <item name="android:textSize">20sp</item>
+        <item name="fontFamily">@font/pl_barlow_extrabold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:textColor">@color/pl_white</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="PL.ActionButton.Chevron" parent="">
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <!-- Kare ikon anwo yo (Enprime, Mesaj, Plis) -->
+    <style name="PL.TopIconButton" parent="">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:padding">13dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:elevation">6dp</item>
+        <item name="android:stateListAnimator">@animator/pl_press_scale</item>
+    </style>
+    <!-- Kat enfòmasyon kont lan -->
+    <style name="PL.StatValue" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/pl_barlow_extrabold</item>
+        <item name="android:textSize">25sp</item>
+        <item name="android:textColor">@color/pl_ink_value</item>
+        <item name="android:maxLines">1</item>
+        <item name="fontFamily">@font/pl_barlow_extrabold</item>
+        <!-- AppCompat: tèks la rapetisi pou l antre (mache sou tout vèsyon Android) -->
+        <item name="autoSizeTextType">uniform</item>
+        <item name="autoSizeMinTextSize">15sp</item>
+        <item name="autoSizeMaxTextSize">25sp</item>
+    </style>
+    <style name="PL.StatLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:fontFamily">@font/pl_barlow_bold</item>
+        <item name="fontFamily">@font/pl_barlow_bold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textColor">@color/pl_ink_label</item>
+    </style>
+    <!-- Navigasyon anba -->
+    <style name="PL.NavItem" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:background">@drawable/pl_bg_nav_item</item>
+    </style>
+    <style name="PL.NavLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:fontFamily">@font/pl_barlow_extrabold</item>
+        <item name="fontFamily">@font/pl_barlow_extrabold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/pl_nav_tint</item>
+        <item name="android:duplicateParentState">true</item>
+    </style>
+</resources>

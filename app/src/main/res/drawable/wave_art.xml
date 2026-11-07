@@ -1,47 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Atizay vag la: riban dous ki desann soti anwo adwat rive anba agoch,
-  ak koulè transparan ki chevoche — sa ki bay efè "swa" a.
-  Pa gen gradyan andedan vektè a (pa sipòte sou Android 5/6 SUNMI V1/V2).
+  Atizay fon Plus Lotterie: riban ble ak wouj dous anba ekran an,
+  ak yon ti limyè ble anwo adwat. Koulè plen sèlman (pa gen degrade
+  andedan vektè a) → mache sou Android 5/6 SUNMI V1/V2.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="360dp"
     android:height="640dp"
     android:viewportWidth="360"
     android:viewportHeight="640">
-
-    <!-- Lavi lejè bò dwat anwo a (dèyè riban an) -->
-    <path
-        android:fillColor="@color/pos_wave_3"
-        android:fillAlpha="0.55"
-        android:pathData="M150,0 C125,95 168,190 262,258 C310,293 342,325 360,352 L360,0 Z" />
-
-    <!-- Gwo riban lejè a (bò goch) -->
-    <path
-        android:fillColor="@color/pos_wave_2"
-        android:fillAlpha="0.5"
-        android:pathData="M70,0 C40,120 100,250 225,335 C290,380 330,430 360,490 L360,420 C322,365 275,322 232,290 C140,222 110,120 128,0 Z" />
-
-    <!-- Riban fonse a — epè nan mitan, fen nan de pwent yo -->
-    <path
-        android:fillColor="@color/pos_wave_1"
-        android:fillAlpha="0.8"
-        android:pathData="M150,0 C125,95 168,190 262,258 C310,293 342,325 360,352 C340,300 315,250 290,215 C230,140 190,80 200,0 Z" />
-
-    <!-- Fil limyè sou kwen riban lejè a -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.6"
-        android:pathData="M128,0 C110,120 140,222 232,290 C275,322 322,365 360,420 L360,430 C318,372 270,330 226,297 C132,228 102,122 121,0 Z" />
-
-    <!-- Swoosh anba a -->
-    <path
-        android:fillColor="@color/pos_wave_3"
-        android:fillAlpha="0.5"
-        android:pathData="M0,470 C70,455 150,465 210,515 C250,550 280,590 300,640 L0,640 Z" />
-
-    <path
-        android:fillColor="@color/pos_wave_2"
-        android:fillAlpha="0.6"
-        android:pathData="M0,430 C90,390 200,420 290,520 C320,555 345,600 360,640 L300,640 C280,590 250,550 210,515 C150,465 70,455 0,470 Z" />
+    <!-- limyè ble anwo adwat -->
+    <path android:fillColor="#1F63FF" android:fillAlpha="0.06"
+        android:pathData="M220,0 C250,70 300,110 360,130 L360,0 Z" />
+    <path android:strokeColor="#1F63FF" android:strokeAlpha="0.14" android:strokeWidth="1.5" android:fillColor="#00000000"
+        android:pathData="M180,0 C220,80 290,128 360,150" />
+    <!-- riban anba yo -->
+    <path android:fillColor="#123A9E" android:fillAlpha="0.08"
+        android:pathData="M0,560 C110,520 240,515 360,548 L360,640 L0,640 Z" />
+    <path android:strokeColor="#D80F22" android:strokeAlpha="0.28" android:strokeWidth="3" android:fillColor="#00000000"
+        android:pathData="M0,585 C120,540 250,532 360,566" />
+    <path android:fillColor="#123A9E" android:fillAlpha="0.12"
+        android:pathData="M0,615 C120,580 250,575 360,600 L360,640 L0,640 Z" />
 </vector>

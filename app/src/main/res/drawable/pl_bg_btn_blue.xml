@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bouton blue: degrade + koulè pi fonse lè w peze l -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <gradient android:angle="315" android:startColor="#FF2F69E6" android:centerColor="#FF1043C2" android:endColor="#FF082C8C" />
+            
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <gradient android:angle="315" android:startColor="#FF3A7BFF" android:centerColor="#FF1450E0" android:endColor="#FF0B35A8" />
+            
+        </shape>
+    </item>
+</selector>

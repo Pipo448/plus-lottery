@@ -177,9 +177,9 @@ object DrawResultsSheet {
             else -> 2
         }
         return when (key) {
-            0 -> "Maten" to Color.parseColor("#0B8FD8")
-            1 -> "Midi" to Color.parseColor("#D9640B")
-            else -> "Swa" to Color.parseColor("#2B1B6B")
+            0 -> "Maten" to Color.parseColor("#1F63FF")
+            1 -> "Midi" to Color.parseColor("#E89B00")
+            else -> "Swa" to Color.parseColor("#123A9E")
         }
     }
 

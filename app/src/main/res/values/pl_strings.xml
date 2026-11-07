@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pl_greeting">Salut %1$s</string>
+    <string name="pl_balance">BALANCE</string>
+    <string name="pl_credit_vente">CRÉDIT DE VENTE</string>
+    <string name="pl_limite_gain">LIMITE GAIN</string>
+    <string name="pl_illimite">Illimité</string>
+    <string name="pl_nouvel_fich">NOUVEL FICH</string>
+    <string name="pl_chache_fich">CHACHE FICH</string>
+    <string name="pl_fich_mwen_yo">FICH MWEN YO</string>
+    <string name="pl_rapo">RAPÒ</string>
+    <string name="pl_nav_bolet">Bolèt</string>
+    <string name="pl_nav_paramet">Paramèt</string>
+    <string name="pl_cd_print">Enprime</string>
+    <string name="pl_cd_messages">Mesaj</string>
+    <string name="pl_cd_more">Plis opsyon</string>
+    <string name="pl_cd_refresh">Rafrechi</string>
+    <string name="pl_cd_logo">Plus Lotterie</string>
+    <string name="pl_footer">PLUS LOTTERIE · PLUS GROUP</string>
+</resources>

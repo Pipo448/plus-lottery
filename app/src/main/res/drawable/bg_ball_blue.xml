@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Boul bolèt (blue): limyè anlè agoch pou efè 3D -->
+<!-- Boul ble (2yèm lo): menm boul 3D ak sit la ak panèl admin nan -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="oval">
@@ -8,14 +8,14 @@
                 android:centerX="0.35"
                 android:centerY="0.3"
                 android:gradientRadius="75%"
-                android:startColor="#7CC4FF"
-                android:centerColor="#1E7FD8"
-                android:endColor="#0F4C8F" />
+                android:startColor="#8FC2FF"
+                android:centerColor="#1F63FF"
+                android:endColor="#0A2A8A" />
         </shape>
     </item>
     <item android:left="9dp" android:top="6dp" android:right="22dp" android:bottom="28dp">
         <shape android:shape="oval">
-            <solid android:color="#33FFFFFF" />
+            <solid android:color="#40FFFFFF" />
         </shape>
     </item>
 </layer-list>

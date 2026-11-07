@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fon ble anwo ak koub wouj anba l.
+  Degrade a fèt nan yon <shape> (mache depi Android 5) — pa nan vector a,
+  paske SUNMI V1/V2 (Android 5/6) pa sipòte degrade andedan vector.
+  Vector anwo a sèlman gen koulè plen: li koupe koub la epi trase liy wouj la.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.25"
+                android:gradientRadius="140%"
+                android:startColor="#FF1D55E0"
+                android:centerColor="#FF123A9E"
+                android:endColor="#FF071A4A" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/pl_header_curve" />
+</layer-list>

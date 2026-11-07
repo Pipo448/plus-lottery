@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Background ekran yo: gradyan syèl tou dous + atizay vag la anlè l -->
+<!-- Fon tout ekran yo: gri-ble klè Plus Lotterie + riban dous (ble, wouj) anba a -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#EEF6FE"
-                android:centerColor="#F8FBFF"
-                android:endColor="#FFFFFF" />
+            <gradient android:angle="270" android:startColor="#FFEEF2FA" android:centerColor="#FFF4F6FC" android:endColor="#FFEEF2FA" />
         </shape>
     </item>
     <item android:drawable="@drawable/wave_art" />
