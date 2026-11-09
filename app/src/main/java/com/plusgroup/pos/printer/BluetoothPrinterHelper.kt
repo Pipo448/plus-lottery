@@ -225,6 +225,7 @@ class BluetoothPrinterHelper {
         qrData: String?,
         logo: Bitmap? = null,
         sections: List<ReceiptSection>? = null,
+        columns: Boolean = false,
     ) {
         val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
         write(ESC_INIT)
@@ -255,8 +256,14 @@ class BluetoothPrinterHelper {
             if (idx > 0) write(feed(1))
             // Non tiraj la sèlman (total la parèt yon sèl fwa anba)
             write(textLine(sec.drawName))
-            for ((code, numero, prix) in sec.lines) {
-                write(textLine(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth)))
+            val colRows = if (columns) ReceiptLabels.columnRows(sec.lines, ReceiptLabels.lineWidth) else emptyList()
+            if (colRows.isNotEmpty()) {
+                // 2 kolòn: mwens papye
+                for (row in colRows) write(textLine(row))
+            } else {
+                for ((code, numero, prix) in sec.lines) {
+                    write(textLine(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth)))
+                }
             }
         }
 

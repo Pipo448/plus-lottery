@@ -158,16 +158,18 @@ class PrinterManager(private val context: Context) {
         val vendeur = vendeur.replace("·", "-")
         // Logo tenant lan anlè fich la (si l genyen youn e si "Enprime logo a" aktif)
         val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
+        // Paramèt → "Resi an 2 kolòn" (chwa ajan an sou aparèy sa a)
+        val columns = com.plusgroup.pos.util.PrintPrefs.columns(context)
         if (isSunmiDevice) {
             sunmiHelper?.printFicheReceipt(
                 companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections,
+                drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections, columns,
             )
         } else {
             runBluetooth {
                 bluetoothHelper.printFicheReceipt(
                     companyName, promoLine, phone, vendeur, dateTimeText, ficheNumber,
-                    drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections,
+                    drawName, drawTotal, lines, grandTotal, footerMessage, qrData, logo, sections, columns,
                 )
             }
         }

@@ -29,7 +29,7 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never"
-        android:paddingBottom="84dp"
+        android:paddingBottom="112dp"
         android:scrollbars="none">
 
         <!-- Antèt la andedan ScrollView a pou l woule ansanm ak kontni an -->
@@ -354,20 +354,29 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/pl_barlow_bold"
-                android:gravity="center"
-                android:letterSpacing="0.08"
-                android:paddingTop="4dp"
-                android:paddingBottom="6dp"
-                android:text="@string/pl_footer"
-                android:textColor="@color/pos_muted"
-                android:textSize="11sp" />
         </LinearLayout>
         </FrameLayout>
     </ScrollView>
+
+    <!-- Banyè PLUS LOTTERIE · PLUS GROUP: fiks sou bann ble a, anlè ba navigasyon an
+         (anvan l te sou koub wouj la epi li pa t li byen) -->
+    <TextView
+        android:id="@+id/tvFooterBrand"
+        android:layout_width="wrap_content"
+        android:layout_height="26dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/pl_bg_footer_pill"
+        android:elevation="6dp"
+        android:fontFamily="@font/pl_barlow_extrabold"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.14"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/pl_footer"
+        android:textColor="@color/pl_white"
+        android:textSize="11sp" />
 
     <!-- ===== Navigasyon anba (fiks): Bolèt (aktif) / Paramèt ===== -->
     <LinearLayout

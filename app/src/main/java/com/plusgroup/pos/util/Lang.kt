@@ -173,6 +173,10 @@ object Lang {
         "Boul ki soti" to "Boules sorties",
         "Kont" to "Compte",
         "Gwosè ekran" to "Taille d’affichage",
+        "Resi an 2 kolòn (ekonomize papye)" to "Reçu sur 2 colonnes (économise le papier)",
+        "AKTIF ✓" to "ACTIF ✓",
+        "Fich yo ap enprime sou 2 kolòn." to "Les fiches seront imprimées sur 2 colonnes.",
+        "Fich yo ap enprime sou 1 kolòn." to "Les fiches seront imprimées sur 1 colonne.",
         "Dekonekte" to "Se déconnecter",
         "Lang / Langue" to "Langue / Lang",
         // Login

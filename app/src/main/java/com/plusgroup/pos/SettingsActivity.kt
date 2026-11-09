@@ -11,6 +11,8 @@ import com.plusgroup.pos.databinding.ItemSettingsRowBinding
 import com.plusgroup.pos.databinding.ItemSettingsSectionBinding
 import com.plusgroup.pos.network.ApiClient
 import com.plusgroup.pos.util.UiScale
+import com.plusgroup.pos.util.PrintPrefs
+import com.plusgroup.pos.util.Lang
 import kotlinx.coroutines.launch
 
 /**
@@ -42,6 +44,7 @@ class SettingsActivity : BaseActivity() {
         binding.btnMizajou.setOnClickListener { showComingSoon() }
 
         addDisplaySizeRow()
+        addReceiptColumnsRow()
         loadAll()
     }
 
@@ -58,6 +61,35 @@ class SettingsActivity : BaseActivity() {
         rowBinding.root.isClickable = true
         rowBinding.root.isFocusable = true
         rowBinding.root.setOnClickListener { UiScale.showPicker(this) }
+        binding.llSettingsContainer.addView(rowBinding.root)
+    }
+
+    // Resi an 2 kolòn (lokal sou aparèy la): mwens papye sou chak fich
+    private fun addReceiptColumnsRow() {
+        val rowBinding = ItemSettingsRowBinding.inflate(
+            LayoutInflater.from(this), binding.llSettingsContainer, false
+        )
+        fun render() {
+            val on = PrintPrefs.columns(this)
+            rowBinding.tvValue.text = if (on) Lang.tr("AKTIF ✓") else Lang.tr("Non")
+            rowBinding.tvValue.setTextColor(
+                ContextCompat.getColor(this, if (on) R.color.pos_green else R.color.pos_blue)
+            )
+        }
+        rowBinding.tvLabel.text = Lang.tr("Resi an 2 kolòn (ekonomize papye)")
+        render()
+        rowBinding.root.isClickable = true
+        rowBinding.root.isFocusable = true
+        rowBinding.root.setOnClickListener {
+            val on = !PrintPrefs.columns(this)
+            PrintPrefs.setColumns(this, on)
+            render()
+            Toast.makeText(
+                this,
+                if (on) Lang.tr("Fich yo ap enprime sou 2 kolòn.") else Lang.tr("Fich yo ap enprime sou 1 kolòn."),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
         binding.llSettingsContainer.addView(rowBinding.root)
     }
 
@@ -82,6 +114,7 @@ class SettingsActivity : BaseActivity() {
 
                 binding.llSettingsContainer.removeAllViews()
                 addDisplaySizeRow()
+                addReceiptColumnsRow()
 
                 // ---- Enfòmasyon jeneral ----
                 addRow("Bank", profile?.tenantName ?: "—")

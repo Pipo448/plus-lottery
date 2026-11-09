@@ -266,6 +266,7 @@ class SunmiPrinterHelper(private val context: Context) {
         qrData: String?,
         logo: Bitmap? = null,
         sections: List<ReceiptSection>? = null,
+        columns: Boolean = false,
     ) {
         // Fich plizyè tiraj: yon seksyon pou chak tiraj
         val secs = sections?.takeIf { it.isNotEmpty() } ?: listOf(ReceiptSection(drawName, drawTotal, lines))
@@ -333,9 +334,18 @@ class SunmiPrinterHelper(private val context: Context) {
                     // Non tiraj la sèlman (total la parèt yon sèl fwa anba)
                     svc.printSafe("${sec.drawName}\n", null, fs(26f), null)
                     pause()
-                    for ((code, numero, prix) in sec.lines) {
-                        svc.printSafe(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
-                        pause()
+                    val colRows = if (columns) ReceiptLabels.columnRows(sec.lines, ReceiptLabels.lineWidth) else emptyList()
+                    if (colRows.isNotEmpty()) {
+                        // 2 kolòn: mwens papye
+                        for (row in colRows) {
+                            svc.printSafe(row + "\n", null, fs(24f), null)
+                            pause()
+                        }
+                    } else {
+                        for ((code, numero, prix) in sec.lines) {
+                            svc.printSafe(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
+                            pause()
+                        }
                     }
                 }
 
