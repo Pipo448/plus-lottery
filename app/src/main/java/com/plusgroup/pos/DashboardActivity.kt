@@ -34,7 +34,7 @@ import java.text.DecimalFormat
 class DashboardActivity : BaseActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
-    private val moneyFormat = DecimalFormat("#,##0.00")
+    private val moneyFormat = com.plusgroup.pos.util.Money.format()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

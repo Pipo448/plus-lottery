@@ -9,6 +9,8 @@ import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
 import woyou.aidlservice.jiuiv5.IWoyouService
+import woyou.aidlservice.jiuiv5.ICallback
+import com.plusgroup.pos.util.Money
 
 /**
  * Kouch entegrasyon ak sèvis enprimant SUNMI a.
@@ -42,6 +44,11 @@ import woyou.aidlservice.jiuiv5.IWoyouService
  *    la fizikman soti anvan koupe a, sinon dènye pati a rete "kwense"
  *    anndan mekanis enprimant lan.
  */
+// Tout tèks pase pa la: espas espesyal (U+202F…) → espas nòmal, sinon
+// enprimant lan enprime fatra ("10ʎ ? 00,") olye de chif yo.
+private fun IWoyouService.printSafe(text: String, typeface: String?, size: Float, cb: ICallback?) =
+    printTextWithFont(Money.printable(text), typeface, size, cb)
+
 class SunmiPrinterHelper(private val context: Context) {
 
     // Tout resi yo pase youn apre lòt (egz. plizyè fich pou plizyè tiraj):
@@ -162,10 +169,10 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.setAlignment(1, null)
                 pause()
 
-                svc.printTextWithFont("PLUS GROUP\n", null, 28f, null)
+                svc.printSafe("PLUS GROUP\n", null, 28f, null)
                 pause()
 
-                svc.printTextWithFont("Test enprimant - tout bon\n", null, 24f, null)
+                svc.printSafe("Test enprimant - tout bon\n", null, 24f, null)
                 pause()
 
                 svc.lineWrap(12, null)
@@ -201,22 +208,22 @@ class SunmiPrinterHelper(private val context: Context) {
 
                 svc.setAlignment(1, null)
                 pause()
-                svc.printTextWithFont("$companyName\n", null, 28f, null)
+                svc.printSafe("$companyName\n", null, 28f, null)
                 pause()
-                svc.printTextWithFont("BONNE CHANCE!\n", null, 24f, null)
+                svc.printSafe("BONNE CHANCE!\n", null, 24f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()
 
                 svc.setAlignment(0, null)
                 pause()
-                svc.printTextWithFont("Tiraj: $drawName\n", null, 24f, null)
+                svc.printSafe("Tiraj: $drawName\n", null, 24f, null)
                 pause()
-                svc.printTextWithFont("Tikè No: $ticketNumber\n", null, 24f, null)
+                svc.printSafe("Tikè No: $ticketNumber\n", null, 24f, null)
                 pause()
-                svc.printTextWithFont("Nimewo: $numbers\n", null, 24f, null)
+                svc.printSafe("Nimewo: $numbers\n", null, 24f, null)
                 pause()
-                svc.printTextWithFont("Montan: $betAmount HTG\n", null, 24f, null)
+                svc.printSafe("Montan: $betAmount HTG\n", null, 24f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()
@@ -227,7 +234,7 @@ class SunmiPrinterHelper(private val context: Context) {
                 pause()
                 svc.lineWrap(1, null)
                 pause()
-                svc.printTextWithFont("$footerMessage\n", null, 24f, null)
+                svc.printSafe("$footerMessage\n", null, 24f, null)
                 pause()
 
                 svc.lineWrap(12, null)
@@ -290,33 +297,33 @@ class SunmiPrinterHelper(private val context: Context) {
 
                 svc.setAlignment(1, null)
                 pause()
-                svc.printTextWithFont("$companyName\n", null, fs(28f), null)
+                svc.printSafe("$companyName\n", null, fs(28f), null)
                 pause()
                 if (promoLine.isNotBlank()) {
-                    svc.printTextWithFont("$promoLine\n", null, fs(24f), null)
+                    svc.printSafe("$promoLine\n", null, fs(24f), null)
                     pause()
                 }
 
                 if (phone.isNotBlank()) {
-                    svc.printTextWithFont("${ReceiptLabels.tel}: $phone\n", null, fs(24f), null)
+                    svc.printSafe("${ReceiptLabels.tel}: $phone\n", null, fs(24f), null)
                     pause()
                 }
                 // Non ajan an anlè fich la, byen vizib
                 if (vendeur.isNotBlank() && vendeur != "—") {
-                    svc.printTextWithFont("${ReceiptLabels.agent}: $vendeur\n", null, fs(26f), null)
+                    svc.printSafe("${ReceiptLabels.agent}: $vendeur\n", null, fs(26f), null)
                     pause()
                 }
 
                 svc.setAlignment(0, null)
                 pause()
-                svc.printTextWithFont("Ticket: $dateTimeText\n", null, fs(24f), null)
+                svc.printSafe("Ticket: $dateTimeText\n", null, fs(24f), null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()
 
-                svc.printTextWithFont("${ReceiptLabels.fiche}: $ficheNumber\n", null, fs(24f), null)
+                svc.printSafe("${ReceiptLabels.fiche}: $ficheNumber\n", null, fs(24f), null)
                 pause()
-                svc.printTextWithFont("-".repeat(ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
+                svc.printSafe("-".repeat(ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
                 pause()
                 secs.forEachIndexed { idx, sec ->
                     if (idx > 0) {
@@ -324,24 +331,24 @@ class SunmiPrinterHelper(private val context: Context) {
                         pause()
                     }
                     // Non tiraj la sèlman (total la parèt yon sèl fwa anba)
-                    svc.printTextWithFont("${sec.drawName}\n", null, fs(26f), null)
+                    svc.printSafe("${sec.drawName}\n", null, fs(26f), null)
                     pause()
                     for ((code, numero, prix) in sec.lines) {
-                        svc.printTextWithFont(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
+                        svc.printSafe(twoColumnLine("$code   $numero", prix, ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
                         pause()
                     }
                 }
 
-                svc.printTextWithFont("-".repeat(ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
+                svc.printSafe("-".repeat(ReceiptLabels.lineWidth) + "\n", null, fs(24f), null)
                 pause()
                 if (secs.size > 1) {
-                    svc.printTextWithFont(ReceiptLabels.draws(secs.size) + "\n", null, fs(24f), null)
+                    svc.printSafe(ReceiptLabels.draws(secs.size) + "\n", null, fs(24f), null)
                     pause()
                 }
                 // TOTAL: sèl montan anba a, an gra epi pi gwo pase rès tèks la
                 try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x01), null) } catch (_: Exception) {}
                 pause()
-                svc.printTextWithFont(twoColumnLine(ReceiptLabels.total, grandTotal, totalWidth()) + "\n", null, fs(32f), null)
+                svc.printSafe(twoColumnLine(ReceiptLabels.total, grandTotal, totalWidth()) + "\n", null, fs(32f), null)
                 pause()
                 try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x00), null) } catch (_: Exception) {}
                 pause()
@@ -351,7 +358,7 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.setAlignment(1, null)
                 pause()
                 if (footerMessage.isNotBlank()) {
-                    svc.printTextWithFont("$footerMessage\n", null, fs(24f), null)
+                    svc.printSafe("$footerMessage\n", null, fs(24f), null)
                     pause()
                     svc.lineWrap(1, null)
                     pause()
@@ -435,21 +442,21 @@ class SunmiPrinterHelper(private val context: Context) {
                 }
                 svc.setAlignment(1, null)
                 pause()
-                svc.printTextWithFont("$companyName\n", null, 28f, null)
+                svc.printSafe("$companyName\n", null, 28f, null)
                 pause()
                 if (branchCode.isNotBlank()) {
-                    svc.printTextWithFont("$branchCode\n", null, 24f, null)
+                    svc.printSafe("$branchCode\n", null, 24f, null)
                     pause()
                 }
                 if (phone.isNotBlank()) {
-                    svc.printTextWithFont("Tel: $phone\n", null, 24f, null)
+                    svc.printSafe("Tel: $phone\n", null, 24f, null)
                     pause()
                 }
                 if (agent.isNotBlank()) {
-                    svc.printTextWithFont("Ajan: $agent\n", null, 26f, null)
+                    svc.printSafe("Ajan: $agent\n", null, 26f, null)
                     pause()
                 }
-                svc.printTextWithFont("$reportTitle\n", null, 26f, null)
+                svc.printSafe("$reportTitle\n", null, 26f, null)
                 pause()
                 svc.lineWrap(1, null)
                 pause()
@@ -457,22 +464,22 @@ class SunmiPrinterHelper(private val context: Context) {
                 svc.setAlignment(0, null)
                 pause()
                 for ((label, value) in headerLines) {
-                    svc.printTextWithFont("$label: $value\n", null, 24f, null)
+                    svc.printSafe("$label: $value\n", null, 24f, null)
                     pause()
                 }
 
-                svc.printTextWithFont("$DASHES\n", null, 24f, null)
+                svc.printSafe("$DASHES\n", null, 24f, null)
                 pause()
                 for ((label, value) in bodyFields) {
-                    svc.printTextWithFont(twoColumnLine("$label:", value) + "\n", null, 24f, null)
+                    svc.printSafe(twoColumnLine("$label:", value) + "\n", null, 24f, null)
                     pause()
                 }
 
                 if (footerFields.isNotEmpty()) {
-                    svc.printTextWithFont("$DASHES\n", null, 24f, null)
+                    svc.printSafe("$DASHES\n", null, 24f, null)
                     pause()
                     for ((label, value) in footerFields) {
-                        svc.printTextWithFont(twoColumnLine("$label:", value) + "\n", null, 24f, null)
+                        svc.printSafe(twoColumnLine("$label:", value) + "\n", null, 24f, null)
                         pause()
                     }
                 }

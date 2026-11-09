@@ -26,7 +26,7 @@ object FicheShare {
         val free: Boolean = false, // maryaj gratis → "GRATIS"
     )
 
-    private val money = DecimalFormat("#,##0.00")
+    private val money = com.plusgroup.pos.util.Money.format()
     private const val WIDTH = 24
 
     private fun row(left: String, right: String): String {

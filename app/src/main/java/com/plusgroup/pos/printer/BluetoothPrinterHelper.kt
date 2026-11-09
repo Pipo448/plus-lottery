@@ -398,7 +398,7 @@ class BluetoothPrinterHelper {
     // --- Kòmand ESC/POS debaz ---
 
     private fun textLine(text: String): ByteArray =
-        (text + "\n").toByteArray(Charsets.UTF_8)
+        (com.plusgroup.pos.util.Money.printable(text) + "\n").toByteArray(Charsets.UTF_8)
 
     // Imaj nwa/blan an ESC/POS (GS v 0): 1 bit pa pwen, 8 pwen pa okte
     private fun rasterImage(bmp: Bitmap): ByteArray {

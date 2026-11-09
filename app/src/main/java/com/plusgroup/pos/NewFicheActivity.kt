@@ -100,7 +100,7 @@ class NewFicheActivity : BaseActivity() {
     private var lastSold: SellFicheResult? = null
     private var lastSoldAt: String? = null
 
-    private val moneyFormat = DecimalFormat("#,##0.00")
+    private val moneyFormat = com.plusgroup.pos.util.Money.format()
     private val printerManager: PrinterManager by lazy { PrinterManager(applicationContext) }
 
 
@@ -661,7 +661,7 @@ class NewFicheActivity : BaseActivity() {
 
     private fun defaultAutoPrice(): String =
         binding.etMontant.text.toString().trim().takeIf { (it.toDoubleOrNull() ?: 0.0) > 0 }
-            ?: lines.lastOrNull { it.category == "BORLETTE" }?.price?.let { moneyFormat.format(it).replace(",", "") }
+            ?: lines.lastOrNull { it.category == "BORLETTE" }?.price?.let { p -> val d = p.toDouble(); if (d % 1.0 == 0.0) d.toLong().toString() else d.toString() }
             ?: ""
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()

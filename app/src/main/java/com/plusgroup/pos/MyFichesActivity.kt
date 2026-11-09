@@ -33,7 +33,7 @@ class MyFichesActivity : BaseActivity() {
     private lateinit var binding: ActivityMyFichesBinding
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private val moneyFormat = DecimalFormat("#,##0.00")
+    private val moneyFormat = com.plusgroup.pos.util.Money.format()
 
     private var startDate: Calendar = Calendar.getInstance()
     private var endDate: Calendar = Calendar.getInstance()

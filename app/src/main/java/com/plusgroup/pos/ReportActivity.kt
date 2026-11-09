@@ -36,7 +36,7 @@ class ReportActivity : BaseActivity() {
     private lateinit var binding: ActivityReportBinding
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private val moneyFormat = DecimalFormat("#,##0.00")
+    private val moneyFormat = com.plusgroup.pos.util.Money.format()
 
     private var fromDate: Calendar = Calendar.getInstance()
     private var toDate: Calendar = Calendar.getInstance()

@@ -113,7 +113,7 @@ object FicheDetailSheet {
         val onChanged: (() -> Unit)? = null,
     )
 
-    private val money = DecimalFormat("#,##0.00")
+    private val money = com.plusgroup.pos.util.Money.format()
 
     fun show(activity: AppCompatActivity, ficheNumber: String, actions: Actions = Actions()) {
         val dialog = BottomSheetDialog(activity)
