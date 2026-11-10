@@ -82,6 +82,8 @@ class DashboardActivity : BaseActivity() {
     }
 
     override fun onResume() {
+        // Nouvo vèsyon APK sou sit la? (maks 1 fwa chak 3 è)
+        com.plusgroup.pos.util.AppUpdate.check(this, lifecycleScope)
         super.onResume()
         applyBoxRule()
         // Retou apre yon ti poz: renouvle token an DAVANS epi prechaje tiraj

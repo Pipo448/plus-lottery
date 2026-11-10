@@ -41,7 +41,9 @@ class SettingsActivity : BaseActivity() {
         binding.btnKont.setOnClickListener { showComingSoon() }
         binding.btnTiraj.setOnClickListener { showComingSoon() }
         binding.btnBoulKiSoti.setOnClickListener { showDrawResults() }
-        binding.btnMizajou.setOnClickListener { showComingSoon() }
+        binding.btnMizajou.setOnClickListener {
+            com.plusgroup.pos.util.AppUpdate.check(this, lifecycleScope, manual = true)
+        }
 
         addDisplaySizeRow()
         addReceiptColumnsRow()
@@ -62,6 +64,16 @@ class SettingsActivity : BaseActivity() {
         rowBinding.root.isFocusable = true
         rowBinding.root.setOnClickListener { UiScale.showPicker(this) }
         binding.llSettingsContainer.addView(rowBinding.root)
+
+        // Vèsyon APK ki enstale a (klike → tcheke mizajou)
+        val v = ItemSettingsRowBinding.inflate(LayoutInflater.from(this), binding.llSettingsContainer, false)
+        v.tvLabel.text = Lang.tr("Vèsyon APK")
+        v.tvValue.text = "${com.plusgroup.pos.util.AppUpdate.installedName(this)}  ›"
+        v.tvValue.setTextColor(ContextCompat.getColor(this, R.color.pos_blue))
+        v.root.isClickable = true
+        v.root.isFocusable = true
+        v.root.setOnClickListener { com.plusgroup.pos.util.AppUpdate.check(this, lifecycleScope, manual = true) }
+        binding.llSettingsContainer.addView(v.root)
     }
 
     // Resi an 2 kolòn (lokal sou aparèy la): mwens papye sou chak fich

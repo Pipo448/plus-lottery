@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Mizajou: enstale nouvo vèsyon APK a ki telechaje sou sit la (util/AppUpdate.kt) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Pou enprimant Bluetooth EKSTÈN (aparèy ki pa SUNMI) -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
