@@ -58,6 +58,10 @@ object AppUpdate {
     private const val KEY_LAST_CHECK = "last_check"
     private const val KEY_SNOOZE_CODE = "snooze_code"
     private const val KEY_SNOOZE_UNTIL = "snooze_until"
+    private const val KEY_DL_CODE = "dl_code"        // vèsyon nou te telechaje
+    private const val KEY_DL_FROM = "dl_from_code"   // vèsyon ki te enstale lè sa a
+    private const val KEY_DL_AT = "dl_at"
+    private const val STUCK_MS = 30 * 60 * 1000L     // 30 min apre telechajman
     private const val AUTO_INTERVAL_MS = 3 * 60 * 60 * 1000L // 3 è
     private const val SNOOZE_MS = 12 * 60 * 60 * 1000L        // "Pita" = 12 è
 
@@ -115,6 +119,18 @@ object AppUpdate {
             val snoozed = prefs.getLong(KEY_SNOOZE_CODE, -1L) == release.versionCode &&
                 now < prefs.getLong(KEY_SNOOZE_UNTIL, 0L)
             if (!manual && snoozed && !release.mandatory) return@launch
+
+            // SEKIRITE ANTI-BOUK: nou te deja telechaje vèsyon sa a, men APK ki
+            // enstale a toujou menm jan (egz. yo mete yon ansyen APK sou sit la
+            // ak yon version.json ki di plis). Pa deranje ajan an otomatikman ankò
+            // pou vèsyon sa a — li ka toujou eseye nan Paramèt → MIZAJOU.
+            val stuck = prefs.getLong(KEY_DL_CODE, -1L) == release.versionCode &&
+                prefs.getLong(KEY_DL_FROM, -1L) == current &&
+                now - prefs.getLong(KEY_DL_AT, 0L) > STUCK_MS
+            if (!manual && stuck) {
+                Log.w(TAG, "Vèsyon ${release.versionCode} telechaje deja men li pa enstale/ pa pi nouvo — pa mande ankò")
+                return@launch
+            }
 
             showDialog(activity, release)
         }
@@ -200,6 +216,11 @@ object AppUpdate {
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setDestinationInExternalFilesDir(app, Environment.DIRECTORY_DOWNLOADS, fileName)
             val id = dm.enqueue(req)
+            app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putLong(KEY_DL_CODE, r.versionCode)
+                .putLong(KEY_DL_FROM, installedCode(app))
+                .putLong(KEY_DL_AT, System.currentTimeMillis())
+                .apply()
             Toast.makeText(activity, Lang.tr("Mizajou a ap telechaje... Gade notifikasyon an."), Toast.LENGTH_LONG).show()
 
             val receiver = object : BroadcastReceiver() {
