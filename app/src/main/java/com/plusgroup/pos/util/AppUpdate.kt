@@ -2,18 +2,22 @@ package com.plusgroup.pos.util
 
 import android.app.Activity
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.graphics.Typeface
+import android.view.Gravity
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.LifecycleCoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -221,34 +225,155 @@ object AppUpdate {
                 .putLong(KEY_DL_FROM, installedCode(app))
                 .putLong(KEY_DL_AT, System.currentTimeMillis())
                 .apply()
-            Toast.makeText(activity, Lang.tr("Mizajou a ap telechaje... Gade notifikasyon an."), Toast.LENGTH_LONG).show()
+            // Fenèt pwogrè DIRÈKTEMAN sou ekran an (ajan an pa bezwen chèche notifikasyon)
+            showProgress(activity, dm, id, r)
+        } catch (e: Exception) {
+            Log.w(TAG, "DownloadManager echwe, n ap louvri navigatè a", e)
+            openInBrowser(app, r.url)
+        }
+    }
 
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(c: Context, i: Intent) {
-                    if (i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L) != id) return
-                    try { app.unregisterReceiver(this) } catch (_: Exception) {}
-                    val uri = dm.getUriForDownloadedFile(id)
-                    if (uri == null) {
-                        openInBrowser(app, r.url)
-                        return
+    /**
+     * Fenèt "Ap telechaje mizajou a" ak ba pwogrè + pousantaj + MB.
+     * Li tcheke DownloadManager chak ½ segonn. Lè l fini → ekran Enstale a
+     * louvri pou kont li. Si l echwe → mesaj klè + bouton "Eseye nan navigatè".
+     */
+    private fun showProgress(activity: Activity, dm: DownloadManager, id: Long, r: Release) {
+        val app = activity.applicationContext
+        val dp = activity.resources.displayMetrics.density
+        val pad = (20 * dp).toInt()
+
+        val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+            isIndeterminate = true
+            max = 100
+            minimumHeight = (10 * dp).toInt()
+        }
+        val pct = TextView(activity).apply {
+            textSize = 30f
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            text = "0%"
+        }
+        val info = TextView(activity).apply {
+            textSize = 14f
+            gravity = Gravity.CENTER
+            text = Lang.tr("Ap konekte...")
+        }
+        val box = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, pad / 2)
+            addView(pct)
+            addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (8 * dp).toInt()
+                bottomMargin = (8 * dp).toInt()
+            })
+            addView(info)
+        }
+
+        val handler = Handler(Looper.getMainLooper())
+        var done = false
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(Lang.tr("Ap telechaje mizajou a") + " · " + r.versionName)
+            .setView(box)
+            .setCancelable(false)
+            .setNegativeButton(Lang.tr("Anile")) { _, _ ->
+                done = true
+                try { dm.remove(id) } catch (_: Exception) {}
+            }
+            .create()
+        dialog.show()
+
+        fun mb(b: Long) = String.format(java.util.Locale.US, "%.1f", b / 1048576.0)
+
+        fun failed(msg: String) {
+            done = true
+            if (dialog.isShowing) dialog.dismiss()
+            if (activity.isFinishing) return
+            AlertDialog.Builder(activity)
+                .setTitle(Lang.tr("Mizajou a pa telechaje"))
+                .setMessage(msg)
+                .setPositiveButton(Lang.tr("Eseye nan navigatè")) { _, _ -> openInBrowser(app, r.url) }
+                .setNegativeButton(Lang.tr("Fèmen"), null)
+                .show()
+        }
+
+        val tick = object : Runnable {
+            override fun run() {
+                if (done) return
+                var status = -1
+                var got = 0L
+                var total = -1L
+                var mime: String? = null
+                try {
+                    dm.query(DownloadManager.Query().setFilterById(id))?.use { c ->
+                        if (c.moveToFirst()) {
+                            status = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                            got = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                            total = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                            mime = c.getString(c.getColumnIndexOrThrow(DownloadManager.COLUMN_MEDIA_TYPE))
+                        }
                     }
-                    try {
-                        app.startActivity(
-                            Intent(Intent.ACTION_VIEW)
-                                .setDataAndType(uri, "application/vnd.android.package-archive")
-                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Pa ka louvri enstalasyon an", e)
-                        openInBrowser(app, r.url)
+                } catch (e: Exception) {
+                    Log.w(TAG, "query DownloadManager", e)
+                }
+
+                when (status) {
+                    DownloadManager.STATUS_SUCCESSFUL -> {
+                        done = true
+                        if (dialog.isShowing) dialog.dismiss()
+                        // Sit la te bay yon paj HTML olye APK a (fichye a poko sou sit la)
+                        if (mime != null && mime!!.contains("html", ignoreCase = true) || (total in 1..200_000)) {
+                            try { dm.remove(id) } catch (_: Exception) {}
+                            failed(Lang.tr("Fichye APK a poko disponib sou sit la. Eseye ankò pita oswa kontakte administratè a."))
+                            return
+                        }
+                        installDownloaded(activity, dm, id, r)
+                    }
+                    DownloadManager.STATUS_FAILED -> {
+                        try { dm.remove(id) } catch (_: Exception) {}
+                        failed(Lang.tr("Telechajman an echwe. Verifye entènèt la epi eseye ankò."))
+                    }
+                    -1 -> {
+                        // Telechajman an anile (pa egzanp nan notifikasyon an)
+                        done = true
+                        if (dialog.isShowing) dialog.dismiss()
+                    }
+                    else -> {
+                        if (total > 0) {
+                            val p = ((got * 100) / total).toInt().coerceIn(0, 100)
+                            bar.isIndeterminate = false
+                            bar.progress = p
+                            pct.text = "$p%"
+                            info.text = "${mb(got)} / ${mb(total)} MB"
+                        } else if (got > 0) {
+                            info.text = "${mb(got)} MB"
+                        } else if (status == DownloadManager.STATUS_PAUSED || status == DownloadManager.STATUS_PENDING) {
+                            info.text = Lang.tr("Ap tann koneksyon an...")
+                        }
+                        handler.postDelayed(this, 500)
                     }
                 }
             }
-            ContextCompat.registerReceiver(
-                app, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_EXPORTED
+        }
+        handler.post(tick)
+    }
+
+    private fun installDownloaded(activity: Activity, dm: DownloadManager, id: Long, r: Release) {
+        val app = activity.applicationContext
+        val uri = dm.getUriForDownloadedFile(id)
+        if (uri == null) {
+            openInBrowser(app, r.url)
+            return
+        }
+        try {
+            Toast.makeText(app, Lang.tr("Telechajman fini. Klike \"Enstale\"."), Toast.LENGTH_LONG).show()
+            activity.startActivity(
+                Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(uri, "application/vnd.android.package-archive")
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         } catch (e: Exception) {
-            Log.w(TAG, "DownloadManager echwe, n ap louvri navigatè a", e)
+            Log.w(TAG, "Pa ka louvri enstalasyon an", e)
             openInBrowser(app, r.url)
         }
     }
