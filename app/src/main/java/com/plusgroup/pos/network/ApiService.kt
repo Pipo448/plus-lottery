@@ -54,6 +54,10 @@ interface ApiService {
     @GET("agent/profile")
     suspend fun getProfile(): Response<ApiDataResponse<AgentProfile>>
 
+    // Vèsyon esè 7 jou (sql/023): konbyen tan ki rete pou bolèt la
+    @GET("tenant/trial-status")
+    suspend fun getTrialStatus(): Response<ApiDataResponse<com.plusgroup.pos.network.models.TrialStatus>>
+
     @GET("agent/balance")
     suspend fun getBalance(): Response<ApiDataResponse<AgentBalance>>
 

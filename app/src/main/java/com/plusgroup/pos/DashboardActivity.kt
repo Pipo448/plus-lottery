@@ -92,6 +92,8 @@ class DashboardActivity : BaseActivity() {
             com.plusgroup.pos.network.ApiClient.keepTokenFresh(applicationContext)
             loadProfileAndBalance()
             launch { com.plusgroup.pos.util.DataCache.refresh(applicationContext) }
+            // Vèsyon esè 7 jou: avètisman davans (1 fwa pa jou, 2 dènye jou yo)
+            launch { com.plusgroup.pos.util.TrialNotice.check(this@DashboardActivity) }
             if (com.plusgroup.pos.util.TenantRules.showBox) {
                 val unread = com.plusgroup.pos.ui.MessagesSheet.unreadCount(this@DashboardActivity)
                 if (unread >= 0) setMailBadge(unread)

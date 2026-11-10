@@ -60,6 +60,14 @@ data class ApiListResponse<T>(
 )
 
 // Anvlòp jenerik pou repons ki gen yon sèl objè: { success: true, data: {...} }
+/** Vèsyon esè 7 jou: bolèt la kanpe otomatikman lè endsAt rive. */
+data class TrialStatus(
+    val isTrial: Boolean? = null,
+    val endsAt: String? = null,
+    val daysLeft: Int? = null,
+    val msLeft: Long? = null,
+)
+
 data class ApiDataResponse<T>(
     val success: Boolean? = null,
     val data: T? = null,

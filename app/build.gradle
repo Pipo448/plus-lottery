@@ -3,6 +3,20 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// =====================================================================
+// VÈSYON OTOMATIK — pa bezwen chanje anyen alamen ankò.
+//   versionCode = kantite minit depi 1 jan 2024 → li monte pou kont li
+//                 nan CHAK build (toujou pi gwo pase build anvan an).
+//   versionName = APP_VERSION_BASE + dat build la, egz. "1.2.261109"
+// Chanje APP_VERSION_BASE (1.2 → 2.0) sèlman lè w vle yon gwo nimewo.
+// version.json sou sit la li chif sa yo DIRÈKTEMAN nan APK a.
+// =====================================================================
+def APP_VERSION_BASE = '1.2'
+def buildDate = new Date()
+def epoch2024 = new java.text.SimpleDateFormat('yyyy-MM-dd').parse('2024-01-01')
+def autoVersionCode = ((buildDate.time - epoch2024.time).intdiv(60000L)) as int
+def autoVersionName = APP_VERSION_BASE + '.' + new java.text.SimpleDateFormat('yyMMdd').format(buildDate)
+
 android {
     namespace 'com.plusgroup.pos'
     compileSdk 34
@@ -13,8 +27,8 @@ android {
         // menm ansyen modèl V1/V2 yo.
         minSdk 21
         targetSdk 34
-        versionCode 2
-        versionName "1.1.0"
+        versionCode autoVersionCode   // otomatik (gade anlè fichye a)
+        versionName autoVersionName
 
         // IMPÒTAN: mete TOULEDE achitekti yo pou APK a enstale sou nenpòt aparèy
         // (32-bit AK 64-bit). Se yon kòz komen POS pa ka enstale APK yo.
