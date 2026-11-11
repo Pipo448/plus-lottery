@@ -414,8 +414,7 @@ object FicheDetailSheet {
         if (soldAt.isNullOrBlank()) return true
         val minutes = com.plusgroup.pos.util.TenantRules.cancelMinutes.takeIf { it > 0 } ?: 5
         return try {
-            val p = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-            val sold = p.parse(soldAt.take(19))?.time ?: return true
+            val sold = com.plusgroup.pos.util.Dates.parse(soldAt)?.time ?: return true
             System.currentTimeMillis() - sold <= minutes * 60_000L
         } catch (_: Exception) {
             true // pa ka li dat la: kite backend lan deside
@@ -515,9 +514,8 @@ object FicheDetailSheet {
     fun prettyDateTime(iso: String?): String? {
         if (iso.isNullOrBlank()) return null
         return try {
-            val p = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
-            val d = p.parse(iso.take(19)) ?: return iso
-            SimpleDateFormat("d MMM yyyy · HH:mm", Locale.FRENCH).format(d)
+            val d = com.plusgroup.pos.util.Dates.parse(iso) ?: return iso
+            com.plusgroup.pos.util.Dates.format(d, "d MMM yyyy · HH:mm", Locale.FRENCH)
         } catch (_: Exception) {
             iso
         }

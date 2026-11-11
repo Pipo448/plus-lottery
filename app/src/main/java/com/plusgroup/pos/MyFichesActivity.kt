@@ -194,16 +194,8 @@ class MyFichesActivity : BaseActivity() {
         )
     }
 
-    private fun formatDateTime(soldAt: String?): String {
-        if (soldAt.isNullOrBlank()) return "—"
-        return try {
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            val date = parser.parse(soldAt.take(19))
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date!!)
-        } catch (_: Exception) {
-            soldAt
-        }
-    }
+    // Lè Ayiti (backend lan voye UTC)
+    private fun formatDateTime(soldAt: String?): String = com.plusgroup.pos.util.Dates.local(soldAt)
 
     private fun categoryLabelFor(numero: String): String {
         return when {
@@ -222,11 +214,17 @@ class MyFichesActivity : BaseActivity() {
         fun codeOf(l: com.plusgroup.pos.network.models.FicheLineSummary): String =
             if (com.plusgroup.pos.util.FreeMariage.isFree(l.gameType)) com.plusgroup.pos.util.FreeMariage.CODE
             else shortCodeFor(categoryLabelFor(l.numero ?: ""))
+        // Menm etikèt ak premye resi a: "3652 (O1)" pou opsyon Loto 4/5
+        fun numeroOf(l: com.plusgroup.pos.network.models.FicheLineSummary): String {
+            val n = l.numero ?: "—"
+            val opt = l.option?.trimStart('0')?.takeIf { it.isNotEmpty() }
+            return if (opt != null) "$n (O$opt)" else n
+        }
         fun amountOf(l: com.plusgroup.pos.network.models.FicheLineSummary): String =
             com.plusgroup.pos.util.FreeMariage.amountText(l.gameType, l.betAmount, moneyFormat)
 
         val printLines = fiche.lines?.map { line ->
-            Triple(codeOf(line), line.numero ?: "—", amountOf(line))
+            Triple(codeOf(line), numeroOf(line), amountOf(line))
         } ?: emptyList()
 
         // Fich plizyè tiraj: yon seksyon pou chak tiraj (menm jan ak premye resi a)
@@ -236,7 +234,7 @@ class MyFichesActivity : BaseActivity() {
                 drawName = name,
                 drawTotal = moneyFormat.format(ls.sumOf { it.betAmount ?: 0.0 }),
                 lines = ls.map { l ->
-                    Triple(codeOf(l), l.numero ?: "—", amountOf(l))
+                    Triple(codeOf(l), numeroOf(l), amountOf(l))
                 },
             )
         } else null
@@ -255,13 +253,14 @@ class MyFichesActivity : BaseActivity() {
                         promoLine = TenantBranding.address.orEmpty(),
                         phone = TenantBranding.phone.orEmpty(),
                         vendeur = cachedVendeur ?: "—",
-                        dateTimeText = formatDateTime(fiche.soldAt),
+                        dateTimeText = com.plusgroup.pos.util.Dates.receipt(fiche.soldAt),
                         ficheNumber = fiche.ficheNumber ?: fiche.ticketNumber ?: "—",
                         drawName = fiche.drawName ?: "—",
                         drawTotal = moneyFormat.format(fiche.totalMise ?: 0.0),
                         lines = printLines,
                         grandTotal = moneyFormat.format(fiche.totalMise ?: 0.0),
-                        footerMessage = "Kopi fich",
+                        // Menm mesaj ak premye resi a + mansyon "KOPI"
+                        footerMessage = listOfNotNull(TenantBranding.message?.takeIf { it.isNotBlank() }, "KOPI FICH").joinToString("\n"),
                         qrData = fiche.ficheNumber ?: fiche.ticketNumber,
                         sections = sections,
                     )

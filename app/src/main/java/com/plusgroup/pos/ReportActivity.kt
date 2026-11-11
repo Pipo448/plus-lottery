@@ -458,7 +458,8 @@ class ReportActivity : BaseActivity() {
                 val api = ApiClient.getService(applicationContext)
                 val res = api.getEliminatedReport(date)
                 val report = res.body()?.data
-                val lines = report?.lines ?: emptyList()
+                // Backend lan voye yon liy pa JWÈT: regwoupe pa FICH (1 fich = 1 liy)
+                val lines = groupEliminated(report?.lines ?: emptyList())
 
                 binding.tvListSummary.text =
                     "${report?.ficheElimine ?: lines.size} fich elimine — Total: ${moneyFormat.format(report?.totalVente ?: 0.0)} HTG"
@@ -479,6 +480,20 @@ class ReportActivity : BaseActivity() {
             }
         }
     }
+
+    /** Yon liy pa fich: total vant, tiraj yo (san repete), dènye lè anilasyon. */
+    private fun groupEliminated(raw: List<EliminatedLine>): List<EliminatedLine> =
+        raw.groupBy { it.ficheNumber ?: it.ticketNumber ?: "—" }
+            .map { (_, ls) ->
+                val first = ls.first()
+                first.copy(
+                    drawName = ls.mapNotNull { it.drawName }.distinct().joinToString(", ").ifBlank { null },
+                    vente = ls.sumOf { it.vente ?: 0.0 },
+                    cancelledAt = ls.mapNotNull { it.cancelledAt }.maxOrNull() ?: first.cancelledAt,
+                    cancelReason = ls.mapNotNull { it.cancelReason }.distinct().joinToString(", ").ifBlank { null },
+                )
+            }
+            .sortedByDescending { com.plusgroup.pos.util.Dates.parse(it.cancelledAt)?.time ?: 0L }
 
     private fun renderEliminatedLines(lines: List<EliminatedLine>) {
         binding.llListContainer.removeAllViews()
@@ -526,16 +541,8 @@ class ReportActivity : BaseActivity() {
         setBackgroundColor(Color.parseColor("#E0E0E0"))
     }
 
-    private fun formatDateTime(raw: String?): String {
-        if (raw.isNullOrBlank()) return "—"
-        return try {
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            val date = parser.parse(raw.take(19))
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date!!)
-        } catch (_: Exception) {
-            raw
-        }
-    }
+    // Lè Ayiti (timestamptz backend lan an UTC; dat san zòn = deja lokal)
+    private fun formatDateTime(raw: String?): String = com.plusgroup.pos.util.Dates.local(raw)
 
     // ==================== ENPRIME ====================
     // Itilize `printerManager.printReportReceipt()` — fòma DVN Lotto:
