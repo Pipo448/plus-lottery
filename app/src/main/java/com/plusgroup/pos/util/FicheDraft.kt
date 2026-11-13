@@ -38,12 +38,16 @@ object FicheDraft {
     private val gson = Gson()
 
     /** Ajan ki konekte a (champ "sub" nan token an) — bouyon an pa pase bay yon lòt ajan. */
-    fun owner(ctx: Context): String? = try {
-        val tok = SessionManager(ctx).getToken() ?: return null
-        val part = tok.split('.').getOrNull(1) ?: return null
-        val json = String(android.util.Base64.decode(part, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING))
-        org.json.JSONObject(json).optString("sub").ifBlank { null }
-    } catch (_: Exception) { null }
+    fun owner(ctx: Context): String? {
+        return try {
+            val tok = SessionManager(ctx).getToken() ?: return null
+            val part = tok.split('.').getOrNull(1) ?: return null
+            val json = String(android.util.Base64.decode(part, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING))
+            org.json.JSONObject(json).optString("sub").ifBlank { null }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     private fun today(): String = Dates.format(java.util.Date(), "yyyy-MM-dd")
 

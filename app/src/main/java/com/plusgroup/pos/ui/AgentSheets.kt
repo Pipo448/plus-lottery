@@ -49,7 +49,7 @@ object AgentSheets {
 
     private fun AppCompatActivity.round(color: Int, radiusDp: Int, stroke: Int? = null) = GradientDrawable().apply {
         setColor(color)
-        cornerRadius = dp(radiusDp).toFloat()
+        setCornerRadius(dp(radiusDp).toFloat())
         if (stroke != null) setStroke(dp(1), stroke)
     }
 
@@ -170,7 +170,7 @@ object AgentSheets {
                 val top = LinearLayout(this@with).apply {
                     orientation = LinearLayout.VERTICAL
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        intArrayOf(col(R.color.pos_navy), col(R.color.pos_blue))).apply { cornerRadius = dp(18).toFloat() }
+                        intArrayOf(col(R.color.pos_navy), col(R.color.pos_blue))).apply { setCornerRadius(dp(18).toFloat()) }
                     setPadding(dp(16), dp(14), dp(16), dp(16))
                 }
                 top.addView(text(Lang.tr("Balans ou"), 14f, col(R.color.pos_on_color_dim)))
