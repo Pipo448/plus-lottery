@@ -121,6 +121,7 @@ class NewFicheActivity : BaseActivity() {
             lines.clear()
             refreshLinesList()
             refreshTotal()
+            com.plusgroup.pos.util.FicheDraft.clear(applicationContext)
         }
         binding.btnShare.setOnClickListener { shareLastFiche() }
         binding.btnPrint.setOnClickListener { submitFiche() }
@@ -171,8 +172,76 @@ class NewFicheActivity : BaseActivity() {
             } else false
         }
 
+        // Bouyon: si ajan an te kite ekran an ak boul sou fich la, remèt yo
+        if (intent.getStringExtra("PREFILL_LINES_JSON").isNullOrBlank() && intent.getStringExtra("PREFILL_DRAW_NAME") == null) {
+            restoreDraftLines()
+        }
+
         loadDrawsAndGames()
         refreshTotal()
+    }
+
+    // ==================== BOUYON (fich ki poko vann) ====================
+
+    private var draft: com.plusgroup.pos.util.FicheDraft.Draft? = null
+
+    private fun restoreDraftLines() {
+        val d = com.plusgroup.pos.util.FicheDraft.load(applicationContext, com.plusgroup.pos.util.FicheDraft.owner(applicationContext))
+            ?: return
+        draft = d
+        lines.clear()
+        d.lines.forEach { l ->
+            lines.add(FicheLine(drawName = l.drawName, numero = l.numero, price = l.price, category = l.category, optionLabel = l.optionLabel))
+        }
+        if (d.boul.isNotBlank()) binding.etBoulLa.setText(d.boul)
+        if (d.montant.isNotBlank()) binding.etMontant.setText(d.montant)
+        refreshLinesList()
+        refreshTotal()
+        if (lines.isNotEmpty()) {
+            Toast.makeText(
+                this,
+                com.plusgroup.pos.util.Lang.tr("Fich ou t ap fè a retounen ({n} boul).").replace("{n}", lines.size.toString()),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
+    /** Remèt tiraj ak jwèt bouyon an te genyen — sèlman sa ki toujou ouvè. */
+    private fun restoreDraftDraws() {
+        val d = draft ?: return
+        draft = null
+        if (selectedDraws.isEmpty() && d.drawIds.isNotEmpty()) {
+            val again = d.drawIds.mapNotNull { id -> openDraws.firstOrNull { it.id == id } }
+            if (again.isNotEmpty()) {
+                selectedDraws.clear()
+                selectedDraws.addAll(if (TenantRules.doubleDraw) again else again.take(1))
+                onDrawsChanged()
+            }
+        }
+        if (d.gameId != null) {
+            activeGames.firstOrNull { it.id == d.gameId }?.let {
+                selectedGame = it
+                binding.tvFicheLabel.text = (it.name ?: "BORLETTE").uppercase()
+            }
+        }
+    }
+
+    private fun saveDraft() {
+        if (!::binding.isInitialized) return
+        com.plusgroup.pos.util.FicheDraft.save(
+            applicationContext,
+            com.plusgroup.pos.util.FicheDraft.owner(applicationContext),
+            selectedDraws.map { it.id },
+            selectedGame?.id,
+            lines.map { com.plusgroup.pos.util.FicheDraft.Line(it.drawName, it.numero, it.price, it.category, it.optionLabel) },
+            binding.etBoulLa.text?.toString().orEmpty(),
+            binding.etMontant.text?.toString().orEmpty(),
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveDraft()
     }
 
     // ==================== CHAJE TIRAJ AK JWÈT ====================
@@ -218,6 +287,7 @@ class NewFicheActivity : BaseActivity() {
         if (!prefillApplied) {
             prefillApplied = true
             applyPrefillIfAny()
+            restoreDraftDraws()
         }
     }
 
@@ -1314,6 +1384,7 @@ class NewFicheActivity : BaseActivity() {
                     binding.etMontant.text?.clear()
                     refreshLinesList()
                     refreshTotal()
+                    com.plusgroup.pos.util.FicheDraft.clear(applicationContext)
                     if (result.replay == true) {
                         Toast.makeText(this@NewFicheActivity, com.plusgroup.pos.util.Lang.tr("Fich sa a te deja vann — n ap enprime l."), Toast.LENGTH_LONG).show()
                     }

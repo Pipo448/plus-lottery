@@ -82,6 +82,14 @@ data class Draw(
     val openTime: String? = null,
     @com.google.gson.annotations.SerializedName("close_time")
     val closeTime: String? = null,
+    @com.google.gson.annotations.SerializedName("draw_date")
+    val drawDate: String? = null,
+    @com.google.gson.annotations.SerializedName("winning_number_1")
+    val winningNumber1: String? = null,
+    @com.google.gson.annotations.SerializedName("winning_number_2")
+    val winningNumber2: String? = null,
+    @com.google.gson.annotations.SerializedName("winning_number_3")
+    val winningNumber3: String? = null,
 )
 
 data class LotteryGame(

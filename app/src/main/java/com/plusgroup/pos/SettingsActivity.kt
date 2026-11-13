@@ -38,8 +38,8 @@ class SettingsActivity : BaseActivity() {
         setContentView(binding.root)
         binding.btnBack.setOnClickListener { finish() }
 
-        binding.btnKont.setOnClickListener { showComingSoon() }
-        binding.btnTiraj.setOnClickListener { showComingSoon() }
+        binding.btnKont.setOnClickListener { com.plusgroup.pos.ui.AgentSheets.showAccount(this) }
+        binding.btnTiraj.setOnClickListener { com.plusgroup.pos.ui.AgentSheets.showDraws(this) }
         binding.btnBoulKiSoti.setOnClickListener { showDrawResults() }
         binding.btnMizajou.setOnClickListener {
             com.plusgroup.pos.util.AppUpdate.check(this, lifecycleScope, manual = true)
