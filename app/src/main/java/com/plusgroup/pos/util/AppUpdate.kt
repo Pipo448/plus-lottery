@@ -66,8 +66,9 @@ object AppUpdate {
     private const val KEY_DL_FROM = "dl_from_code"   // vèsyon ki te enstale lè sa a
     private const val KEY_DL_AT = "dl_at"
     private const val STUCK_MS = 30 * 60 * 1000L     // 30 min apre telechajman
-    private const val AUTO_INTERVAL_MS = 3 * 60 * 60 * 1000L // 3 è
-    private const val SNOOZE_MS = 12 * 60 * 60 * 1000L        // "Pita" = 12 è
+    // Tcheke otomatik sou TOUT ekran yo (BaseActivity), maks 1 fwa chak 20 min
+    private const val AUTO_INTERVAL_MS = 20 * 60 * 1000L       // 20 min
+    private const val SNOOZE_MS = 2 * 60 * 60 * 1000L          // "Pita" = 2 è, apre sa mesaj la tounen
 
     data class Release(
         val versionCode: Long,

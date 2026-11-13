@@ -63,6 +63,9 @@ import java.text.DecimalFormat
  */
 class NewFicheActivity : BaseActivity() {
 
+    // Pa koupe ajan an pandan l ap vann: mesaj mizajou a ap parèt sou lòt ekran yo
+    override val autoUpdateCheck: Boolean get() = false
+
     private lateinit var binding: ActivityNewFicheBinding
 
     private var openDraws: List<Draw> = emptyList()
