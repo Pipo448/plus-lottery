@@ -85,6 +85,7 @@ class ParyajActivity : BaseActivity() {
     private var requestId = UUID.randomUUID().toString()
     private var acceptChanges = false
     private var stakeText = ""
+    private var lastCode: String? = null
 
     private lateinit var content: LinearLayout
     private lateinit var scroll: ScrollView
@@ -181,7 +182,23 @@ class ParyajActivity : BaseActivity() {
             setPadding(dp(12), dp(4), dp(12), dp(16))
         }
         scroll.addView(content)
-        root.addView(scroll, lp(h = 0, weight = 1f))
+        // Rale ekran an desann (swipe) → rafrechi match yo / tikè a / rapò a
+        val swipe = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this)
+        swipe.setColorSchemeColors(BLUE, RED, GOLD)
+        swipe.addView(scroll)
+        swipe.setOnRefreshListener {
+            lifecycleScope.launch {
+                if (info == null) loadInfo()
+                when (tab) {
+                    0 -> loadEvents(false)
+                    1 -> loadEvents(true)
+                    2 -> lastCode?.let { verify(it) } ?: showVerify(null)
+                    3 -> loadReport()
+                }
+                swipe.postDelayed({ swipe.isRefreshing = false }, 1000L)
+            }
+        }
+        root.addView(swipe, lp(h = 0, weight = 1f))
 
         // Ba tikè a (anba)
         slipBar = LinearLayout(this).apply {
@@ -244,15 +261,27 @@ class ParyajActivity : BaseActivity() {
         try {
             val res = ApiClient.getService(applicationContext).paryeInfo()
             if (res.isSuccessful) {
-                info = res.body()?.getAsJsonObject("data")
+                info = obj(res.body(), "data")
             } else {
                 val raw = res.errorBody()?.string()
                 message("Paryaj pa disponib", errorOf(raw, "Administratè a pa louvri paryaj sou POS."))
             }
-        } catch (e: Exception) {
+        } catch (e: java.io.IOException) {
             message("Pa gen koneksyon", "Verifye entènèt la epi eseye ankò.")
+        } catch (e: Exception) {
+            message("Erè", "Pa ka chaje paryaj: ${e.message ?: e.javaClass.simpleName}")
         }
     }
+
+    /** Gson: getAsJsonObject() voye ClassCastException si valè a se `null` (JsonNull) → itilize sa yo. */
+    private fun obj(o: JsonObject?, k: String): JsonObject? =
+        o?.get(k)?.takeIf { it.isJsonObject }?.asJsonObject
+
+    private fun bool(o: JsonObject?, k: String): Boolean =
+        try { o?.get(k)?.takeIf { it.isJsonPrimitive }?.asBoolean == true } catch (_: Exception) { false }
+
+    private fun arr(o: JsonObject?, k: String): JsonArray? =
+        o?.get(k)?.takeIf { it.isJsonArray }?.asJsonArray
 
     private fun num(o: JsonObject?, k: String, def: Double = 0.0): Double =
         try { o?.get(k)?.takeIf { !it.isJsonNull }?.asDouble ?: def } catch (_: Exception) { def }
@@ -281,10 +310,12 @@ class ParyajActivity : BaseActivity() {
                     message("Erè", errorOf(res.errorBody()?.string(), "Pa ka chaje match yo."))
                     return@launch
                 }
-                lastEvents = res.body()?.getAsJsonArray("data") ?: JsonArray()
+                lastEvents = arr(res.body(), "data") ?: JsonArray()
                 renderEvents()
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 message("Pa gen koneksyon", "Verifye entènèt la epi eseye ankò.")
+            } catch (e: Exception) {
+                message("Erè", "Pa ka montre done yo: ${e.message ?: e.javaClass.simpleName}")
             }
         }
     }
@@ -312,8 +343,8 @@ class ParyajActivity : BaseActivity() {
         val id = str(e, "id") ?: return c
         val home = str(e, "home") ?: ""
         val away = str(e, "away") ?: ""
-        val live = e.get("live")?.asBoolean == true
-        val score = e.getAsJsonObject("score")
+        val live = bool(e, "live")
+        val score = obj(e, "score")
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         top.addView(text(if (live) "● LIVE" else whenText(str(e, "commenceAt")), 12f, if (live) RED else MUTED, true), lp(0, weight = 1f))
         if (live && score != null) top.addView(text("${num(score, "home").toInt()} - ${num(score, "away").toInt()}", 14f, RED, true))
@@ -322,7 +353,7 @@ class ParyajActivity : BaseActivity() {
         c.addView(text(away, 16f, INK, true))
 
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(8), 0, 0) }
-        val h = e.getAsJsonObject("h2h")
+        val h = obj(e, "h2h")
         val evLabel = "$home - $away"
         val start = str(e, "commenceAt")
         fun add(outcome: String, top: String, label: String) {
@@ -362,7 +393,7 @@ class ParyajActivity : BaseActivity() {
             slip.remove(same)
         } else {
             slip.removeAll { it.eventId == s.eventId } // yon sèl chwa pa match
-            val max = info?.get("maxSelections")?.asInt ?: 12
+            val max = num(info, "maxSelections", 12.0).toInt()
             if (slip.size >= max) {
                 Toast.makeText(this, "Maksimòm $max match pa tikè.", Toast.LENGTH_SHORT).show()
                 return
@@ -398,10 +429,12 @@ class ParyajActivity : BaseActivity() {
                     Toast.makeText(this@ParyajActivity, errorOf(res.errorBody()?.string(), "Match sa a pa disponib."), Toast.LENGTH_LONG).show()
                     return@launch
                 }
-                val e = res.body()?.getAsJsonObject("data") ?: return@launch
+                val e = obj(res.body(), "data") ?: return@launch
                 showMarketsDialog(e)
-            } catch (ex: Exception) {
+            } catch (ex: java.io.IOException) {
                 Toast.makeText(this@ParyajActivity, "Pa gen koneksyon.", Toast.LENGTH_SHORT).show()
+            } catch (ex: Exception) {
+                Toast.makeText(this@ParyajActivity, "Erè: ${ex.message ?: ex.javaClass.simpleName}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -412,7 +445,7 @@ class ParyajActivity : BaseActivity() {
         val away = str(e, "away") ?: ""
         val evLabel = "$home - $away"
         val start = str(e, "commenceAt")
-        val m = e.getAsJsonObject("markets") ?: JsonObject()
+        val m = obj(e, "markets") ?: JsonObject()
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(4), dp(16), dp(8)) }
         var dialog: AlertDialog? = null
 
@@ -432,7 +465,7 @@ class ParyajActivity : BaseActivity() {
             body.addView(row)
         }
 
-        m.getAsJsonObject("h2h")?.let { h ->
+        obj(m, "h2h")?.let { h ->
             section("Rezilta final (1X2)")
             val hasDraw = h.get("draw")?.isJsonNull == false
             if (hasDraw) {
@@ -448,7 +481,7 @@ class ParyajActivity : BaseActivity() {
                 )
             }
         }
-        m.getAsJsonObject("double")?.let { d ->
+        obj(m, "double")?.let { d ->
             section("Doub chans")
             rowOf(
                 opt("1X", num(d, "home_draw")) { Sel(id, "double", "home_draw", null, num(d, "home_draw"), "$home oswa Nil (1X)", evLabel, start) },
@@ -456,7 +489,7 @@ class ParyajActivity : BaseActivity() {
                 opt("X2", num(d, "draw_away")) { Sel(id, "double", "draw_away", null, num(d, "draw_away"), "Nil oswa $away (X2)", evLabel, start) },
             )
         }
-        m.getAsJsonArray("totals")?.takeIf { it.size() > 0 }?.let { arr ->
+        arr(m, "totals")?.takeIf { it.size() > 0 }?.let { arr ->
             section("Plis / Mwens (total gòl)")
             for (el in arr) {
                 val l = el.asJsonObject
@@ -468,7 +501,7 @@ class ParyajActivity : BaseActivity() {
                 )
             }
         }
-        m.getAsJsonArray("spreads")?.takeIf { it.size() > 0 }?.let { arr ->
+        arr(m, "spreads")?.takeIf { it.size() > 0 }?.let { arr ->
             section("Andikap")
             for (el in arr) {
                 val l = el.asJsonObject
@@ -481,7 +514,7 @@ class ParyajActivity : BaseActivity() {
                 )
             }
         }
-        m.getAsJsonObject("btts")?.let { b ->
+        obj(m, "btts")?.let { b ->
             section("Tou de ekip make")
             rowOf(
                 opt("Wi", num(b, "yes")) { Sel(id, "btts", "yes", null, num(b, "yes"), "Tou de ekip make: Wi", evLabel, start) },
@@ -635,7 +668,7 @@ class ParyajActivity : BaseActivity() {
             try {
                 val res = ApiClient.getService(applicationContext).paryeSell(body)
                 if (res.isSuccessful) {
-                    val d = res.body()?.getAsJsonObject("data") ?: JsonObject()
+                    val d = obj(res.body(), "data") ?: JsonObject()
                     slip.clear()
                     acceptChanges = false
                     stakeText = ""
@@ -667,7 +700,7 @@ class ParyajActivity : BaseActivity() {
 
     private fun applyChanges(raw: String?) {
         try {
-            val arr = JsonParser.parseString(raw ?: return).asJsonObject.getAsJsonArray("changes") ?: return
+            val arr = arr(JsonParser.parseString(raw ?: return).asJsonObject, "changes") ?: return
             for (el in arr) {
                 val c = el.asJsonObject
                 val s = slip.firstOrNull { it.eventId == str(c, "eventId") && it.market == str(c, "market") && it.outcome == str(c, "outcome") } ?: continue
@@ -703,7 +736,7 @@ class ParyajActivity : BaseActivity() {
             val phone = TenantBranding.phone.orEmpty()
             val code = str(d, "code") ?: "—"
             val dt = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.US).format(Date())
-            val sels = d.getAsJsonArray("selections") ?: JsonArray()
+            val sels = arr(d, "selections") ?: JsonArray()
             val bodyFields = mutableListOf<Pair<String, String>>()
             sels.forEachIndexed { i, el: JsonElement ->
                 val s = el.asJsonObject
@@ -768,6 +801,7 @@ class ParyajActivity : BaseActivity() {
 
     private fun verify(raw: String) {
         val code = raw.trim().uppercase()
+        if (code.matches(Regex("PP\\d{8}"))) lastCode = code
         if (!code.matches(Regex("PP\\d{8}"))) {
             Toast.makeText(this, "Kòd la dwe sanble PP12345678.", Toast.LENGTH_SHORT).show()
             return
@@ -785,10 +819,13 @@ class ParyajActivity : BaseActivity() {
                     Toast.makeText(this@ParyajActivity, errorOf(res.errorBody()?.string(), "Tikè pa jwenn."), Toast.LENGTH_LONG).show()
                     return@launch
                 }
-                showVerify(res.body()?.getAsJsonObject("data"))
-            } catch (e: Exception) {
+                showVerify(obj(res.body(), "data"))
+            } catch (e: java.io.IOException) {
                 showVerify(null)
                 Toast.makeText(this@ParyajActivity, "Pa gen koneksyon.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                showVerify(null)
+                Toast.makeText(this@ParyajActivity, "Erè: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -817,7 +854,7 @@ class ParyajActivity : BaseActivity() {
         if (str(b, "channel") == "online") {
             c.addView(text("Pari an liy: kòb la antre sou balans jwè a otomatikman.", 13f, MUTED))
         }
-        val sels = b.getAsJsonArray("selections") ?: JsonArray()
+        val sels = arr(b, "selections") ?: JsonArray()
         for (el in sels) {
             val s = el.asJsonObject
             val res = when (str(s, "result")) { "won" -> "✓"; "lost" -> "✗"; "void" -> "—"; else -> "…" }
@@ -836,14 +873,14 @@ class ParyajActivity : BaseActivity() {
             15f, INK, true,
         ).apply { setPadding(0, dp(10), 0, 0) })
         val agent = str(b, "agentName")
-        if (agent != null && b.get("mine")?.asBoolean != true) {
+        if (agent != null && !bool(b, "mine")) {
             c.addView(text("Vandè: $agent — se li ki pou peye tikè sa a.", 13f, RED).apply { setPadding(0, dp(6), 0, 0) })
         }
         val code = str(b, "code") ?: ""
-        if (b.get("canPay")?.asBoolean == true) {
+        if (bool(b, "canPay")) {
             c.addView(button("PEYE ${money.format(num(b, "payout"))} HTG", GREEN) { confirmPay(code, num(b, "payout")) }, lp(top = 10))
         }
-        if (b.get("canCancel")?.asBoolean == true) {
+        if (bool(b, "canCancel")) {
             c.addView(button("ANILE TIKÈ A", RED) { confirmCancel(code) }, lp(top = 8))
         }
         return c
@@ -900,7 +937,7 @@ class ParyajActivity : BaseActivity() {
                     message("Erè", errorOf(res.errorBody()?.string(), "Pa ka chaje rapò a."))
                     return@launch
                 }
-                val r = res.body()?.getAsJsonObject("data") ?: JsonObject()
+                val r = obj(res.body(), "data") ?: JsonObject()
                 val money = Money.format()
                 val rows = listOf(
                     "Tikè vann" to "${num(r, "tickets").toInt()}",
@@ -947,8 +984,10 @@ class ParyajActivity : BaseActivity() {
                     }
                 }, lp(top = 12))
                 content.addView(c)
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 message("Pa gen koneksyon", "Verifye entènèt la epi eseye ankò.")
+            } catch (e: Exception) {
+                message("Erè", "Pa ka montre done yo: ${e.message ?: e.javaClass.simpleName}")
             }
         }
     }

@@ -23,361 +23,368 @@
         android:scaleType="fitXY"
         android:src="@drawable/pl_bg_bottom_curves" />
 
-    <ScrollView
+    <!-- Rale ekran an desann pou rafrechi (swipe to refresh) -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:overScrollMode="never"
-        android:paddingBottom="112dp"
-        android:scrollbars="none">
+        android:layout_height="match_parent">
 
-        <!-- Antèt la andedan ScrollView a pou l woule ansanm ak kontni an -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-        <!-- Fon ble anwo + riban wouj -->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="270dp"
-            android:importantForAccessibility="no"
-            android:scaleType="fitXY"
-            android:src="@drawable/pl_bg_header" />
-
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingTop="2dp"
-            android:paddingEnd="16dp">
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="112dp"
+            android:scrollbars="none">
 
-            <!-- ===== Antèt: Enprimant / Mesaj / Logo / Meni ===== -->
+            <!-- Antèt la andedan ScrollView a pou l woule ansanm ak kontni an -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="100dp">
+                android:layout_height="wrap_content">
 
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start|top"
-                    android:layout_marginTop="12dp"
-                    android:clipChildren="false"
-                    android:clipToPadding="false">
+            <!-- Fon ble anwo + riban wouj -->
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="270dp"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY"
+                android:src="@drawable/pl_bg_header" />
 
-                    <ImageButton
-                        android:id="@+id/btnPrinter"
-                        style="@style/PL.TopIconButton"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:padding="12dp"
-                        android:background="@drawable/pl_bg_icon_btn_blue"
-                        android:contentDescription="@string/pl_cd_print"
-                        android:src="@drawable/pl_ic_print" />
-
-                    <ImageButton
-                        android:id="@+id/btnMail"
-                        style="@style/PL.TopIconButton"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:layout_marginStart="10dp"
-                        android:layout_toEndOf="@id/btnPrinter"
-                        android:padding="12dp"
-                        android:background="@drawable/pl_bg_icon_btn_blue"
-                        android:contentDescription="@string/pl_cd_messages"
-                        android:src="@drawable/pl_ic_mail" />
-
-                    <!-- Kantite mesaj ki poko li (Bwat mesaj) -->
-                    <TextView
-                        android:id="@+id/tvMailBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:layout_alignTop="@id/btnMail"
-                        android:layout_alignEnd="@id/btnMail"
-                        android:layout_marginTop="-6dp"
-                        android:layout_marginEnd="-6dp"
-                        android:background="@drawable/bg_badge_dot"
-                        android:elevation="10dp"
-                        android:fontFamily="@font/pl_barlow_extrabold"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:minWidth="20dp"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp"
-                        android:textColor="@color/pl_white"
-                        android:textSize="11sp"
-                        android:visibility="gone"
-                        tools:text="3"
-                        tools:visibility="visible" />
-                </RelativeLayout>
-
-                <!-- Logo Plus Lotterie. Si bolèt la gen logo pa l, DashboardActivity
-                     mete l la nan yon ti kare blan. -->
-                <ImageView
-                    android:id="@+id/ivLogo"
-                    android:layout_width="148dp"
-                    android:layout_height="92dp"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="4dp"
-                    android:adjustViewBounds="true"
-                    android:contentDescription="@string/pl_cd_logo"
-                    android:elevation="2dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/pl_logo_plus_lotterie" />
-
-                <ImageButton
-                    android:id="@+id/btnMenu"
-                    style="@style/PL.TopIconButton"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
-                    android:layout_gravity="end|top"
-                    android:layout_marginTop="12dp"
-                    android:padding="12dp"
-                    android:background="@drawable/pl_bg_icon_btn_gold"
-                    android:contentDescription="@string/pl_cd_more"
-                    android:src="@drawable/pl_ic_more" />
-            </FrameLayout>
-
-            <!-- ===== Salitasyon + rafrechi ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp">
-
-                <TextView
-                    android:id="@+id/tvSalut"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:fontFamily="@font/pl_barlow_extrabold_italic"
-                    android:gravity="center"
-                    android:maxLines="1"
-                    android:text="Salut"
-                    android:textColor="@color/pl_white"
-                    android:textSize="23sp"
-                    tools:text="Salut 004 004" />
-
-                <ImageButton
-                    android:id="@+id/btnRefresh"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/pl_bg_round_translucent"
-                    android:contentDescription="@string/pl_cd_refresh"
-                    android:padding="11dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/pl_ic_refresh" />
-            </LinearLayout>
-
-            <!-- ===== Kat enfòmasyon kont ===== -->
-            <LinearLayout
-                android:id="@+id/cardAccount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/pl_bg_card_white"
-                android:elevation="10dp"
+                android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:paddingStart="16dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="4dp">
+                android:paddingTop="2dp"
+                android:paddingEnd="16dp">
 
+                <!-- ===== Antèt: Enprimant / Mesaj / Logo / Meni ===== -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp">
+
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|top"
+                        android:layout_marginTop="12dp"
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
+
+                        <ImageButton
+                            android:id="@+id/btnPrinter"
+                            style="@style/PL.TopIconButton"
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:padding="12dp"
+                            android:background="@drawable/pl_bg_icon_btn_blue"
+                            android:contentDescription="@string/pl_cd_print"
+                            android:src="@drawable/pl_ic_print" />
+
+                        <ImageButton
+                            android:id="@+id/btnMail"
+                            style="@style/PL.TopIconButton"
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_toEndOf="@id/btnPrinter"
+                            android:padding="12dp"
+                            android:background="@drawable/pl_bg_icon_btn_blue"
+                            android:contentDescription="@string/pl_cd_messages"
+                            android:src="@drawable/pl_ic_mail" />
+
+                        <!-- Kantite mesaj ki poko li (Bwat mesaj) -->
+                        <TextView
+                            android:id="@+id/tvMailBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="20dp"
+                            android:layout_alignTop="@id/btnMail"
+                            android:layout_alignEnd="@id/btnMail"
+                            android:layout_marginTop="-6dp"
+                            android:layout_marginEnd="-6dp"
+                            android:background="@drawable/bg_badge_dot"
+                            android:elevation="10dp"
+                            android:fontFamily="@font/pl_barlow_extrabold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:minWidth="20dp"
+                            android:paddingStart="5dp"
+                            android:paddingEnd="5dp"
+                            android:textColor="@color/pl_white"
+                            android:textSize="11sp"
+                            android:visibility="gone"
+                            tools:text="3"
+                            tools:visibility="visible" />
+                    </RelativeLayout>
+
+                    <!-- Logo Plus Lotterie. Si bolèt la gen logo pa l, DashboardActivity
+                         mete l la nan yon ti kare blan. -->
+                    <ImageView
+                        android:id="@+id/ivLogo"
+                        android:layout_width="148dp"
+                        android:layout_height="92dp"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="4dp"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@string/pl_cd_logo"
+                        android:elevation="2dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/pl_logo_plus_lotterie" />
+
+                    <ImageButton
+                        android:id="@+id/btnMenu"
+                        style="@style/PL.TopIconButton"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="end|top"
+                        android:layout_marginTop="12dp"
+                        android:padding="12dp"
+                        android:background="@drawable/pl_bg_icon_btn_gold"
+                        android:contentDescription="@string/pl_cd_more"
+                        android:src="@drawable/pl_ic_more" />
+                </FrameLayout>
+
+                <!-- ===== Salitasyon + rafrechi ===== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvSalut"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/pl_barlow_extrabold_italic"
                         android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="10dp">
+                        android:maxLines="1"
+                        android:text="Salut"
+                        android:textColor="@color/pl_white"
+                        android:textSize="23sp"
+                        tools:text="Salut 004 004" />
 
-                        <TextView
-                            android:id="@+id/tvBalance"
-                            style="@style/PL.StatValue"
-                            android:text="0.00"
-                            tools:text="0,00" />
+                    <ImageButton
+                        android:id="@+id/btnRefresh"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/pl_bg_round_translucent"
+                        android:contentDescription="@string/pl_cd_refresh"
+                        android:padding="11dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/pl_ic_refresh" />
+                </LinearLayout>
 
-                        <TextView
-                            style="@style/PL.StatLabel"
-                            android:text="@string/pl_balance" />
+                <!-- ===== Kat enfòmasyon kont ===== -->
+                <LinearLayout
+                    android:id="@+id/cardAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/pl_bg_card_white"
+                    android:elevation="10dp"
+                    android:orientation="vertical"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                android:id="@+id/tvBalance"
+                                style="@style/PL.StatValue"
+                                android:text="0.00"
+                                tools:text="0,00" />
+
+                            <TextView
+                                style="@style/PL.StatLabel"
+                                android:text="@string/pl_balance" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1.5dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@color/pl_divider" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                android:id="@+id/tvCreditVente"
+                                style="@style/PL.StatValue"
+                                android:text="@string/pl_illimite" />
+
+                            <TextView
+                                style="@style/PL.StatLabel"
+                                android:text="@string/pl_credit_vente" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <View
-                        android:layout_width="1.5dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="1.5dp"
                         android:background="@color/pl_divider" />
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="10dp">
+                        android:paddingTop="10dp"
+                        android:paddingBottom="12dp">
 
                         <TextView
-                            android:id="@+id/tvCreditVente"
+                            android:id="@+id/tvLimiteGain"
                             style="@style/PL.StatValue"
                             android:text="@string/pl_illimite" />
 
                         <TextView
                             style="@style/PL.StatLabel"
-                            android:text="@string/pl_credit_vente" />
+                            android:text="@string/pl_limite_gain" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1.5dp"
-                    android:background="@color/pl_divider" />
-
+                <!-- ===== 4 gwo bouton aksyon (yo santre nan espas ki rete a) ===== -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
                     android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="12dp">
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
-                    <TextView
-                        android:id="@+id/tvLimiteGain"
-                        style="@style/PL.StatValue"
-                        android:text="@string/pl_illimite" />
+                    <LinearLayout
+                        android:id="@+id/btnNouvelFich"
+                        style="@style/PL.ActionButton"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/pl_bg_btn_green"
+                        android:contentDescription="@string/pl_nouvel_fich">
 
-                    <TextView
-                        style="@style/PL.StatLabel"
-                        android:text="@string/pl_limite_gain" />
+                        <ImageView
+                            style="@style/PL.ActionButton.Icon"
+                            android:src="@drawable/pl_ic_ticket" />
+
+                        <TextView
+                            style="@style/PL.ActionButton.Label"
+                            android:text="@string/pl_nouvel_fich" />
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Chevron"
+                            android:src="@drawable/pl_ic_chevron_circle" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnChacheFich"
+                        style="@style/PL.ActionButton"
+                        android:background="@drawable/pl_bg_btn_blue"
+                        android:contentDescription="@string/pl_chache_fich">
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Icon"
+                            android:src="@drawable/pl_ic_search" />
+
+                        <TextView
+                            style="@style/PL.ActionButton.Label"
+                            android:text="@string/pl_chache_fich" />
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Chevron"
+                            android:src="@drawable/pl_ic_chevron_circle" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnFichMwenYo"
+                        style="@style/PL.ActionButton"
+                        android:background="@drawable/pl_bg_btn_gold"
+                        android:contentDescription="@string/pl_fich_mwen_yo">
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Icon"
+                            android:src="@drawable/pl_ic_list" />
+
+                        <TextView
+                            style="@style/PL.ActionButton.Label"
+                            android:text="@string/pl_fich_mwen_yo"
+                            android:textColor="@color/pl_ink" />
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Chevron"
+                            android:src="@drawable/pl_ic_chevron_circle_dark" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnRapo"
+                        style="@style/PL.ActionButton"
+                        android:background="@drawable/pl_bg_btn_red"
+                        android:contentDescription="@string/pl_rapo">
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Icon"
+                            android:src="@drawable/pl_ic_bars" />
+
+                        <TextView
+                            style="@style/PL.ActionButton.Label"
+                            android:text="@string/pl_rapo" />
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Chevron"
+                            android:src="@drawable/pl_ic_chevron_circle" />
+                    </LinearLayout>
+
+                    <!-- PARYE PLIS+ (sql/040): parèt sèlman si bolèt la louvri paryaj sou POS -->
+                    <LinearLayout
+                        android:id="@+id/btnParyaj"
+                        style="@style/PL.ActionButton"
+                        android:background="@drawable/pl_bg_btn_blue"
+                        android:contentDescription="PARYAJ"
+                        android:visibility="gone">
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Icon"
+                            android:src="@drawable/pl_ic_ticket" />
+
+                        <TextView
+                            style="@style/PL.ActionButton.Label"
+                            android:text="PARYAJ" />
+
+                        <ImageView
+                            style="@style/PL.ActionButton.Chevron"
+                            android:src="@drawable/pl_ic_chevron_circle" />
+                    </LinearLayout>
                 </LinearLayout>
+
             </LinearLayout>
-
-            <!-- ===== 4 gwo bouton aksyon (yo santre nan espas ki rete a) ===== -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:orientation="vertical"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp">
-
-                <LinearLayout
-                    android:id="@+id/btnNouvelFich"
-                    style="@style/PL.ActionButton"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/pl_bg_btn_green"
-                    android:contentDescription="@string/pl_nouvel_fich">
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Icon"
-                        android:src="@drawable/pl_ic_ticket" />
-
-                    <TextView
-                        style="@style/PL.ActionButton.Label"
-                        android:text="@string/pl_nouvel_fich" />
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Chevron"
-                        android:src="@drawable/pl_ic_chevron_circle" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/btnChacheFich"
-                    style="@style/PL.ActionButton"
-                    android:background="@drawable/pl_bg_btn_blue"
-                    android:contentDescription="@string/pl_chache_fich">
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Icon"
-                        android:src="@drawable/pl_ic_search" />
-
-                    <TextView
-                        style="@style/PL.ActionButton.Label"
-                        android:text="@string/pl_chache_fich" />
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Chevron"
-                        android:src="@drawable/pl_ic_chevron_circle" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/btnFichMwenYo"
-                    style="@style/PL.ActionButton"
-                    android:background="@drawable/pl_bg_btn_gold"
-                    android:contentDescription="@string/pl_fich_mwen_yo">
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Icon"
-                        android:src="@drawable/pl_ic_list" />
-
-                    <TextView
-                        style="@style/PL.ActionButton.Label"
-                        android:text="@string/pl_fich_mwen_yo"
-                        android:textColor="@color/pl_ink" />
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Chevron"
-                        android:src="@drawable/pl_ic_chevron_circle_dark" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/btnRapo"
-                    style="@style/PL.ActionButton"
-                    android:background="@drawable/pl_bg_btn_red"
-                    android:contentDescription="@string/pl_rapo">
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Icon"
-                        android:src="@drawable/pl_ic_bars" />
-
-                    <TextView
-                        style="@style/PL.ActionButton.Label"
-                        android:text="@string/pl_rapo" />
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Chevron"
-                        android:src="@drawable/pl_ic_chevron_circle" />
-                </LinearLayout>
-
-                <!-- PARYE PLIS+ (sql/040): parèt sèlman si bolèt la louvri paryaj sou POS -->
-                <LinearLayout
-                    android:id="@+id/btnParyaj"
-                    style="@style/PL.ActionButton"
-                    android:background="@drawable/pl_bg_btn_blue"
-                    android:contentDescription="PARYAJ"
-                    android:visibility="gone">
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Icon"
-                        android:src="@drawable/pl_ic_ticket" />
-
-                    <TextView
-                        style="@style/PL.ActionButton.Label"
-                        android:text="PARYAJ" />
-
-                    <ImageView
-                        style="@style/PL.ActionButton.Chevron"
-                        android:src="@drawable/pl_ic_chevron_circle" />
-                </LinearLayout>
-            </LinearLayout>
-
-        </LinearLayout>
-        </FrameLayout>
-    </ScrollView>
+            </FrameLayout>
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- Banyè PLUS LOTTERIE · PLUS GROUP: fiks sou bann ble a, anlè ba navigasyon an
          (anvan l te sou koub wouj la epi li pa t li byen) -->

@@ -64,6 +64,12 @@ class ReportActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityReportBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Rale ekran an desann (swipe) → rechaje rapò ki louvri a
+        binding.swipeRefresh.setColorSchemeColors(0xFF1F63FF.toInt(), 0xFFD80F22.toInt(), 0xFFFFC21A.toInt())
+        binding.swipeRefresh.setOnRefreshListener {
+            loadCurrentReport()
+            binding.swipeRefresh.postDelayed({ binding.swipeRefresh.isRefreshing = false }, 1200L)
+        }
 
         binding.btnBack.setOnClickListener { finish() }
 

@@ -52,6 +52,22 @@ class DashboardActivity : BaseActivity() {
         // Konekte enprimant lan depi app la louvri: premye fich la soti touswit
         com.plusgroup.pos.printer.PrinterManager(applicationContext).connect()
 
+        // Rale ekran an desann (swipe) → rafrechi pwofil, balans, logo, tiraj, paryaj
+        binding.swipeRefresh.setColorSchemeColors(0xFF1F63FF.toInt(), 0xFFD80F22.toInt(), 0xFFFFC21A.toInt())
+        binding.swipeRefresh.setOnRefreshListener {
+            lifecycleScope.launch {
+                try {
+                    com.plusgroup.pos.network.ApiClient.keepTokenFresh(applicationContext)
+                    loadProfileAndBalance(forceBranding = true)
+                    com.plusgroup.pos.util.DataCache.refresh(applicationContext)
+                    checkParyaj()
+                } catch (_: Exception) {
+                } finally {
+                    binding.swipeRefresh.isRefreshing = false
+                }
+            }
+        }
+
         binding.btnRefresh.setOnClickListener { v ->
             v.animate().rotationBy(360f).setDuration(500).start()
             loadProfileAndBalance(forceBranding = true)

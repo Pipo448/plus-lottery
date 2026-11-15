@@ -111,6 +111,18 @@ class NewFicheActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityNewFicheBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Rale lis la desann (swipe) → rafrechi tiraj ak jwèt yo (boul ki deja antre yo rete)
+        binding.swipeRefresh.setColorSchemeColors(0xFF1F63FF.toInt(), 0xFFD80F22.toInt(), 0xFFFFC21A.toInt())
+        binding.swipeRefresh.setOnRefreshListener {
+            lifecycleScope.launch {
+                try {
+                    if (DataCache.refresh(applicationContext)) applyDrawsAndGames(DataCache.openDraws(), DataCache.games())
+                } catch (_: Exception) {
+                } finally {
+                    binding.swipeRefresh.isRefreshing = false
+                }
+            }
+        }
 
         binding.btnBack.setOnClickListener { finish() }
 
