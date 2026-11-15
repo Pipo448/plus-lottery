@@ -26,6 +26,8 @@ import com.google.gson.JsonParser
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.plusgroup.pos.network.ApiClient
+import com.plusgroup.pos.printer.ParyajReceipt
+import com.plusgroup.pos.printer.ParyajSelection
 import com.plusgroup.pos.printer.PrinterManager
 import com.plusgroup.pos.util.ApiErrors
 import com.plusgroup.pos.util.DeviceIdHelper
@@ -86,6 +88,9 @@ class ParyajActivity : BaseActivity() {
     private var acceptChanges = false
     private var stakeText = ""
     private var lastCode: String? = null
+    /** false = paryaj poko aktive pou bolèt la: ajan an ka gade match yo e chwazi, men li pa ka vann. */
+    private var active = true
+    private var previewMessage = "Paryaj poko aktive pou bolèt ou a. Ou ka gade match yo ak kòt yo, men ou pa ka vann tikè. Mande administratè bolèt la aktive \"Parye Plis+\"."
 
     private lateinit var content: LinearLayout
     private lateinit var scroll: ScrollView
@@ -192,8 +197,8 @@ class ParyajActivity : BaseActivity() {
                 when (tab) {
                     0 -> loadEvents(false)
                     1 -> loadEvents(true)
-                    2 -> lastCode?.let { verify(it) } ?: showVerify(null)
-                    3 -> loadReport()
+                    2 -> if (!active) message("Paryaj poko aktive", previewMessage) else lastCode?.let { verify(it) } ?: showVerify(null)
+                    3 -> if (active) loadReport() else message("Paryaj poko aktive", previewMessage)
                 }
                 swipe.postDelayed({ swipe.isRefreshing = false }, 1000L)
             }
@@ -236,8 +241,8 @@ class ParyajActivity : BaseActivity() {
         when (i) {
             0 -> loadEvents(false)
             1 -> loadEvents(true)
-            2 -> showVerify(null)
-            3 -> loadReport()
+            2 -> if (active) showVerify(null) else message("Paryaj poko aktive", previewMessage)
+            3 -> if (active) loadReport() else message("Paryaj poko aktive", previewMessage)
         }
     }
 
@@ -262,6 +267,9 @@ class ParyajActivity : BaseActivity() {
             val res = ApiClient.getService(applicationContext).paryeInfo()
             if (res.isSuccessful) {
                 info = obj(res.body(), "data")
+                // Ansyen sèvè yo pa voye "active" → konsidere l aktif
+                active = info?.get("active")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: true
+                str(info, "message")?.let { previewMessage = it }
             } else {
                 val raw = res.errorBody()?.string()
                 message("Paryaj pa disponib", errorOf(raw, "Administratè a pa louvri paryaj sou POS."))
@@ -322,6 +330,7 @@ class ParyajActivity : BaseActivity() {
 
     private fun renderEvents() {
         content.removeAllViews()
+        if (!active) content.addView(previewBanner())
         if (lastEvents.size() == 0) {
             message(if (tab == 1) "Pa gen match an dirèk" else "Pa gen match", "Tounen pita.")
             return
@@ -336,6 +345,28 @@ class ParyajActivity : BaseActivity() {
             }
             content.addView(eventCard(e))
         }
+    }
+
+    /** Bann jòn: mòd gade (paryaj poko aktive pou bolèt la). */
+    private fun previewBanner(): View {
+        val c = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = round(0xFFFFF4D0.toInt(), 14, GOLD)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            layoutParams = lp(top = 10)
+        }
+        c.addView(text("MÒD GADE", 13f, 0xFF8A5A00.toInt(), true))
+        c.addView(text("Paryaj poko aktive pou bolèt ou a. Ou ka gade match yo epi chwazi ekip, men ou pa ka vann tikè.", 13f, INK))
+        return c
+    }
+
+    /** Notifikasyon lè ajan an eseye vann pandan paryaj poko aktive. */
+    private fun notifyInactive() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Paryaj poko aktive")
+            .setMessage(previewMessage)
+            .setPositiveButton(Lang.tr("OK"), null)
+            .show()
     }
 
     private fun eventCard(e: JsonObject): View {
@@ -624,6 +655,7 @@ class ParyajActivity : BaseActivity() {
         dialog.setOnShowListener {
             val btn = dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE)
             btn.setOnClickListener {
+                if (!active) { notifyInactive(); return@setOnClickListener }
                 val stake = et.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
                 tvMsg.visibility = View.GONE
                 if (stake < minStake) { tvMsg.text = "Miz minimòm: ${money.format(minStake)} HTG"; tvMsg.visibility = View.VISIBLE; return@setOnClickListener }
@@ -737,37 +769,35 @@ class ParyajActivity : BaseActivity() {
             val code = str(d, "code") ?: "—"
             val dt = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.US).format(Date())
             val sels = arr(d, "selections") ?: JsonArray()
-            val bodyFields = mutableListOf<Pair<String, String>>()
-            sels.forEachIndexed { i, el: JsonElement ->
-                val s = el.asJsonObject
-                bodyFields.add("${i + 1}. ${str(s, "eventLabel") ?: ""}" to whenText(str(s, "commenceAt")))
-                bodyFields.add("   ${str(s, "label") ?: ""}" to String.format(Locale.US, "%.2f", num(s, "odds")))
-            }
+            val receipt = ParyajReceipt(
+                companyName = company,
+                phone = phone,
+                agent = vendeur,
+                code = code,
+                dateText = dt,
+                typeText = if (sels.size() > 1) "Konbine ${sels.size()} match" else "Pari senp",
+                selections = sels.map { el: JsonElement ->
+                    val s = el.asJsonObject
+                    ParyajSelection(
+                        eventLabel = str(s, "eventLabel") ?: "",
+                        league = str(s, "league") ?: "",
+                        whenText = whenText(str(s, "commenceAt")),
+                        pick = str(s, "label") ?: "",
+                        odds = String.format(Locale.US, "%.2f", num(s, "odds")),
+                        live = bool(s, "isLive"),
+                    )
+                },
+                stake = "${money.format(num(d, "stake"))} HTG",
+                totalOdds = String.format(Locale.US, "%.2f", num(d, "totalOdds")),
+                potentialWin = "${money.format(num(d, "potentialWin"))} HTG",
+            )
             printer.connect {
                 runOnUiThread {
                     if (!printer.isReady()) {
                         Toast.makeText(this@ParyajActivity, "Tikè a VANN, men enprimant lan pa konekte. Konekte l epi peze Reenprime.", Toast.LENGTH_LONG).show()
                         return@runOnUiThread
                     }
-                    printer.printReportReceipt(
-                        companyName = company,
-                        branchCode = "PARYE PLIS+",
-                        phone = phone,
-                        reportTitle = "TIKE PARYAJ",
-                        headerLines = listOf(
-                            "Kod" to code,
-                            "Dat" to dt,
-                            "Tip" to (if (sels.size() > 1) "Konbine ${sels.size()} match" else "Pari senp"),
-                        ),
-                        bodyFields = bodyFields,
-                        footerFields = listOf(
-                            "Miz" to "${money.format(num(d, "stake"))} HTG",
-                            "Kot total" to String.format(Locale.US, "%.2f", num(d, "totalOdds")),
-                            "GEN POSIB" to "${money.format(num(d, "potentialWin"))} HTG",
-                            "Touche ak kod" to code,
-                        ),
-                        agent = vendeur,
-                    )
+                    printer.printParyajReceipt(receipt)
                 }
             }
         }

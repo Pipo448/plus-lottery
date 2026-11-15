@@ -121,12 +121,9 @@ class DashboardActivity : BaseActivity() {
         }
     }
 
-    /** PARYE PLIS+: bouton PARYAJ la parèt sèlman si bolèt la louvri paryaj sou POS. */
-    private suspend fun checkParyaj() {
-        val on = try {
-            ApiClient.getService(applicationContext).paryeInfo().isSuccessful
-        } catch (_: Exception) { false }
-        binding.btnParyaj.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE
+    /** PARYE PLIS+: bouton PARYAJ la toujou parèt (mòd gade si bolèt la poko aktive l). */
+    private fun checkParyaj() {
+        binding.btnParyaj.visibility = android.view.View.VISIBLE
     }
 
     /** Mon compte → "Box": bwat mesaj (anvlòp) sou akèy la. */

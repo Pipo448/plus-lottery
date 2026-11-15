@@ -503,6 +503,57 @@ class SunmiPrinterHelper(private val context: Context) {
         }
     }
 
+    /**
+     * TIKÈ PARYAJ (Parye Plis+): fòma dedye (ParyajReceiptFormat) — chak match
+     * sou pwòp liy li, seleksyon agoch / kòt adwat, GEN POSIB an gwo, QR kòd la.
+     */
+    fun printParyajReceipt(r: ParyajReceipt, logo: Bitmap? = null) {
+        val svc = woyouService ?: run {
+            Log.w(TAG, "Enprimant pa konekte — pa ka enprime")
+            return
+        }
+        printQueue.execute {
+            try {
+                svc.printerInit(null)
+                pause(120)
+                forceLatinCodepage(svc)
+                pause(60)
+                if (logo != null) {
+                    try {
+                        svc.setAlignment(1, null); pause()
+                        svc.printBitmap(logo, null); pause(120)
+                        svc.lineWrap(1, null); pause()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Logo a pa t enprime", e)
+                    }
+                }
+                val width = ReceiptLabels.lineWidth
+                fun emit(line: ReceiptLine) {
+                    svc.setAlignment(if (line.center) 1 else 0, null); pause()
+                    val bold = line.style != ReceiptLine.Style.N
+                    if (bold) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x01), null) } catch (_: Exception) {}; pause() }
+                    val size = if (line.style == ReceiptLine.Style.BIG) fs(34f) else fs(24f)
+                    svc.printSafe(line.text + "\n", null, size, null); pause()
+                    if (bold) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x00), null) } catch (_: Exception) {}; pause() }
+                }
+                ParyajReceiptFormat.body(r, width).forEach(::emit)
+                val qr = r.qrData
+                if (!qr.isNullOrBlank()) {
+                    svc.lineWrap(1, null); pause()
+                    svc.setAlignment(1, null); pause()
+                    svc.printQRCode(qr, 8, 0, null); pause(120)
+                    svc.lineWrap(1, null); pause()
+                }
+                ParyajReceiptFormat.after(r, width).forEach(::emit)
+                svc.lineWrap(5, null)
+                pause(80)
+                svc.cutpaper(null)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Echèk enprime tikè paryaj la", e)
+            }
+        }
+    }
+
     // Aliyen tèks agoch ak yon valè adwat sou menm liy (menm lojik ak
     // BluetoothPrinterHelper, sipoze lajè ~32 karaktè).
     /** Gwosè lèt dapre Mon compte → "Gwosè enprimant" (piti / nòmal / gwo). */

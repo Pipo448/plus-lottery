@@ -208,6 +208,14 @@ class PrinterManager(private val context: Context) {
         }
     }
 
+    /** Tikè paryaj (Parye Plis+) — fòma dedye ak QR, sou SUNMI kou Bluetooth. */
+    fun printParyajReceipt(receipt: ParyajReceipt) {
+        val r = receipt.copy(agent = receipt.agent.replace("·", "-"))
+        val logo = try { TenantBranding.logoForPrint(context) } catch (_: Exception) { null }
+        if (isSunmiDevice) sunmiHelper?.printParyajReceipt(r, logo)
+        else runBluetooth { bluetoothHelper.printParyajReceipt(r, logo) }
+    }
+
     // --- Jesyon chwa enprimant Bluetooth (sèlman itilize si pa SUNMI) ---
 
     fun getPairedBluetoothPrinters(): List<BluetoothDevice> = bluetoothHelper.getPairedDevices()

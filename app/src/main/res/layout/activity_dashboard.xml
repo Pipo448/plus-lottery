@@ -359,13 +359,12 @@
                             android:src="@drawable/pl_ic_chevron_circle" />
                     </LinearLayout>
 
-                    <!-- PARYE PLIS+ (sql/040): parèt sèlman si bolèt la louvri paryaj sou POS -->
+                    <!-- PARYE PLIS+ (sql/040): toujou parèt. Si bolèt la poko aktive l, ajan an ka gade match yo men li pa ka vann. -->
                     <LinearLayout
                         android:id="@+id/btnParyaj"
                         style="@style/PL.ActionButton"
                         android:background="@drawable/pl_bg_btn_blue"
-                        android:contentDescription="PARYAJ"
-                        android:visibility="gone">
+                        android:contentDescription="PARYAJ">
 
                         <ImageView
                             style="@style/PL.ActionButton.Icon"

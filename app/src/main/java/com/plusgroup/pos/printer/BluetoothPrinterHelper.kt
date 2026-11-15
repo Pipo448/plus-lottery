@@ -352,6 +352,38 @@ class BluetoothPrinterHelper {
         write(cutPaper())
     }
 
+    /** TIKÈ PARYAJ — menm fòma ak `SunmiPrinterHelper.printParyajReceipt()`. */
+    fun printParyajReceipt(r: ParyajReceipt, logo: Bitmap? = null) {
+        write(ESC_INIT)
+        write(alignCenter())
+        if (logo != null) {
+            write(rasterImage(logo))
+            write(feed(1))
+        }
+        val width = ReceiptLabels.lineWidth
+        fun emit(line: ReceiptLine) {
+            write(if (line.center) alignCenter() else alignLeft())
+            // BIG = wotè doub (lajè pa chanje → menm kantite karaktè sou liy lan)
+            if (line.style == ReceiptLine.Style.BIG) write(byteArrayOf(0x1B, 0x21, 0x10)) else write(sizeMode())
+            if (line.style != ReceiptLine.Style.N) write(boldOn())
+            write(textLine(line.text))
+            if (line.style != ReceiptLine.Style.N) write(boldOff())
+            write(normalMode())
+        }
+        ParyajReceiptFormat.body(r, width).forEach(::emit)
+        val qr = r.qrData
+        if (!qr.isNullOrBlank()) {
+            write(feed(1))
+            write(alignCenter())
+            write(qrCode(qr, 6))
+            write(feed(1))
+        }
+        ParyajReceiptFormat.after(r, width).forEach(::emit)
+        write(alignLeft())
+        write(feed(3))
+        write(cutPaper())
+    }
+
     // Aliyen tèks agoch ak yon valè adwat sou menm liy, ak espas ki
     // ranpli ant yo (sipoze lajè papye ~32 karaktè, 58mm estanda).
     private fun twoColumnLine(left: String, right: String, width: Int = 32): String {
