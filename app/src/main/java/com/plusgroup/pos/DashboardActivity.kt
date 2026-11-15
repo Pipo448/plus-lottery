@@ -69,6 +69,9 @@ class DashboardActivity : BaseActivity() {
         binding.btnRapo.setOnClickListener {
             startActivity(Intent(this, ReportActivity::class.java))
         }
+        binding.btnParyaj.setOnClickListener {
+            startActivity(Intent(this, ParyajActivity::class.java))
+        }
 
         // Tab aktif la (Bolèt) parèt an lò ak ti liy anba l
         binding.tabBolet.isSelected = true
@@ -91,6 +94,7 @@ class DashboardActivity : BaseActivity() {
         lifecycleScope.launch {
             com.plusgroup.pos.network.ApiClient.keepTokenFresh(applicationContext)
             loadProfileAndBalance()
+            launch { checkParyaj() }
             launch { com.plusgroup.pos.util.DataCache.refresh(applicationContext) }
             // Vèsyon esè 7 jou: avètisman davans (1 fwa pa jou, 2 dènye jou yo)
             launch { com.plusgroup.pos.util.TrialNotice.check(this@DashboardActivity) }
@@ -99,6 +103,14 @@ class DashboardActivity : BaseActivity() {
                 if (unread >= 0) setMailBadge(unread)
             }
         }
+    }
+
+    /** PARYE PLIS+: bouton PARYAJ la parèt sèlman si bolèt la louvri paryaj sou POS. */
+    private suspend fun checkParyaj() {
+        val on = try {
+            ApiClient.getService(applicationContext).paryeInfo().isSuccessful
+        } catch (_: Exception) { false }
+        binding.btnParyaj.visibility = if (on) android.view.View.VISIBLE else android.view.View.GONE
     }
 
     /** Mon compte → "Box": bwat mesaj (anvlòp) sou akèy la. */

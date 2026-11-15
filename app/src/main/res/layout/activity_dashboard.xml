@@ -352,6 +352,27 @@
                         style="@style/PL.ActionButton.Chevron"
                         android:src="@drawable/pl_ic_chevron_circle" />
                 </LinearLayout>
+
+                <!-- PARYE PLIS+ (sql/040): parèt sèlman si bolèt la louvri paryaj sou POS -->
+                <LinearLayout
+                    android:id="@+id/btnParyaj"
+                    style="@style/PL.ActionButton"
+                    android:background="@drawable/pl_bg_btn_blue"
+                    android:contentDescription="PARYAJ"
+                    android:visibility="gone">
+
+                    <ImageView
+                        style="@style/PL.ActionButton.Icon"
+                        android:src="@drawable/pl_ic_ticket" />
+
+                    <TextView
+                        style="@style/PL.ActionButton.Label"
+                        android:text="PARYAJ" />
+
+                    <ImageView
+                        style="@style/PL.ActionButton.Chevron"
+                        android:src="@drawable/pl_ic_chevron_circle" />
+                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>

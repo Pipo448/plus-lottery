@@ -163,4 +163,36 @@ interface ApiService {
 
     @GET("agent/settings")
     suspend fun getCompanySettings(): Response<ApiListResponse<CompanySetting>>
+
+    // ==================== PARYE PLIS+ (sql/040) — paryaj kach sou POS ====================
+    @GET("agent/parye/info")
+    suspend fun paryeInfo(): Response<com.google.gson.JsonObject>
+
+    @GET("agent/parye/events")
+    suspend fun paryeEvents(
+        @Query("live") live: String? = null,
+        @Query("sport") sport: String? = null,
+        @Query("q") q: String? = null,
+    ): Response<com.google.gson.JsonObject>
+
+    @GET("agent/parye/events/{id}")
+    suspend fun paryeEvent(@Path("id") id: String): Response<com.google.gson.JsonObject>
+
+    @POST("agent/parye/bets")
+    suspend fun paryeSell(@Body body: com.google.gson.JsonObject): Response<com.google.gson.JsonObject>
+
+    @GET("agent/parye/bets")
+    suspend fun paryeBets(@Query("from") from: String? = null, @Query("to") to: String? = null): Response<com.google.gson.JsonObject>
+
+    @GET("agent/parye/bets/{code}")
+    suspend fun paryeVerify(@Path("code") code: String): Response<com.google.gson.JsonObject>
+
+    @POST("agent/parye/bets/{code}/pay")
+    suspend fun paryePay(@Path("code") code: String): Response<com.google.gson.JsonObject>
+
+    @POST("agent/parye/bets/{code}/cancel")
+    suspend fun paryeCancel(@Path("code") code: String): Response<com.google.gson.JsonObject>
+
+    @GET("agent/parye/report")
+    suspend fun paryeReport(@Query("from") from: String? = null, @Query("to") to: String? = null): Response<com.google.gson.JsonObject>
 }

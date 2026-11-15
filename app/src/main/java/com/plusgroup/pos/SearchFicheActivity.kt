@@ -83,6 +83,12 @@ class SearchFicheActivity : BaseActivity() {
     private fun openFiche(ficheNumber: String) {
         (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)
             ?.hideSoftInputFromWindow(binding.etTicket.windowToken, 0)
+        // Tikè PARYAJ (PP + 8 chif) → ekran Paryaj la (verifye / peye)
+        if (ficheNumber.trim().uppercase().matches(Regex("PP\\d{8}"))) {
+            startActivity(android.content.Intent(this, ParyajActivity::class.java)
+                .putExtra(ParyajActivity.EXTRA_CODE, ficheNumber.trim().uppercase()))
+            return
+        }
         binding.tvResult.text = "Fich #${FicheDetailSheet.formatFicheNo(ficheNumber)}"
         FicheDetailSheet.show(this, ficheNumber)
     }
