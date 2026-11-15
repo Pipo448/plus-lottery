@@ -199,7 +199,13 @@ class LoginActivity : BaseActivity() {
                     TenantBranding.setServer(applicationContext, info.tenantName, info.logo, newTenant = isNew)
                     showBranding()
                     if (info.active == false) {
-                        setDeviceStatus("Kont bolèt sa a sispann. Kontakte administratè a.", R.color.pos_red)
+                        // Backend lan di VRÈ rezon an (esè fini, abònman fini, sispann…)
+                        val why = info.message?.takeIf { it.isNotBlank() } ?: when (info.state) {
+                            "trial_expired" -> "Peryòd esè bolèt sa a fini. Kontakte Plus Group."
+                            "subscription_expired" -> "Abònman bolèt sa a fini. Kontakte Plus Group pou reaktive l."
+                            else -> "Kont bolèt sa a sispann. Kontakte administratè a."
+                        }
+                        setDeviceStatus(why, R.color.pos_red)
                     } else {
                         setDeviceStatus("✓ Aparèy rekonèt — ${info.tenantName ?: ""}".trimEnd(' ', '—'), R.color.pos_green)
                     }

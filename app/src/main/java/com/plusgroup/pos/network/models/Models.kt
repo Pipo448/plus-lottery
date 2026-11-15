@@ -22,6 +22,10 @@ data class DeviceInfo(
     val tenantName: String? = null,
     val logo: String? = null,
     val active: Boolean? = null,
+    /** active | trial | trial_expired | subscription_expired | suspended (backend 2026-11) */
+    val state: String? = null,
+    /** Vrè rezon bolèt la bloke, pou ajan an konnen kisa pou l fè */
+    val message: String? = null,
 )
 
 data class LoginResponse(
