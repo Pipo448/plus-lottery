@@ -580,6 +580,14 @@ class ParyajActivity : BaseActivity() {
         val tvTotal = text("", 15f, INK, true).apply { setPadding(0, dp(10), 0, 0) }
         val tvWin = text("", 17f, GREEN, true)
         val tvMsg = text("", 13f, RED, true).apply { visibility = View.GONE; setPadding(0, dp(6), 0, 0) }
+        val tvCap = text("", 13f, MUTED).apply { visibility = View.GONE; setPadding(0, dp(4), 0, 0) }
+        val quickBtns = ArrayList<Pair<Int, View>>()
+        // Miz maks pou KÒT SA A: miz × kòt pa ka depase gen maks (menm règ ak backend: maxStakeFor)
+        fun allowed(odds: Double): Double {
+            val cap = if (maxStake > 0) maxStake else Double.MAX_VALUE
+            val byWin = if (maxWin > 0 && odds > 1) Math.floor(maxWin / odds + 1e-9) else cap
+            return maxOf(minStake, minOf(cap, byWin))
+        }
         val et = EditText(this).apply {
             hint = "Miz (min ${money.format(minStake)})"
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -595,8 +603,20 @@ class ParyajActivity : BaseActivity() {
             val odds = totalOdds()
             var win = stake * odds
             if (maxWin > 0 && win > maxWin) win = maxWin
+            val max = allowed(odds)
             tvTotal.text = "${if (slip.size > 1) "Konbine ${slip.size} match" else "Pari senp"} · kòt ${String.format(Locale.US, "%.2f", odds)}"
-            tvWin.text = "Gen posib: ${money.format(win)} HTG"
+            quickBtns.forEach { (v, b) -> b.isEnabled = v <= max; b.alpha = if (v <= max) 1f else 0.35f }
+            val generalCap = if (maxStake > 0) maxStake else Double.MAX_VALUE
+            val limited = maxWin > 0 && generalCap > max
+            tvCap.visibility = if (limited) View.VISIBLE else View.GONE
+            tvCap.text = "Ak kòt sa a, miz maks la se ${money.format(max)} HTG (gen maks ${money.format(maxWin)} HTG)"
+            if (stake > max) {
+                tvWin.setTextColor(RED)
+                tvWin.text = "Miz twò wo: max ${money.format(max)} HTG"
+            } else {
+                tvWin.setTextColor(GREEN)
+                tvWin.text = "Gen posib: ${money.format(win)} HTG"
+            }
         }
         fun renderList() {
             list.removeAllViews()
@@ -629,9 +649,12 @@ class ParyajActivity : BaseActivity() {
         body.addView(et, lp(top = 6))
         val quick = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(25, 50, 100, 250, 500).forEachIndexed { i, v ->
-            quick.addView(button("$v", 0xFFE8EEFF.toInt(), INK) { et.setText(v.toString()); et.setSelection(et.text.length) }, lp(0, weight = 1f, end = if (i < 4) 4 else 0))
+            val b = button("$v", 0xFFE8EEFF.toInt(), INK) { et.setText(v.toString()); et.setSelection(et.text.length) }
+            quickBtns += v to b
+            quick.addView(b, lp(0, weight = 1f, end = if (i < 4) 4 else 0))
         }
         body.addView(quick, lp(top = 6))
+        body.addView(tvCap)
         body.addView(tvWin, lp(top = 8))
         body.addView(tvMsg)
         et.addTextChangedListener(object : android.text.TextWatcher {
@@ -660,6 +683,13 @@ class ParyajActivity : BaseActivity() {
                 tvMsg.visibility = View.GONE
                 if (stake < minStake) { tvMsg.text = "Miz minimòm: ${money.format(minStake)} HTG"; tvMsg.visibility = View.VISIBLE; return@setOnClickListener }
                 if (maxStake > 0 && stake > maxStake) { tvMsg.text = "Miz maksimòm: ${money.format(maxStake)} HTG"; tvMsg.visibility = View.VISIBLE; return@setOnClickListener }
+                val max = allowed(totalOdds())
+                if (stake > max) {
+                    tvMsg.text = "Ak kòt sa a, miz maksimòm lan se ${money.format(max)} HTG. Kliyan an t ap peye ${money.format(stake)} HTG pou touche sèlman ${money.format(maxWin)} HTG."
+                    tvMsg.visibility = View.VISIBLE
+                    et.setText(max.toLong().toString()); et.setSelection(et.text.length)
+                    return@setOnClickListener
+                }
                 (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.hideSoftInputFromWindow(et.windowToken, 0)
                 btn.isEnabled = false
                 sell(stake) { ok, msg, changed ->
