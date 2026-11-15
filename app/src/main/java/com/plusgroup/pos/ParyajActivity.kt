@@ -328,6 +328,31 @@ class ParyajActivity : BaseActivity() {
         }
     }
 
+    /** Filt lis match yo: "ALL" = tout, "TOP" = top match sèlman, oswa non yon peyi. */
+    private var filter = "ALL"
+
+    private data class Ev(val o: JsonObject, val country: String, val flag: String, val cRank: Int,
+                          val league: String, val lRank: Int, val start: String, val top: Boolean)
+
+    private fun evOf(e: JsonObject): Ev {
+        val league = str(e, "leagueName") ?: str(e, "league") ?: ""
+        return Ev(
+            e,
+            country = str(e, "country") ?: "Lòt chanpyona",
+            flag = str(e, "flag") ?: "🏳️",
+            cRank = num(e, "countryRank", 90.0).toInt(),
+            league = league,
+            lRank = num(e, "leagueRank", 50.0).toInt(),
+            start = str(e, "commenceAt") ?: "",
+            top = bool(e, "top"),
+        )
+    }
+
+    /**
+     * Lis match yo klase pwofesyonèl:
+     *   [ba filt peyi]  →  ⭐ TOP MATCH  →  PEYI (drapo)  →  lig  →  match yo pa lè.
+     * Peyi yo nan lòd backend lan bay (Entènasyonal, gwo chanpyona yo, lòt yo).
+     */
     private fun renderEvents() {
         content.removeAllViews()
         if (!active) content.addView(previewBanner())
@@ -335,16 +360,63 @@ class ParyajActivity : BaseActivity() {
             message(if (tab == 1) "Pa gen match an dirèk" else "Pa gen match", "Tounen pita.")
             return
         }
-        var lastLeague = ""
-        for (el in lastEvents) {
-            val e = el.asJsonObject
-            val league = str(e, "league") ?: ""
-            if (league != lastLeague) {
-                lastLeague = league
-                content.addView(text(league.uppercase(), 12f, MUTED, true).apply { setPadding(dp(4), dp(12), 0, 0) })
-            }
-            content.addView(eventCard(e))
+        val all = lastEvents.mapNotNull { runCatching { evOf(it.asJsonObject) }.getOrNull() }
+        val tops = all.filter { it.top }.sortedBy { it.start }
+        val countries = all.groupBy { it.country }.entries
+            .sortedWith(compareBy({ it.value.first().cRank }, { it.key }))
+        if (filter == "TOP" && tops.isEmpty()) filter = "ALL"
+        if (filter != "ALL" && filter != "TOP" && countries.none { it.key == filter }) filter = "ALL"
+
+        // 1) Ba filt (glise sou kote): Tout · ⭐ Top · 🇬🇧 Angletè (12) …
+        val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(8), 0, dp(2)) }
+        fun chip(label: String, key: String) {
+            val on = filter == key
+            bar.addView(text(label, 13f, if (on) Color.WHITE else INK, true).apply {
+                background = round(if (on) NAVY else Color.WHITE, 18, if (on) NAVY else LINE)
+                setPadding(dp(12), dp(7), dp(12), dp(7))
+                setOnClickListener { filter = key; renderEvents(); scroll.scrollTo(0, 0) }
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(6) })
         }
+        chip("Tout (${all.size})", "ALL")
+        if (tops.isNotEmpty()) chip("⭐ Top", "TOP")
+        countries.forEach { (c, list) -> chip("${list.first().flag} $c (${list.size})", c) }
+        content.addView(android.widget.HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(bar)
+        })
+
+        // 2) TOP MATCH (sèlman nan "Tout" ak "Top")
+        if ((filter == "ALL" || filter == "TOP") && tops.isNotEmpty()) {
+            content.addView(sectionHeader("⭐  TOP MATCH", "${tops.size}", GOLD, INK))
+            tops.forEach { content.addView(eventCard(it.o, "${it.flag} ${it.league}")) }
+        }
+        if (filter == "TOP") return
+
+        // 3) Peyi → lig → match
+        for ((country, list) in countries) {
+            if (filter != "ALL" && filter != country) continue
+            content.addView(sectionHeader("${list.first().flag}  ${country.uppercase()}", "${list.size}", NAVY, Color.WHITE))
+            list.groupBy { it.league }.entries
+                .sortedWith(compareBy({ it.value.first().lRank }, { it.key }))
+                .forEach { (league, evs) ->
+                    content.addView(text("$league  ·  ${evs.size}", 13f, BLUE, true).apply { setPadding(dp(4), dp(10), 0, dp(2)) })
+                    evs.sortedBy { it.start }.forEach { content.addView(eventCard(it.o)) }
+                }
+        }
+    }
+
+    /** Tèt seksyon (TOP MATCH oswa yon peyi). */
+    private fun sectionHeader(title: String, count: String, bg: Int, fg: Int): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = round(bg, 12)
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            layoutParams = lp(top = 14)
+        }
+        row.addView(text(title, 14f, fg, true), lp(0, weight = 1f))
+        row.addView(text(count, 13f, fg, true))
+        return row
     }
 
     /** Bann jòn: mòd gade (paryaj poko aktive pou bolèt la). */
@@ -369,7 +441,8 @@ class ParyajActivity : BaseActivity() {
             .show()
     }
 
-    private fun eventCard(e: JsonObject): View {
+    /** @param tag non lig la (pou TOP MATCH kote match yo soti nan plizyè lig) */
+    private fun eventCard(e: JsonObject, tag: String? = null): View {
         val c = card().apply { layoutParams = lp(top = 6) }
         val id = str(e, "id") ?: return c
         val home = str(e, "home") ?: ""
@@ -377,7 +450,8 @@ class ParyajActivity : BaseActivity() {
         val live = bool(e, "live")
         val score = obj(e, "score")
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        top.addView(text(if (live) "● LIVE" else whenText(str(e, "commenceAt")), 12f, if (live) RED else MUTED, true), lp(0, weight = 1f))
+        val time = if (live) "● LIVE" else whenText(str(e, "commenceAt"))
+        top.addView(text(if (tag != null) "$time  ·  $tag" else time, 12f, if (live) RED else MUTED, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(0, weight = 1f))
         if (live && score != null) top.addView(text("${num(score, "home").toInt()} - ${num(score, "away").toInt()}", 14f, RED, true))
         c.addView(top)
         c.addView(text(home, 16f, INK, true).apply { setPadding(0, dp(4), 0, 0) })
