@@ -170,13 +170,20 @@ class ParyajActivity : BaseActivity() {
             setBackgroundColor(NAVY)
             setPadding(dp(8), 0, dp(8), dp(8))
         }
-        val names = listOf("MATCH", "LIVE", "VERIFYE", "RAPÒ")
+        // Endèks lojik yo: 0 MATCH · 1 LIVE · 2 VERIFYE · 3 RAPÒ · 4 PARI (lis pari ajan an vann)
+        // Lòd sou ekran an: MATCH · LIVE · PARI · VERIFYE · RAPÒ
+        val names = listOf("MATCH", "LIVE", "VERIFYE", "RAPÒ", "PARI")
         tabViews = names.mapIndexed { i, n ->
-            text(Lang.tr(n), 14f, Color.WHITE, true).apply {
+            text(Lang.tr(n), 13f, Color.WHITE, true).apply {
                 gravity = Gravity.CENTER
                 setPadding(0, dp(9), 0, dp(9))
+                maxLines = 1
                 setOnClickListener { selectTab(i) }
-            }.also { tabsRow.addView(it, lp(0, weight = 1f, end = if (i < names.size - 1) 6 else 0)) }
+            }
+        }
+        val visual = listOf(0, 1, 4, 2, 3)
+        visual.forEachIndexed { pos, i ->
+            tabsRow.addView(tabViews[i], lp(0, weight = if (i == 2) 1.25f else 1f, end = if (pos < visual.size - 1) 5 else 0))
         }
         root.addView(tabsRow)
 
@@ -199,6 +206,7 @@ class ParyajActivity : BaseActivity() {
                     1 -> loadEvents(true)
                     2 -> if (!active) message("Paryaj poko aktive", previewMessage) else lastCode?.let { verify(it) } ?: showVerify(null)
                     3 -> if (active) loadReport() else message("Paryaj poko aktive", previewMessage)
+                    4 -> if (active) loadMyBets(betsDays) else message("Paryaj poko aktive", previewMessage)
                 }
                 swipe.postDelayed({ swipe.isRefreshing = false }, 1000L)
             }
@@ -243,6 +251,7 @@ class ParyajActivity : BaseActivity() {
             1 -> loadEvents(true)
             2 -> if (active) showVerify(null) else message("Paryaj poko aktive", previewMessage)
             3 -> if (active) loadReport() else message("Paryaj poko aktive", previewMessage)
+            4 -> if (active) loadMyBets(betsDays) else message("Paryaj poko aktive", previewMessage)
         }
     }
 
@@ -1058,6 +1067,109 @@ class ParyajActivity : BaseActivity() {
             }
             .setNegativeButton(Lang.tr("Non"), null)
             .show()
+    }
+
+    // ==================== PARI MWEN VANN (lis) ====================
+    /** 0 = jodi a, 1 = yè, 7 = 7 dènye jou yo */
+    private var betsDays = 0
+
+    private fun loadMyBets(days: Int) {
+        betsDays = days
+        loading()
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = haiti }
+        val now = System.currentTimeMillis()
+        val day = 86_400_000L
+        val (from, to) = when (days) {
+            1 -> fmt.format(Date(now - day)) to fmt.format(Date(now - day))
+            7 -> fmt.format(Date(now - 6 * day)) to fmt.format(Date(now))
+            else -> fmt.format(Date(now)) to fmt.format(Date(now))
+        }
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(applicationContext).paryeBets(from, to)
+                if (!res.isSuccessful) {
+                    message("Erè", errorOf(res.errorBody()?.string(), "Pa ka chaje pari yo."))
+                    return@launch
+                }
+                val list = arr(res.body(), "data") ?: JsonArray()
+                if (tab != 4) return@launch
+                renderMyBets(list)
+            } catch (e: java.io.IOException) {
+                message("Pa gen koneksyon", "Verifye entènèt la epi eseye ankò.")
+            } catch (e: Exception) {
+                message("Erè", "Pa ka montre pari yo: ${e.message ?: e.javaClass.simpleName}")
+            }
+        }
+    }
+
+    private fun renderMyBets(list: JsonArray) {
+        val money = Money.format()
+        content.removeAllViews()
+
+        // Chwa peryòd
+        val chips = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(6), 0, dp(6)) }
+        listOf(0 to "Jodi a", 1 to "Yè", 7 to "7 jou").forEachIndexed { i, (d, label) ->
+            val on = d == betsDays
+            chips.addView(text(Lang.tr(label), 14f, if (on) INK else Color.WHITE, true).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(8), 0, dp(8))
+                background = round(if (on) GOLD else NAVY, 10)
+                setOnClickListener { loadMyBets(d) }
+            }, lp(0, weight = 1f, end = if (i < 2) 6 else 0))
+        }
+        content.addView(chips)
+
+        // Rezime
+        var stake = 0.0; var n = 0; var cancelled = 0; var won = 0
+        for (el in list) {
+            val b = el.asJsonObject
+            if (str(b, "status") == "cancelled") { cancelled++; continue }
+            n++; stake += num(b, "stake")
+            if (str(b, "status") == "won") won++
+        }
+        val sum = card()
+        sum.addView(text(Lang.tr("Pari ou vann yo"), 17f, INK, true))
+        sum.addView(text("$n tikè · ${money.format(stake)} HTG" +
+            (if (won > 0) " · $won genyen" else "") +
+            (if (cancelled > 0) " · $cancelled anile" else ""), 14f, MUTED).apply { setPadding(0, dp(4), 0, 0) })
+        content.addView(sum)
+
+        if (list.size() == 0) {
+            content.addView(card().apply { addView(text(Lang.tr("Pa gen pari pou peryòd sa a."), 15f, MUTED)) })
+            return
+        }
+
+        val timeFmt = SimpleDateFormat(if (betsDays == 0) "HH:mm" else "dd/MM HH:mm", Locale.US).apply { timeZone = haiti }
+        val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+        for (el in list) {
+            val b = el.asJsonObject
+            val code = str(b, "code") ?: continue
+            val (st, color) = statusText(b)
+            val placed = str(b, "placedAt")?.let { p -> runCatching { timeFmt.format(iso.parse(p.take(19))!!) }.getOrNull() } ?: ""
+            val sels = arr(b, "selections")
+            val first = sels?.firstOrNull()?.asJsonObject
+            val c = card()
+            val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            top.addView(text(code, 16f, INK, true), lp(0, weight = 1f))
+            top.addView(text(placed, 13f, MUTED))
+            c.addView(top)
+            val what = when {
+                sels == null || sels.size() == 0 -> ""
+                sels.size() == 1 -> "${str(first, "label") ?: ""} · ${str(first, "eventLabel") ?: ""}"
+                else -> "Konbine · ${sels.size()} match"
+            }
+            if (what.isNotBlank()) c.addView(text(what, 13f, MUTED).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(0, dp(2), 0, 0) })
+            val bottom = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(6), 0, 0) }
+            bottom.addView(text(st, 13f, color, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(0, weight = 1f))
+            val st0 = str(b, "status")
+            val right = if (st0 == "won" || st0 == "void") "${money.format(num(b, "payout"))} HTG" else "${money.format(num(b, "stake"))} HTG · ${String.format(Locale.US, "%.2f", num(b, "totalOdds"))}"
+            bottom.addView(text(right, 14f, INK, true))
+            c.addView(bottom)
+            c.isClickable = true
+            c.setOnClickListener { verify(code) }
+            content.addView(c)
+        }
+        content.addView(text(Lang.tr("Klike sou yon tikè pou w wè detay li, peye l oswa anile l."), 12f, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(8), 0, 0) })
     }
 
     // ==================== RAPÒ (separe de bolèt) ====================
