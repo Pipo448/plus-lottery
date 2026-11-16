@@ -1089,7 +1089,7 @@ class ParyajActivity : BaseActivity() {
             orientation = LinearLayout.VERTICAL
             background = round(0xFFF6F8FD.toInt(), 14, LINE); setPadding(dp(12), dp(10), dp(12), dp(10))
         }
-        played.addView(text(Lang.tr("Ou te jwe"), 12f, MUTED, true))
+        played.addView(text(Lang.tr("Kliyan an te parye sou"), 12f, MUTED, true))
         played.addView(text(str(s, "label") ?: "", 19f, 0xFF050B1F.toInt(), true).apply { setTypeface(typeface, Typeface.BOLD) })
         bi(obj(s, "pick"))?.takeIf { it.isNotBlank() && it != str(s, "label") }?.let { played.addView(text(it, 14f, INK, true)) }
         val mk = bi(obj(s, "marketName")) ?: ""
@@ -1100,6 +1100,19 @@ class ParyajActivity : BaseActivity() {
             gravity = Gravity.CENTER; background = round(badgeColor, 12); setPadding(0, dp(8), 0, dp(8))
         }, lp(top = 12))
         bi(obj(s, "explain"))?.let { box.addView(text(it, 14f, INK).apply { setPadding(0, dp(10), 0, 0) }) }
+
+        // Estatistik match la (gòl, minit, posesyon…): founisè kòt la pa bay yo → n louvri yon rechèch
+        if (home.isNotBlank() && away.isNotBlank()) {
+            val day = str(s, "commenceAt")?.take(10).orEmpty()
+            box.addView(button(Lang.tr("WÈ ESTATISTIK MATCH LA"), NAVY) {
+                try {
+                    val q = android.net.Uri.encode("$home vs $away $day")
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q=$q")))
+                } catch (_: Exception) {
+                    Toast.makeText(this, Lang.tr("Pa gen navigatè sou aparèy sa a."), Toast.LENGTH_SHORT).show()
+                }
+            }, lp(top = 12))
+        }
 
         MaterialAlertDialogBuilder(this)
             .setTitle(str(s, "eventLabel") ?: Lang.tr("Match"))
