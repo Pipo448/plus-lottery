@@ -366,7 +366,9 @@ class BluetoothPrinterHelper {
             // BIG = wotè doub (lajè pa chanje → menm kantite karaktè sou liy lan)
             if (line.style == ReceiptLine.Style.BIG) write(byteArrayOf(0x1B, 0x21, 0x10)) else write(sizeMode())
             if (line.style != ReceiptLine.Style.N) write(boldOn())
+            if (line.style == ReceiptLine.Style.PICK) write(byteArrayOf(0x1B, 0x47, 0x01)) // doub enpresyon → pi fonse
             write(textLine(line.text))
+            if (line.style == ReceiptLine.Style.PICK) write(byteArrayOf(0x1B, 0x47, 0x00))
             if (line.style != ReceiptLine.Style.N) write(boldOff())
             write(normalMode())
         }

@@ -998,17 +998,34 @@ class ParyajActivity : BaseActivity() {
             c.addView(text("Pari an liy: kòb la antre sou balans jwè a otomatikman.", 13f, MUTED))
         }
         val sels = arr(b, "selections") ?: JsonArray()
+        if (sels.size() > 0) c.addView(text(Lang.tr("Klike sou yon match pou w wè rezilta l."), 12f, MUTED).apply { setPadding(0, 0, 0, dp(2)) })
         for (el in sels) {
             val s = el.asJsonObject
-            val res = when (str(s, "result")) { "won" -> "✓"; "lost" -> "✗"; "void" -> "—"; else -> "…" }
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(6), 0, 0) }
-            row.addView(text(res, 16f, when (str(s, "result")) { "won" -> GREEN; "lost" -> RED; else -> MUTED }, true).apply { setPadding(0, 0, dp(8), 0) })
+            val result = str(s, "result")
+            val res = when (result) { "won" -> "✓"; "lost" -> "✗"; "void" -> "—"; else -> "…" }
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(6), dp(8), dp(4), dp(8))
+                background = round(0xFFF6F8FD.toInt(), 12)
+                isClickable = true
+                setOnClickListener { showSelection(s) }
+            }
+            row.addView(text(res, 16f, when (result) { "won" -> GREEN; "lost" -> RED; else -> MUTED }, true).apply { setPadding(0, 0, dp(8), 0) })
             val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            col.addView(text(str(s, "label") ?: "", 14f, INK, true))
-            col.addView(text("${str(s, "eventLabel") ?: ""} · ${whenText(str(s, "commenceAt"))}", 12f, MUTED))
+            // Sa kliyan an JWE a: pi fonse, pi gwo
+            col.addView(text(str(s, "label") ?: "", 15f, 0xFF050B1F.toInt(), true).apply { setTypeface(typeface, Typeface.BOLD) })
+            val ev = obj(s, "event")
+            val hs = ev?.get("homeScore")?.takeIf { !it.isJsonNull }?.asInt
+            val asc = ev?.get("awayScore")?.takeIf { !it.isJsonNull }?.asInt
+            val matchLine = if (ev != null && hs != null && asc != null)
+                "${str(ev, "home")} $hs – $asc ${str(ev, "away")} · ${if (str(ev, "status") == "live") "LIVE" else Lang.tr("Final")}"
+            else "${str(s, "eventLabel") ?: ""} · ${whenText(str(s, "commenceAt"))}"
+            col.addView(text(matchLine, 12f, MUTED))
             row.addView(col, lp(0, weight = 1f))
             row.addView(text(String.format(Locale.US, "%.2f", num(s, "odds")), 14f, BLUE, true))
-            c.addView(row)
+            row.addView(text("›", 20f, MUTED, true).apply { setPadding(dp(8), 0, dp(2), 0) })
+            c.addView(row, lp(top = 6))
         }
         c.addView(text(
             "Miz: ${money.format(num(b, "stake"))} HTG · Kòt: ${String.format(Locale.US, "%.2f", num(b, "totalOdds"))}\n" +
@@ -1027,6 +1044,68 @@ class ParyajActivity : BaseActivity() {
             c.addView(button("ANILE TIKÈ A", RED) { confirmCancel(code) }, lp(top = 8))
         }
         return c
+    }
+
+    /** Klike sou yon match nan tikè a: skò final, sa l te jwe a, poukisa li genyen / pèdi. */
+    private fun showSelection(s: JsonObject) {
+        val fr = Lang.isFr(this)
+        fun bi(o: JsonObject?): String? = o?.let { str(it, if (fr) "fr" else "ht") ?: str(it, "ht") }
+        val ev = obj(s, "event")
+        val result = str(s, "result") ?: "pending"
+        val (badge, badgeColor) = when (result) {
+            "won" -> "GENYEN" to GREEN
+            "lost" -> "PÈDI" to RED
+            "void" -> "ANILE (kòt 1)" to GOLD
+            else -> (if (str(ev, "status") == "live") "AP JWE" else "AP TANN") to BLUE
+        }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(6), dp(18), dp(4)) }
+
+        val meta = listOf(str(s, "league"), whenText(str(s, "commenceAt"))).filter { !it.isNullOrBlank() }.joinToString(" · ")
+        if (meta.isNotBlank()) box.addView(text(meta, 13f, MUTED))
+
+        // Tablo skò a
+        val home = str(ev, "home") ?: (str(s, "eventLabel") ?: "").split(Regex("\\s+[–-]\\s+")).getOrNull(0).orEmpty()
+        val away = str(ev, "away") ?: (str(s, "eventLabel") ?: "").split(Regex("\\s+[–-]\\s+")).getOrNull(1).orEmpty()
+        val hs = ev?.get("homeScore")?.takeIf { !it.isJsonNull }?.asInt
+        val asc = ev?.get("awayScore")?.takeIf { !it.isJsonNull }?.asInt
+        val board = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            background = round(NAVY, 14); setPadding(dp(10), dp(12), dp(10), dp(12))
+        }
+        board.addView(text(home, 15f, Color.WHITE, true).apply { gravity = Gravity.CENTER; maxLines = 2 }, lp(0, weight = 1f))
+        board.addView(text(if (hs != null && asc != null) "$hs – $asc" else "vs", 26f, GOLD, true).apply { gravity = Gravity.CENTER; setPadding(dp(8), 0, dp(8), 0) })
+        board.addView(text(away, 15f, Color.WHITE, true).apply { gravity = Gravity.CENTER; maxLines = 2 }, lp(0, weight = 1f))
+        box.addView(board, lp(top = 8))
+        val st = when (str(ev, "status")) {
+            "finished" -> Lang.tr("Match la fini")
+            "live" -> Lang.tr("Match la ap jwe")
+            "cancelled" -> Lang.tr("Match la anile")
+            else -> if (hs != null) Lang.tr("Match la fini") else Lang.tr("Match la poko jwe")
+        }
+        box.addView(text(st, 12f, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(4), 0, 0) }, lp())
+
+        // Sa l te jwe a
+        val played = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = round(0xFFF6F8FD.toInt(), 14, LINE); setPadding(dp(12), dp(10), dp(12), dp(10))
+        }
+        played.addView(text(Lang.tr("Ou te jwe"), 12f, MUTED, true))
+        played.addView(text(str(s, "label") ?: "", 19f, 0xFF050B1F.toInt(), true).apply { setTypeface(typeface, Typeface.BOLD) })
+        bi(obj(s, "pick"))?.takeIf { it.isNotBlank() && it != str(s, "label") }?.let { played.addView(text(it, 14f, INK, true)) }
+        val mk = bi(obj(s, "marketName")) ?: ""
+        played.addView(text(listOf(mk, "${Lang.tr("Kòt")} ${String.format(Locale.US, "%.2f", num(s, "odds"))}").filter { it.isNotBlank() }.joinToString(" · "), 13f, MUTED).apply { setPadding(0, dp(2), 0, 0) })
+        box.addView(played, lp(top = 12))
+
+        box.addView(text(Lang.tr(badge), 16f, Color.WHITE, true).apply {
+            gravity = Gravity.CENTER; background = round(badgeColor, 12); setPadding(0, dp(8), 0, dp(8))
+        }, lp(top = 12))
+        bi(obj(s, "explain"))?.let { box.addView(text(it, 14f, INK).apply { setPadding(0, dp(10), 0, 0) }) }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(str(s, "eventLabel") ?: Lang.tr("Match"))
+            .setView(ScrollView(this).apply { addView(box) })
+            .setPositiveButton(Lang.tr("Fèmen"), null)
+            .show()
     }
 
     private fun confirmPay(code: String, amount: Double) {

@@ -12,9 +12,9 @@ package com.plusgroup.pos.printer
  *   Ajan: Jean
  *   Tip: Konbine 2 match
  *   --------------------------------
- *   1) Real Madrid vs Barcelona
+ *   1) Real Madrid vs Barcelona     (nòmal)
  *      21/11 07:30 - La Liga
- *      Plis pase 2.5            1.85   (gra)
+ *      > Plis pase 2.5          1.85   (PICK: gra + pi fonse)
  *   2) ...
  *   --------------------------------
  *   Miz                    100,00 HTG
@@ -52,9 +52,9 @@ data class ParyajReceipt(
     val qrData: String? = code,
 )
 
-/** Yon liy resi: style = N (nòmal), B (gra), BIG (gwo + gra). */
+/** Yon liy resi: style = N (nòmal), B (gra), BIG (gwo + gra), PICK (sa kliyan an jwe a: gra + doub enpresyon → pi fonse). */
 data class ReceiptLine(val text: String, val style: Style = Style.N, val center: Boolean = false) {
-    enum class Style { N, B, BIG }
+    enum class Style { N, B, BIG, PICK }
 }
 
 object ParyajReceiptFormat {
@@ -80,16 +80,18 @@ object ParyajReceiptFormat {
         r.selections.forEachIndexed { i, s ->
             val num = "${i + 1}) "
             val indent = " ".repeat(num.length)
+            // Match la (nòmal) → sa kliyan an JWE a anba l, PI FONSE (PICK) ak "> " devan
             wrap(s.eventLabel, width - num.length).forEachIndexed { k, part ->
-                l((if (k == 0) num else indent) + part, ReceiptLine.Style.B)
+                l((if (k == 0) num else indent) + part)
             }
             val meta = listOf(if (s.live) "LIVE" else s.whenText, s.league).filter { it.isNotBlank() }.joinToString(" - ")
             if (meta.isNotBlank()) wrap(meta, width - indent.length).forEach { l(indent + it) }
-            // Seleksyon agoch, kòt adwat; si seleksyon an twò long li pran 2 liy
-            val pickW = width - indent.length - s.odds.length - 1
+            // Seleksyon agoch, kòt adwat; si seleksyon an twò long li pran 2 liy (tout an PICK)
+            val mark = "> "
+            val pickW = width - indent.length - mark.length - s.odds.length - 1
             val pick = wrap(s.pick, pickW.coerceAtLeast(8))
-            pick.dropLast(1).forEach { l(indent + it) }
-            l(pair(indent + pick.lastOrNull().orEmpty(), s.odds, width), ReceiptLine.Style.B)
+            pick.dropLast(1).forEachIndexed { k, part -> l(indent + (if (k == 0) mark else "  ") + part, ReceiptLine.Style.PICK) }
+            l(pair(indent + (if (pick.size == 1) mark else "  ") + pick.lastOrNull().orEmpty(), s.odds, width), ReceiptLine.Style.PICK)
             if (i < r.selections.size - 1) l("")
         }
 

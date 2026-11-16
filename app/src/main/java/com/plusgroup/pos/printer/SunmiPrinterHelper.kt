@@ -531,9 +531,13 @@ class SunmiPrinterHelper(private val context: Context) {
                 fun emit(line: ReceiptLine) {
                     svc.setAlignment(if (line.center) 1 else 0, null); pause()
                     val bold = line.style != ReceiptLine.Style.N
+                    val dark = line.style == ReceiptLine.Style.PICK
                     if (bold) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x01), null) } catch (_: Exception) {}; pause() }
+                    // PICK: doub enpresyon (ESC G 1) → sa kliyan an jwe a soti pi fonse
+                    if (dark) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x47, 0x01), null) } catch (_: Exception) {}; pause() }
                     val size = if (line.style == ReceiptLine.Style.BIG) fs(34f) else fs(24f)
                     svc.printSafe(line.text + "\n", null, size, null); pause()
+                    if (dark) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x47, 0x00), null) } catch (_: Exception) {}; pause() }
                     if (bold) { try { svc.sendRAWData(byteArrayOf(0x1B, 0x45, 0x00), null) } catch (_: Exception) {}; pause() }
                 }
                 ParyajReceiptFormat.body(r, width).forEach(::emit)
