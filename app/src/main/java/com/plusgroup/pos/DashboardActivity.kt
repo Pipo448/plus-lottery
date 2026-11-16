@@ -121,9 +121,33 @@ class DashboardActivity : BaseActivity() {
         }
     }
 
-    /** PARYE PLIS+: bouton PARYAJ la toujou parèt (mòd gade si bolèt la poko aktive l). */
+    /** Antrepriz "Paryaj sèlman": PARYAJ louvri yon sèl fwa otomatikman lè app la louvri. */
+    private var paryeOnlyOpened = false
+
+    /**
+     * PARYE PLIS+: bouton PARYAJ la toujou parèt (mòd gade si bolèt la poko aktive l).
+     * Antrepriz "Paryaj sèlman" (backend: boletEnabled = false): bouton bolèt yo
+     * (Nouvèl fich, Chache fich, Fich mwen yo, Rapò) kache, epi PARYAJ louvri dirèkteman.
+     * Si pa gen entènèt oswa backend lan pa reponn, anyen pa chanje (bolèt rete vizib).
+     */
     private fun checkParyaj() {
         binding.btnParyaj.visibility = android.view.View.VISIBLE
+        lifecycleScope.launch {
+            try {
+                val res = com.plusgroup.pos.network.ApiClient.getService(applicationContext).paryeInfo()
+                if (!res.isSuccessful) return@launch
+                val d = res.body()?.get("data")?.takeIf { it.isJsonObject }?.asJsonObject ?: return@launch
+                val bolet = d.get("boletEnabled")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: true
+                val v = if (bolet) android.view.View.VISIBLE else android.view.View.GONE
+                listOf(binding.btnNouvelFich, binding.btnChacheFich, binding.btnFichMwenYo, binding.btnRapo).forEach { it.visibility = v }
+                if (!bolet && !paryeOnlyOpened) {
+                    paryeOnlyOpened = true
+                    startActivity(Intent(this@DashboardActivity, ParyajActivity::class.java))
+                }
+            } catch (_: Exception) {
+                // Pa gen koneksyon: kite akèy la jan l ye
+            }
+        }
     }
 
     /** Mon compte → "Box": bwat mesaj (anvlòp) sou akèy la. */
