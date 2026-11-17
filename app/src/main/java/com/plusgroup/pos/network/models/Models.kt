@@ -3,8 +3,10 @@ package com.plusgroup.pos.network.models
 data class LoginRequest(
     val username: String,
     val password: String,
-    // Bolèt aparèy la mare ak li (DEVICE ID), si APK a konnen l
+    // Antrepriz ajan an chwazi (lè plizyè antrepriz gen menm idantifyan + modpas)
     val tenantSlug: String? = null,
+    // DEVICE ID POS la: sèvè a konnen ak ki antrepriz aparèy la mare (sql/013)
+    val deviceId: String? = null,
 )
 
 /** Yon bank nan lis sèvè APK a (GET /public/servers). */

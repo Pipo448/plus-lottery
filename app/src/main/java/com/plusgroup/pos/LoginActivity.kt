@@ -232,7 +232,7 @@ class LoginActivity : BaseActivity() {
 
     // ==================== LOGIN ====================
 
-    private fun handleLogin() {
+    private fun handleLogin(tenantSlug: String? = null) {
         val username = binding.etUsername.text.toString().trim()
         val password = binding.etPassword.text.toString()
 
@@ -247,7 +247,24 @@ class LoginActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getService(applicationContext)
-                val res = api.login(LoginRequest(username, password))
+                val res = api.login(LoginRequest(username, password, tenantSlug = tenantSlug, deviceId = deviceId))
+
+                // Plizyè antrepriz gen menm idantifyan + menm modpas, e aparèy sa a poko mare
+                // ak youn ladan yo → ajan an chwazi antrepriz li (yon sèl fwa).
+                if (res.code() == 409) {
+                    val raw = res.errorBody()?.string()
+                    val choices = tenantChoices(raw)
+                    if (choices.isNotEmpty()) {
+                        MaterialAlertDialogBuilder(this@LoginActivity)
+                            .setTitle("Chwazi antrepriz ou")
+                            .setItems(choices.map { it.second }.toTypedArray()) { _, i -> handleLogin(choices[i].first) }
+                            .setNegativeButton("Anile", null)
+                            .show()
+                        return@launch
+                    }
+                    showError(extractErrorMessage(raw) ?: "Koneksyon an pa pase.")
+                    return@launch
+                }
 
                 if (!res.isSuccessful || res.body() == null) {
                     showError(
@@ -293,6 +310,19 @@ class LoginActivity : BaseActivity() {
                 setLoading(false)
             }
         }
+    }
+
+    /** 409 CHOOSE_TENANT → lis (slug, non) antrepriz yo */
+    private fun tenantChoices(errorBody: String?): List<Pair<String, String>> = try {
+        val json = com.google.gson.JsonParser.parseString(errorBody ?: "").asJsonObject
+        if (json.get("code")?.asString != "CHOOSE_TENANT") emptyList()
+        else json.getAsJsonArray("tenants").mapNotNull { el ->
+            val o = el.asJsonObject
+            val slug = o.get("slug")?.asString ?: return@mapNotNull null
+            slug to (o.get("name")?.asString ?: slug)
+        }
+    } catch (e: Exception) {
+        emptyList()
     }
 
     private fun extractErrorMessage(errorBody: String?): String? {
