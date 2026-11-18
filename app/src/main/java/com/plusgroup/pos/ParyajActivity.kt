@@ -454,6 +454,24 @@ class ParyajActivity : BaseActivity() {
             .show()
     }
 
+    /** Non ekip la ak logo klib li (oswa drapo peyi chanpyona a si pa gen logo) */
+    private fun teamRow(name: String, logo: String?, flag: String?): LinearLayout {
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val flagTv = text(flag ?: "", 15f, INK, false)
+        if (!logo.isNullOrBlank()) {
+            val iv = android.widget.ImageView(this).apply { scaleType = android.widget.ImageView.ScaleType.FIT_CENTER }
+            row.addView(iv, LinearLayout.LayoutParams(dp(22), dp(22)).apply { marginEnd = dp(8) })
+            com.plusgroup.pos.util.TeamLogos.load(logo, iv) {
+                iv.visibility = View.GONE
+                if (!flag.isNullOrBlank()) row.addView(flagTv, 0, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(8) })
+            }
+        } else if (!flag.isNullOrBlank()) {
+            row.addView(flagTv, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(8) })
+        }
+        row.addView(text(name, 16f, INK, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        return row
+    }
+
     /** @param tag non lig la (pou TOP MATCH kote match yo soti nan plizyè lig) */
     private fun eventCard(e: JsonObject, tag: String? = null): View {
         val c = card().apply { layoutParams = lp(top = 6) }
@@ -467,8 +485,8 @@ class ParyajActivity : BaseActivity() {
         top.addView(text(if (tag != null) "$time  ·  $tag" else time, 12f, if (live) RED else MUTED, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(0, weight = 1f))
         if (live && score != null) top.addView(text("${num(score, "home").toInt()} - ${num(score, "away").toInt()}", 14f, RED, true))
         c.addView(top)
-        c.addView(text(home, 16f, INK, true).apply { setPadding(0, dp(4), 0, 0) })
-        c.addView(text(away, 16f, INK, true))
+        c.addView(teamRow(home, str(e, "homeLogo"), str(e, "flag")).apply { setPadding(0, dp(4), 0, 0) })
+        c.addView(teamRow(away, str(e, "awayLogo"), str(e, "flag")))
 
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(8), 0, 0) }
         val h = obj(e, "h2h")
