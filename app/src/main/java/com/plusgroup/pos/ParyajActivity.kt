@@ -494,7 +494,7 @@ class ParyajActivity : BaseActivity() {
         val start = str(e, "commenceAt")
         fun add(outcome: String, top: String, label: String) {
             val odds = num(h, outcome)
-            row.addView(oddButton(top, odds, isOn(id, "h2h", outcome, null)) {
+            row.addView(oddButton(top, odds, isOn(id, "h2h", outcome, null), bool(e, "suspended")) {
                 toggle(Sel(id, "h2h", outcome, null, odds, label, evLabel, start))
             }, lp(0, weight = 1f, end = 6))
         }
@@ -506,16 +506,18 @@ class ParyajActivity : BaseActivity() {
         return c
     }
 
-    private fun oddButton(top: String, odds: Double, on: Boolean, onClick: () -> Unit): View {
+    /** locked = kòt bloke (gòl / kòt pa ajou): pal ak kadna, pa ka klike */
+    private fun oddButton(top: String, odds: Double, on: Boolean, locked: Boolean = false, onClick: () -> Unit): View {
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             background = if (on) round(GOLD, 12) else round(0xFFE8EEFF.toInt(), 12, 0xFFC9D8FA.toInt())
             setPadding(dp(4), dp(6), dp(4), dp(6))
-            isClickable = odds > 1.0
-            if (odds > 1.0) setOnClickListener { onClick() }
+            isClickable = odds > 1.0 && !locked
+            if (odds > 1.0 && !locked) setOnClickListener { onClick() }
+            if (locked) alpha = 0.4f
         }
-        box.addView(text(top, 11f, if (on) INK else MUTED, true).apply { gravity = Gravity.CENTER; maxLines = 1 })
+        box.addView(text(if (locked) "🔒 $top" else top, 11f, if (on) INK else MUTED, true).apply { gravity = Gravity.CENTER; maxLines = 1 })
         box.addView(text(if (odds > 1.0) String.format(Locale.US, "%.2f", odds) else "—", 16f, INK, true).apply { gravity = Gravity.CENTER })
         return box
     }
@@ -1058,7 +1060,7 @@ class ParyajActivity : BaseActivity() {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(3), 0, dp(3)) }
             items.forEachIndexed { i, (top, odds, make) ->
                 val probe = make()
-                row.addView(oddButton(top, odds, isOn(probe.eventId, probe.market, probe.outcome, probe.point)) {
+                row.addView(oddButton(top, odds, isOn(probe.eventId, probe.market, probe.outcome, probe.point), bool(e, "suspended")) {
                     toggle(make())
                     dialog?.dismiss()
                 }, lp(0, weight = 1f, end = if (i < items.size - 1) 6 else 0))
