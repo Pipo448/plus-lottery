@@ -1049,7 +1049,7 @@ class ParyajActivity : BaseActivity() {
         val evLabel = "$home - $away"
         val start = str(e, "commenceAt")
         val m = obj(e, "markets") ?: JsonObject()
-        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(4), dp(16), dp(8)) }
+        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(12), dp(4), dp(12), dp(8)) }
         var dialog: AlertDialog? = null
 
         fun opt(top: String, odds: Double, make: () -> Sel): Triple<String, Double, () -> Sel> = Triple(top, odds, make)
@@ -1126,11 +1126,17 @@ class ParyajActivity : BaseActivity() {
         }
 
         val sv = ScrollView(this).apply { addView(body) }
+        // Tout laj ak tout wotè ekran an (menm dimansyon ak lis match yo), pa yon ti fenèt nan mitan
         dialog = MaterialAlertDialogBuilder(this)
             .setTitle(evLabel)
             .setView(sv)
             .setNegativeButton(Lang.tr("Fèmen"), null)
+            .setBackgroundInsetStart(0)
+            .setBackgroundInsetEnd(0)
+            .setBackgroundInsetTop(0)
+            .setBackgroundInsetBottom(0)
             .show()
+        dialog?.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
 
     private fun fmtPoint(p: Double): String =
@@ -1726,49 +1732,76 @@ class ParyajActivity : BaseActivity() {
         }
 
         val timeFmt = SimpleDateFormat(if (betsDays == 0) "HH:mm" else "dd/MM HH:mm", Locale.US).apply { timeZone = haiti }
-        val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-        for (el in list) {
-            val b = el.asJsonObject
-            val code = str(b, "code") ?: continue
-            val (st, color) = statusText(b)
-            val placed = str(b, "placedAt")?.let { p -> runCatching { timeFmt.format(iso.parse(p.take(19))!!) }.getOrNull() } ?: ""
-            val sels = arr(b, "selections")
-            val first = sels?.firstOrNull()?.asJsonObject
-            val c = card()
-            val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-            top.addView(text(code, 16f, INK, true), lp(0, weight = 1f))
-            top.addView(text(placed, 13f, MUTED))
-            c.addView(top)
-            val what = when {
-                sels == null || sels.size() == 0 -> ""
-                sels.size() == 1 -> "${str(first, "label") ?: ""} · ${str(first, "eventLabel") ?: ""}"
-                else -> "Konbine · ${sels.size()} match"
-            }
-            if (what.isNotBlank()) c.addView(text(what, 13f, MUTED).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(0, dp(2), 0, 0) })
-            val bottom = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(6), 0, 0) }
-            bottom.addView(text(st, 13f, color, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(0, weight = 1f))
-            val st0 = str(b, "status")
-            val right = if (st0 == "won" || st0 == "void") "${money.format(num(b, "payout"))} HTG" else "${money.format(num(b, "stake"))} HTG · ${String.format(Locale.US, "%.2f", num(b, "totalOdds"))}"
-            bottom.addView(text(right, 14f, INK, true))
-            c.addView(bottom)
-            c.isClickable = true
-            c.setOnClickListener { verify(code) }
-            content.addView(c)
-        }
+        for (el in list) soldBetCard(el.asJsonObject, timeFmt)?.let { content.addView(it) }
         content.addView(text(Lang.tr("Klike sou yon tikè pou w wè detay li, peye l oswa anile l."), 12f, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(8), 0, 0) })
     }
 
+
+    /** Yon tikè ajan an vann (lis PARI ak RAPÒ). Klike → detay / peye / anile. */
+    private fun soldBetCard(b: JsonObject, timeFmt: SimpleDateFormat): View? {
+        val money = Money.format()
+        val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+        val code = str(b, "code") ?: return null
+        val (st, color) = statusText(b)
+        val placed = str(b, "placedAt")?.let { p -> runCatching { timeFmt.format(iso.parse(p.take(19))!!) }.getOrNull() } ?: ""
+        val sels = arr(b, "selections")
+        val first = sels?.firstOrNull()?.asJsonObject
+        val c = card()
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.addView(text(code, 16f, INK, true), lp(0, weight = 1f))
+        top.addView(text(placed, 13f, MUTED))
+        c.addView(top)
+        val what = when {
+            sels == null || sels.size() == 0 -> ""
+            sels.size() == 1 -> "${str(first, "label") ?: ""} · ${str(first, "eventLabel") ?: ""}"
+            else -> "Konbine · ${sels.size()} match"
+        }
+        if (what.isNotBlank()) c.addView(text(what, 13f, MUTED).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(0, dp(2), 0, 0) })
+        val bottom = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(6), 0, 0) }
+        bottom.addView(text(st, 13f, color, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(0, weight = 1f))
+        val st0 = str(b, "status")
+        val right = if (st0 == "won" || st0 == "void") "${money.format(num(b, "payout"))} HTG" else "${money.format(num(b, "stake"))} HTG · ${String.format(Locale.US, "%.2f", num(b, "totalOdds"))}"
+        bottom.addView(text(right, 14f, INK, true))
+        c.addView(bottom)
+        c.isClickable = true
+        c.setOnClickListener { verify(code) }
+        return c
+    }
+
     // ==================== RAPÒ (separe de bolèt) ====================
+    /** Peryòd rapò a (yyyy-MM-dd, lè Ayiti) + filtè tikè yo: all / won / lost / pending */
+    private var repFrom: String? = null
+    private var repTo: String? = null
+    private var repFilter = "all"
+
+    private fun ymd(ms: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = haiti }.format(Date(ms))
+
+    private fun pickReportDate(current: String, onPicked: (String) -> Unit) {
+        val cal = java.util.Calendar.getInstance(haiti)
+        runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = haiti }.parse(current) }.getOrNull()?.let { cal.time = it }
+        android.app.DatePickerDialog(this, { _, y, m, d ->
+            onPicked(String.format(Locale.US, "%04d-%02d-%02d", y, m + 1, d))
+        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).apply {
+            datePicker.maxDate = System.currentTimeMillis()
+        }.show()
+    }
+
     private fun loadReport() {
         loading()
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = haiti }.format(Date())
+        val today = ymd(System.currentTimeMillis())
+        val from = repFrom ?: today
+        val to = repTo ?: today
         lifecycleScope.launch {
             try {
-                val res = ApiClient.getService(applicationContext).paryeReport(today, today)
+                val api = ApiClient.getService(applicationContext)
+                val res = api.paryeReport(from, to)
                 if (!res.isSuccessful) {
                     message("Erè", errorOf(res.errorBody()?.string(), "Pa ka chaje rapò a."))
                     return@launch
                 }
+                val bets = runCatching { api.paryeBets(from, to) }.getOrNull()
+                    ?.takeIf { it.isSuccessful }?.let { arr(it.body(), "data") } ?: JsonArray()
+                if (tab != 3) return@launch
                 val r = obj(res.body(), "data") ?: JsonObject()
                 val money = Money.format()
                 val rows = listOf(
@@ -1784,8 +1817,48 @@ class ParyajActivity : BaseActivity() {
                     "Rezilta" to "${money.format(num(r, "net"))} HTG",
                 )
                 content.removeAllViews()
+                val show = { x: String -> x.substring(8, 10) + "/" + x.substring(5, 7) + "/" + x.substring(0, 4) }
+                val period = if (from == to) show(from) else "${show(from)} → ${show(to)}"
+                val day = 86_400_000L
+                val now = System.currentTimeMillis()
+
+                // Chwa peryòd: Jodi a · Yè · 7 jou · 30 jou
+                val chips = LinearLayout(this@ParyajActivity).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(6), 0, dp(4)) }
+                val presets = listOf(
+                    Triple("Jodi a", today, today),
+                    Triple("Yè", ymd(now - day), ymd(now - day)),
+                    Triple("7 jou", ymd(now - 6 * day), today),
+                    Triple("30 jou", ymd(now - 29 * day), today),
+                )
+                presets.forEachIndexed { i, (label, f0, t0) ->
+                    val on = f0 == from && t0 == to
+                    chips.addView(text(Lang.tr(label), 13f, if (on) INK else Color.WHITE, true).apply {
+                        gravity = Gravity.CENTER
+                        setPadding(0, dp(8), 0, dp(8))
+                        maxLines = 1
+                        background = round(if (on) GOLD else NAVY, 10)
+                        setOnClickListener { repFrom = f0; repTo = t0; loadReport() }
+                    }, lp(0, weight = 1f, end = if (i < presets.size - 1) 5 else 0))
+                }
+                content.addView(chips)
+
+                // Dat egzak: Depi · Jiska
+                val dates = LinearLayout(this@ParyajActivity).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(2), 0, dp(6)) }
+                fun dateBox(label: String, value: String, onPick: (String) -> Unit) = LinearLayout(this@ParyajActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(12), dp(6), dp(12), dp(6))
+                    background = round(Color.WHITE, 10)
+                    addView(text(Lang.tr(label), 11f, MUTED))
+                    addView(text("📅 " + show(value), 15f, INK, true))
+                    isClickable = true
+                    setOnClickListener { pickReportDate(value, onPick) }
+                }
+                dates.addView(dateBox("Depi", from) { d -> repFrom = d; if ((repTo ?: to) < d) repTo = d; loadReport() }, lp(0, weight = 1f, end = 6))
+                dates.addView(dateBox("Jiska", to) { d -> repTo = d; if ((repFrom ?: from) > d) repFrom = d; loadReport() }, lp(0, weight = 1f))
+                content.addView(dates)
+
                 val c = card()
-                c.addView(text("Rapò paryaj — jodi a", 17f, INK, true))
+                c.addView(text(Lang.tr("Rapò paryaj") + " — " + period, 17f, INK, true))
                 c.addView(text("Separe de vant bolèt yo.", 13f, MUTED).apply { setPadding(0, dp(2), 0, dp(6)) })
                 rows.forEach { (k, v) ->
                     val row = LinearLayout(this@ParyajActivity).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(6), 0, dp(6)) }
@@ -1807,7 +1880,7 @@ class ParyajActivity : BaseActivity() {
                                     branchCode = "PARYE PLIS+",
                                     phone = TenantBranding.phone.orEmpty(),
                                     reportTitle = "RAPO PARYAJ",
-                                    headerLines = listOf("Dat" to today),
+                                    headerLines = if (from == to) listOf("Dat" to show(from)) else listOf("Depi" to show(from), "Jiska" to show(to)),
                                     bodyFields = rows,
                                     agent = TenantBranding.vendeur ?: "",
                                 )
@@ -1816,11 +1889,55 @@ class ParyajActivity : BaseActivity() {
                     }
                 }, lp(top = 12))
                 content.addView(c)
+                renderReportTickets(bets, from == to)
             } catch (e: java.io.IOException) {
                 message("Pa gen koneksyon", "Verifye entènèt la epi eseye ankò.")
             } catch (e: Exception) {
                 message("Erè", "Pa ka montre done yo: ${e.message ?: e.javaClass.simpleName}")
             }
         }
+    }
+
+    /** Tikè peryòd la ak filtè: Tout · Genyen · Pèdi · Ap tann (klike → detay) */
+    private fun renderReportTickets(bets: JsonArray, oneDay: Boolean) {
+        val all = bets.mapNotNull { it?.takeIf { x -> x.isJsonObject }?.asJsonObject }
+        fun cat(b: JsonObject): String = when (str(b, "status")) {
+            "won" -> "won"; "lost" -> "lost"; "pending" -> "pending"; "cancelled" -> "cancelled"; else -> "other"
+        }
+        val counts = all.groupingBy { cat(it) }.eachCount()
+        content.addView(text(Lang.tr("Tikè yo"), 16f, INK, true).apply { setPadding(dp(2), dp(14), 0, dp(4)) })
+        val filters = listOf(
+            Triple("all", "Tout", all.size),
+            Triple("won", "Genyen", counts["won"] ?: 0),
+            Triple("lost", "Pèdi", counts["lost"] ?: 0),
+            Triple("pending", "Ap tann", counts["pending"] ?: 0),
+        )
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, 0, 0, dp(6)) }
+        filters.forEachIndexed { i, (key, label, n) ->
+            val on = key == repFilter
+            val bg = when { !on -> Color.WHITE; key == "won" -> GREEN; key == "lost" -> RED; key == "pending" -> BLUE; else -> NAVY }
+            row.addView(text("${Lang.tr(label)} ($n)", 12f, if (on) Color.WHITE else INK, true).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(8), 0, dp(8))
+                maxLines = 1
+                background = round(bg, 10)
+                setOnClickListener {
+                    repFilter = key
+                    // re-rann sèlman lis la (san rechaje rapò a)
+                    val idx = content.indexOfChild(this@apply.parent as View) - 1
+                    while (content.childCount > idx && idx >= 0) content.removeViewAt(idx)
+                    renderReportTickets(bets, oneDay)
+                }
+            }, lp(0, weight = 1f, end = if (i < filters.size - 1) 5 else 0))
+        }
+        content.addView(row)
+        val shown = all.filter { repFilter == "all" || cat(it) == repFilter }
+        if (shown.isEmpty()) {
+            content.addView(card().apply { addView(text(Lang.tr("Pa gen tikè pou chwa sa a."), 14f, MUTED)) })
+            return
+        }
+        val timeFmt = SimpleDateFormat(if (oneDay) "HH:mm" else "dd/MM HH:mm", Locale.US).apply { timeZone = haiti }
+        shown.forEach { b -> soldBetCard(b, timeFmt)?.let { content.addView(it) } }
+        if (all.size >= 200) content.addView(text(Lang.tr("200 dènye tikè yo sèlman. Chwazi yon peryòd pi kout pou wè rès yo."), 12f, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(8), 0, 0) })
     }
 }

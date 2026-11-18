@@ -27,13 +27,22 @@ object TeamLogos {
         cache.get(url)?.let { view.setImageBitmap(it); return }
         if (synchronized(failed) { url in failed }) { onFail(); return }
         pool.execute {
-            val bmp = fetch("$url/tiny") ?: fetch(url)
+            val bmp = sources(url).firstNotNullOfOrNull { fetch(it) }
             main.post {
                 if (view.tag != url) return@post
                 if (bmp != null) { cache.put(url, bmp); view.setImageBitmap(bmp) }
                 else { synchronized(failed) { failed.add(url) }; onFail() }
             }
         }
+    }
+
+    /** ESPN: ti imaj "combiner" → imaj orijinal · TheSportsDB: "/tiny" → imaj la */
+    private fun sources(url: String): List<String> {
+        Regex("^https?://a\\.espncdn\\.com/combiner/i\\?img=([^&]+)", RegexOption.IGNORE_CASE).find(url)?.let {
+            return listOf(url, "https://a.espncdn.com" + java.net.URLDecoder.decode(it.groupValues[1], "UTF-8"))
+        }
+        if (url.contains("thesportsdb.com", ignoreCase = true)) return listOf("$url/tiny", url)
+        return listOf(url)
     }
 
     private fun fetch(u: String): Bitmap? = try {
