@@ -367,7 +367,7 @@ class ParyajActivity : BaseActivity() {
     private fun renderEvents() {
         content.removeAllViews()
         if (!active) content.addView(previewBanner())
-        if (active && vgEnabled()) content.addView(button(Lang.tr("🎡 JWÈT VITYÈL: ROULETTE · LUCKY 6"), 0xFF0B6B3C.toInt()) { selectTab(5) }, lp(top = 6))
+        if (active && vgEnabled()) content.addView(button(Lang.tr("🎡 JWÈT VITYÈL: ROULETTE · LUCKY 6 · AVYON"), 0xFF0B6B3C.toInt()) { selectTab(5) }, lp(top = 6))
         if (active) content.addView(button(Lang.tr("KÒD PATAJ: CHAJE YON PARI"), BLUE) { askShareCode() }, lp(top = 6))
         if (lastEvents.size() == 0) {
             message(if (tab == 1) "Pa gen match an dirèk" else "Pa gen match", "Tounen pita.")
@@ -594,6 +594,21 @@ class ParyajActivity : BaseActivity() {
         val closes = iso(str(b, "closesAt"))
         val draw = iso(str(b, "drawAt"))
         val lastRes = last?.let { obj(it, "result") }
+        if (vgGame == "crash") {
+            // Avyon: sèvè a pa bay pwen kote l ap tonbe pandan vòl la; nou kalkile miltiplikatè a ak lè a
+            val fl = obj(g, "flying")
+            val flAt = iso(str(fl, "drawAt"))
+            val lastX = lastRes?.let { num(it, "crash") }
+            val hist = (arr(g, "history") ?: JsonArray()).take(6).joinToString("  ") { h -> "x" + String.format(Locale.US, "%.2f", num(obj(h.asJsonObject, "result"), "crash")) }
+            val head = when {
+                fl != null && flAt in 1..now -> "✈️ Vòl #${str(fl, "short")} AP VOLE: x${String.format(Locale.US, "%.2f", Math.floor(Math.exp(0.08 * (now - flAt) / 1000.0) * 100) / 100)}"
+                now < closes -> "Vòl #${str(b, "short")} · paryaj fèmen nan ${clock(closes - now)}"
+                else -> "Paryaj fèmen · vòl #${str(b, "short")} dekole nan ${clock(draw - now)}"
+            }
+            val tail = if (lastX != null) "\nDènye vòl #${str(last, "short")}: tonbe nan x${String.format(Locale.US, "%.2f", lastX)}" else ""
+            tv.text = "$head$tail${if (hist.isNotEmpty()) "\n$hist" else ""}"
+            return
+        }
         val lastTxt = if (lastRes == null) "" else if (vgGame == "roulette") "Dènye rezilta #${str(last, "short")}: ${str(lastRes, "number")}"
             else "Dènye tiraj #${str(last, "short")}: premye boul ${arr(lastRes, "balls")?.firstOrNull()?.asInt ?: "-"}"
         val head = if (now < closes) "Tiraj #${str(b, "short")} · paryaj fèmen nan ${clock(closes - now)}"
@@ -603,17 +618,18 @@ class ParyajActivity : BaseActivity() {
 
     private fun renderVirtual(reload: Boolean = false) {
         if (!active || !vgEnabled()) { message("Jwèt vityèl", "Jwèt vityèl yo poko ouvè pou antrepriz ou a. Administratè a ka ouvri yo nan panèl la: Parye Plis+ → Paramèt."); return }
-        val allowed = arr(obj(info, "virtual"), "games")?.map { it.asString } ?: listOf("roulette", "lucky6")
+        val allowed = arr(obj(info, "virtual"), "games")?.map { it.asString } ?: listOf("roulette", "lucky6", "crash")
         if (vgGame !in allowed && allowed.isNotEmpty()) vgGame = allowed.first()
         content.removeAllViews()
 
         // Chwa jwèt la
         val gRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        listOf("roulette" to "🎡 ROULETTE", "lucky6" to "🎱 LUCKY 6").filter { it.first in allowed }.forEachIndexed { i, (k, l) ->
+        val gList = listOf("roulette" to "🎡 ROULETTE", "lucky6" to "🎱 LUCKY 6", "crash" to "✈️ AVYON").filter { it.first in allowed }
+        gList.forEachIndexed { i, (k, l) ->
             val on = k == vgGame
             gRow.addView(button(l, if (on) GOLD else NAVY, if (on) INK else Color.WHITE) {
-                if (vgGame != k) { vgGame = k; vgLines.clear(); vgType = if (k == "roulette") "n" else "pick"; vgReq = UUID.randomUUID().toString(); renderVirtual() }
-            }, lp(0, weight = 1f, end = if (i == 0) 6 else 0))
+                if (vgGame != k) { vgGame = k; vgLines.clear(); vgType = when (k) { "roulette" -> "n"; "crash" -> "auto"; else -> "pick" }; vgReq = UUID.randomUUID().toString(); renderVirtual() }
+            }, lp(0, weight = 1f, end = if (i < gList.size - 1) 6 else 0))
         }
         content.addView(gRow)
 
@@ -625,6 +641,39 @@ class ParyajActivity : BaseActivity() {
 
         // Antre yon paryaj
         val c = card()
+        if (vgGame == "crash") {
+            vgType = "auto"
+            c.addView(text(Lang.tr("Avyon: parye anvan l dekole. Si miltiplikatè a rive nan kote ou chwazi a anvan avyon an tonbe, ou genyen miz × miltiplikatè. Yon sèl paryaj pa tikè."), 14f, MUTED, true))
+            val etX = EditText(this).apply {
+                hint = Lang.tr("Retire otomatikman nan (egz. 2.00)")
+                setText("2.00")
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                textSize = 18f
+            }
+            c.addView(etX, lp(top = 8))
+            val pr = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            listOf("1.5", "2", "3", "5", "10").forEachIndexed { i, x ->
+                pr.addView(text("x$x", 14f, INK, true).apply {
+                    gravity = Gravity.CENTER; background = round(0xFFEEF2FB.toInt(), 10); setPadding(dp(4), dp(9), dp(4), dp(9))
+                    setOnClickListener { etX.setText(x) }
+                }, lp(0, weight = 1f, end = if (i < 4) 6 else 0))
+            }
+            c.addView(pr, lp(top = 6))
+            val etS = EditText(this).apply {
+                hint = Lang.tr("Miz (HTG)")
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                textSize = 18f
+            }
+            c.addView(etS, lp(top = 4))
+            c.addView(button(Lang.tr("METE SOU TIKÈ A"), BLUE) {
+                val stake = etS.text.toString().replace(',', '.').toDoubleOrNull() ?: 0.0
+                if (stake <= 0) { Toast.makeText(this, Lang.tr("Mete miz la."), Toast.LENGTH_SHORT).show(); return@button }
+                val line = vgBuild("auto", etX.text.toString(), stake) ?: return@button
+                vgLines.clear(); vgLines.add(line)
+                vgReq = UUID.randomUUID().toString()
+                renderVirtual()
+            }, lp(top = 8))
+        } else {
         c.addView(text(Lang.tr("Kalite paryaj"), 14f, MUTED, true))
         val types: List<Pair<String, String>> = if (vgGame == "roulette") listOf(
             "n" to "Nimewo x36", "split" to "Cheval x18", "street" to "Street x12", "corner" to "Katye x9", "line" to "Liy 6 x6", "five" to "0-00-1-2-3 x7",
@@ -686,6 +735,7 @@ class ParyajActivity : BaseActivity() {
             vgReq = UUID.randomUUID().toString()
             renderVirtual()
         }, lp(top = 8))
+        }
         content.addView(c, lp(top = 8))
 
         // Tikè a
@@ -718,6 +768,13 @@ class ParyajActivity : BaseActivity() {
         val nums = raw.split(Regex("[^0-9]+")).filter { it.isNotBlank() }
         val n = nums.firstOrNull()
         val v = n?.toIntOrNull()
+        if (vgGame == "crash") {
+            val x = raw.trim().replace(',', '.').toDoubleOrNull() ?: return err("Tape kote pou retire a (egz. 2.00).")
+            if (x < 1.01 || x > 100) return err("Retrè otomatik la dwe ant x1.01 ak x100.")
+            val xr = Math.floor(x * 100) / 100
+            val xs = String.format(Locale.US, "%.2f", xr)
+            return VgLine("auto:$xs", "Avyon: retire otomatik nan x$xs", xr, stake)
+        }
         if (vgGame == "roulette") {
             return when (type) {
                 "n" -> {
