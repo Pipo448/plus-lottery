@@ -252,7 +252,9 @@ class ParyajActivity : BaseActivity() {
             2 -> if (active) showVerify(null) else message("Paryaj poko aktive", previewMessage)
             3 -> if (active) loadReport() else message("Paryaj poko aktive", previewMessage)
             4 -> if (active) loadMyBets(betsDays) else message("Paryaj poko aktive", previewMessage)
+            5 -> renderVirtual(reload = true)
         }
+        if (i != 5) stopVgTicker()
     }
 
     private fun loading() {
@@ -365,6 +367,8 @@ class ParyajActivity : BaseActivity() {
     private fun renderEvents() {
         content.removeAllViews()
         if (!active) content.addView(previewBanner())
+        if (active && vgEnabled()) content.addView(button(Lang.tr("🎡 JWÈT VITYÈL: ROULETTE · LUCKY 6"), 0xFF0B6B3C.toInt()) { selectTab(5) }, lp(top = 6))
+        if (active) content.addView(button(Lang.tr("KÒD PATAJ: CHAJE YON PARI"), BLUE) { askShareCode() }, lp(top = 6))
         if (lastEvents.size() == 0) {
             message(if (tab == 1) "Pa gen match an dirèk" else "Pa gen match", "Tounen pita.")
             return
@@ -520,6 +524,414 @@ class ParyajActivity : BaseActivity() {
             val y = scroll.scrollY
             renderEvents()
             scroll.post { scroll.scrollTo(0, y) }
+        }
+    }
+
+    // ==================== JWÈT VITYÈL (sql/049) ====================
+    // American Roulette + Lucky 6: yon tikè = yon tiraj, chak liy gen pwòp miz li.
+    private data class VgLine(val spec: String, val label: String, val odds: Double, val stake: Double)
+
+    private var vgGame = "roulette"
+    private var vgType = "n"
+    private val vgLines = mutableListOf<VgLine>()
+    private var vgReq = UUID.randomUUID().toString()
+    private var vgGames: JsonArray = JsonArray()
+    private var vgStatus: TextView? = null
+    private val vgHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var vgTick: Runnable? = null
+    private var vgLoadedAt = 0L
+    private var vgOffset = 0L
+
+    private fun vgEnabled(): Boolean = obj(info, "virtual")?.let { bool(it, "enabled") } == true
+
+    private fun vgNow() = System.currentTimeMillis() + vgOffset
+    private fun iso(s: String?): Long = try {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.parse(s!!.take(19))!!.time
+    } catch (_: Exception) { 0L }
+    private fun clock(ms: Long): String { val s = Math.max(0L, (ms + 999) / 1000); return "${s / 60}:${String.format(Locale.US, "%02d", s % 60)}" }
+
+    private fun vgCur(): JsonObject? = vgGames.firstOrNull { str(it.asJsonObject, "game") == vgGame }?.asJsonObject
+
+    private fun stopVgTicker() { vgTick?.let { vgHandler.removeCallbacks(it) }; vgTick = null }
+
+    private fun startVgTicker() {
+        stopVgTicker()
+        val r = object : Runnable {
+            override fun run() {
+                if (tab != 5) return
+                updateVgStatus()
+                if (System.currentTimeMillis() - vgLoadedAt > 5000) loadVgState()
+                vgHandler.postDelayed(this, 1000)
+            }
+        }
+        vgTick = r
+        vgHandler.postDelayed(r, 1000)
+    }
+
+    private fun loadVgState(after: (() -> Unit)? = null) {
+        vgLoadedAt = System.currentTimeMillis()
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(applicationContext).vgState()
+                val d = obj(res.body(), "data")
+                if (res.isSuccessful && d != null) {
+                    vgGames = arr(d, "games") ?: JsonArray()
+                    val st = iso(str(d, "serverTime"))
+                    if (st > 0) vgOffset = st - System.currentTimeMillis()
+                }
+            } catch (_: Exception) { }
+            updateVgStatus()
+            after?.invoke()
+        }
+    }
+
+    private fun updateVgStatus() {
+        val tv = vgStatus ?: return
+        val g = vgCur() ?: run { tv.text = Lang.tr("Ap chaje…"); return }
+        val b = obj(g, "betting")
+        val last = obj(g, "last")
+        val now = vgNow()
+        val closes = iso(str(b, "closesAt"))
+        val draw = iso(str(b, "drawAt"))
+        val lastRes = last?.let { obj(it, "result") }
+        val lastTxt = if (lastRes == null) "" else if (vgGame == "roulette") "Dènye rezilta #${str(last, "short")}: ${str(lastRes, "number")}"
+            else "Dènye tiraj #${str(last, "short")}: premye boul ${arr(lastRes, "balls")?.firstOrNull()?.asInt ?: "-"}"
+        val head = if (now < closes) "Tiraj #${str(b, "short")} · paryaj fèmen nan ${clock(closes - now)}"
+            else "Paryaj fèmen · tiraj #${str(b, "short")} nan ${clock(draw - now)}"
+        tv.text = if (lastTxt.isEmpty()) head else "$head\n$lastTxt"
+    }
+
+    private fun renderVirtual(reload: Boolean = false) {
+        if (!active || !vgEnabled()) { message("Jwèt vityèl", "Jwèt vityèl yo poko ouvè pou antrepriz ou a. Administratè a ka ouvri yo nan panèl la: Parye Plis+ → Paramèt."); return }
+        val allowed = arr(obj(info, "virtual"), "games")?.map { it.asString } ?: listOf("roulette", "lucky6")
+        if (vgGame !in allowed && allowed.isNotEmpty()) vgGame = allowed.first()
+        content.removeAllViews()
+
+        // Chwa jwèt la
+        val gRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        listOf("roulette" to "🎡 ROULETTE", "lucky6" to "🎱 LUCKY 6").filter { it.first in allowed }.forEachIndexed { i, (k, l) ->
+            val on = k == vgGame
+            gRow.addView(button(l, if (on) GOLD else NAVY, if (on) INK else Color.WHITE) {
+                if (vgGame != k) { vgGame = k; vgLines.clear(); vgType = if (k == "roulette") "n" else "pick"; vgReq = UUID.randomUUID().toString(); renderVirtual() }
+            }, lp(0, weight = 1f, end = if (i == 0) 6 else 0))
+        }
+        content.addView(gRow)
+
+        val st = card()
+        val status = text(Lang.tr("Ap chaje…"), 15f, INK, true)
+        vgStatus = status
+        st.addView(status)
+        content.addView(st, lp(top = 8))
+
+        // Antre yon paryaj
+        val c = card()
+        c.addView(text(Lang.tr("Kalite paryaj"), 14f, MUTED, true))
+        val types: List<Pair<String, String>> = if (vgGame == "roulette") listOf(
+            "n" to "Nimewo x36", "split" to "Cheval x18", "street" to "Street x12", "corner" to "Katye x9", "line" to "Liy 6 x6", "five" to "0-00-1-2-3 x7",
+            "dozen:1" to "1-12 x3", "dozen:2" to "13-24 x3", "dozen:3" to "25-36 x3", "col:1" to "Kolòn 1 x3", "col:2" to "Kolòn 2 x3", "col:3" to "Kolòn 3 x3",
+            "red" to "Wouj x2", "black" to "Nwa x2", "even" to "Pè x2", "odd" to "Enpè x2", "low" to "1-18 x2", "high" to "19-36 x2",
+        ) else listOf(
+            "pick" to "6 nimewo", "first:over" to "Premye > 24,5", "first:under" to "Premye < 24,5", "first:even" to "Premye pè", "first:odd" to "Premye enpè",
+            "sum5:over" to "Total 5 > 122,5", "sum5:under" to "Total 5 < 122,5", "more:even" to "Plis pè (5)", "more:odd" to "Plis enpè (5)",
+            "first:color:red" to "Wouj x7", "first:color:green" to "Vèt x7", "first:color:blue" to "Ble x7", "first:color:purple" to "Mov x7",
+            "first:color:brown" to "Mawon x7", "first:color:yellow" to "Jòn x7", "first:color:orange" to "Zoranj x7", "first:color:black" to "Nwa x7",
+        )
+        types.chunked(3).forEach { row ->
+            val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            row.forEachIndexed { i, (k, l) ->
+                val on = k == vgType
+                r.addView(text(l, 13f, if (on) Color.WHITE else INK, true).apply {
+                    gravity = Gravity.CENTER; maxLines = 2
+                    background = round(if (on) BLUE else 0xFFEEF2FB.toInt(), 10)
+                    setPadding(dp(4), dp(9), dp(4), dp(9))
+                    setOnClickListener { vgType = k; renderVirtual() }
+                }, lp(0, weight = 1f, end = if (i < row.size - 1) 6 else 0))
+            }
+            repeat(3 - row.size) { r.addView(View(this), lp(0, weight = 1f)) }
+            c.addView(r, lp(top = 6))
+        }
+
+        val needsNum = vgType in listOf("n", "split", "street", "corner", "line", "pick")
+        val etNum = EditText(this).apply {
+            hint = when (vgType) {
+                "n" -> "Nimewo (0, 00, 1–36)"
+                "split" -> "2 nimewo ki kole (egz. 17 20)"
+                "street" -> "Yon nimewo nan ranje a (egz. 34)"
+                "corner" -> "Pi piti nimewo kare a (egz. 17)"
+                "line" -> "Yon nimewo nan premye ranje a"
+                else -> "6 nimewo 1–48 (egz. 3 8 15 22 31 44)"
+            }
+            inputType = InputType.TYPE_CLASS_TEXT
+            textSize = 18f
+        }
+        if (needsNum) {
+            c.addView(etNum, lp(top = 8))
+            if (vgType == "pick") c.addView(button(Lang.tr("🎲 6 NIMEWO O AZA"), NAVY) {
+                etNum.setText((1..48).shuffled().take(6).sorted().joinToString(" "))
+            }, lp(top = 4))
+        }
+        val etStake = EditText(this).apply {
+            hint = Lang.tr("Miz (HTG)")
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            textSize = 18f
+        }
+        c.addView(etStake, lp(top = 4))
+        c.addView(button(Lang.tr("AJOUTE SOU TIKÈ A"), BLUE) {
+            val stake = etStake.text.toString().replace(',', '.').toDoubleOrNull() ?: 0.0
+            if (stake <= 0) { Toast.makeText(this, Lang.tr("Mete miz la."), Toast.LENGTH_SHORT).show(); return@button }
+            val line = vgBuild(vgType, etNum.text.toString(), stake)
+            if (line == null) return@button
+            val i = vgLines.indexOfFirst { it.spec == line.spec }
+            if (i >= 0) vgLines[i] = vgLines[i].copy(stake = vgLines[i].stake + stake) else vgLines.add(line)
+            vgReq = UUID.randomUUID().toString()
+            renderVirtual()
+        }, lp(top = 8))
+        content.addView(c, lp(top = 8))
+
+        // Tikè a
+        val money = Money.format()
+        val t = card()
+        t.addView(text(Lang.tr("Tikè"), 16f, INK, true))
+        if (vgLines.isEmpty()) t.addView(text(Lang.tr("Ajoute omwen yon paryaj."), 14f, MUTED).apply { setPadding(0, dp(4), 0, 0) })
+        vgLines.forEach { l ->
+            val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(8), 0, 0) }
+            r.addView(text("${l.label}  x${if (l.odds % 1.0 == 0.0) l.odds.toInt() else l.odds}", 15f, 0xFF050B1F.toInt(), true), lp(0, weight = 1f))
+            r.addView(text("${money.format(l.stake)}", 15f, INK, true).apply { setPadding(dp(8), 0, dp(8), 0) })
+            r.addView(text("✕", 18f, RED, true).apply { setPadding(dp(10), dp(4), dp(6), dp(4)); setOnClickListener { vgLines.remove(l); vgReq = UUID.randomUUID().toString(); renderVirtual() } })
+            t.addView(r)
+        }
+        val total = vgLines.sumOf { it.stake }
+        if (vgLines.isNotEmpty()) {
+            t.addView(text("${Lang.tr("Total miz")}: ${money.format(total)} HTG", 16f, INK, true).apply { setPadding(0, dp(10), 0, 0) })
+            t.addView(button(Lang.tr("VANN TIKÈ A"), RED) { vgSell() }, lp(top = 10))
+        }
+        content.addView(t, lp(top = 8))
+
+        updateVgStatus()
+        if (reload || vgGames.size() == 0) loadVgState()
+        startVgTicker()
+    }
+
+    /** Fòm nan → spec sèvè a (menm règ ak backend lan) */
+    private fun vgBuild(type: String, raw: String, stake: Double): VgLine? {
+        fun err(m: String): VgLine? { Toast.makeText(this, Lang.tr(m), Toast.LENGTH_LONG).show(); return null }
+        val nums = raw.split(Regex("[^0-9]+")).filter { it.isNotBlank() }
+        val n = nums.firstOrNull()
+        val v = n?.toIntOrNull()
+        if (vgGame == "roulette") {
+            return when (type) {
+                "n" -> {
+                    val x = raw.trim()
+                    if (x == "00" || x == "0") VgLine("n:$x", "Nimewo $x", 36.0, stake)
+                    else if (v != null && v in 1..36) VgLine("n:$v", "Nimewo $v", 36.0, stake) else err("Nimewo a dwe 0, 00 oswa ant 1 ak 36.")
+                }
+                "split" -> {
+                    val a = nums.getOrNull(0)?.toIntOrNull(); val b = nums.getOrNull(1)?.toIntOrNull()
+                    if (a == null || b == null) return err("Tape 2 nimewo (egz. 17 20).")
+                    val lo = minOf(a, b); val hi = maxOf(a, b)
+                    if (lo < 1 || hi > 36 || !(hi - lo == 3 || (hi - lo == 1 && lo % 3 != 0))) return err("$lo ak $hi pa kole sou tab la.")
+                    VgLine("split:$lo-$hi", "Cheval $lo-$hi", 18.0, stake)
+                }
+                "street" -> { if (v == null || v !in 1..36) return err("Tape yon nimewo ant 1 ak 36."); val r = (v + 2) / 3; VgLine("street:$r", "Street ${3 * r - 2}-${3 * r - 1}-${3 * r}", 12.0, stake) }
+                "corner" -> { if (v == null || v < 1 || v > 32 || v % 3 == 0) return err("Katye: tape pi piti nimewo kare a (pa 3, 6, 9… ni 33–36)."); VgLine("corner:$v", "Katye $v-${v + 1}-${v + 3}-${v + 4}", 9.0, stake) }
+                "line" -> { if (v == null || v !in 1..36) return err("Tape yon nimewo ant 1 ak 36."); val r = minOf(11, (v + 2) / 3); VgLine("line:$r", "Liy 6 (${3 * r - 2}-${3 * r + 3})", 6.0, stake) }
+                "five" -> VgLine("five", "Senk (0-00-1-2-3)", 7.0, stake)
+                "dozen:1" -> VgLine(type, "1ye douzèn (1-12)", 3.0, stake)
+                "dozen:2" -> VgLine(type, "2yèm douzèn (13-24)", 3.0, stake)
+                "dozen:3" -> VgLine(type, "3yèm douzèn (25-36)", 3.0, stake)
+                "col:1", "col:2", "col:3" -> VgLine(type, "Kolòn ${type.last()}", 3.0, stake)
+                "red" -> VgLine(type, "Wouj", 2.0, stake)
+                "black" -> VgLine(type, "Nwa", 2.0, stake)
+                "even" -> VgLine(type, "Pè", 2.0, stake)
+                "odd" -> VgLine(type, "Enpè", 2.0, stake)
+                "low" -> VgLine(type, "Ba (1-18)", 2.0, stake)
+                "high" -> VgLine(type, "Wo (19-36)", 2.0, stake)
+                else -> null
+            }
+        }
+        if (type == "pick") {
+            val ns = nums.mapNotNull { it.toIntOrNull() }.distinct()
+            if (ns.size != 6 || ns.any { it !in 1..48 }) return err("Tape egzakteman 6 nimewo diferan ant 1 ak 48.")
+            val sorted = ns.sorted()
+            return VgLine("pick:${sorted.joinToString(",")}", "6 nimewo: ${sorted.joinToString("-")}", 10000.0, stake)
+        }
+        val labels = mapOf(
+            "first:over" to "Premye boul > 24,5", "first:under" to "Premye boul < 24,5", "first:even" to "Premye boul pè", "first:odd" to "Premye boul enpè",
+            "sum5:over" to "Total 5 premye boul > 122,5", "sum5:under" to "Total 5 premye boul < 122,5", "more:even" to "Plis boul pè nan 5 premye yo", "more:odd" to "Plis boul enpè nan 5 premye yo",
+        )
+        labels[type]?.let { return VgLine(type, it, 1.85, stake) }
+        val colors = mapOf("red" to "Wouj", "green" to "Vèt", "blue" to "Ble", "purple" to "Mov", "brown" to "Mawon", "yellow" to "Jòn", "orange" to "Zoranj", "black" to "Nwa")
+        if (type.startsWith("first:color:")) return VgLine(type, "Koulè premye boul: ${colors[type.removePrefix("first:color:")]}", 7.0, stake)
+        return null
+    }
+
+    private fun vgSell() {
+        if (vgLines.isEmpty()) return
+        val g = vgCur()
+        val b = obj(g, "betting")
+        val body = JsonObject().apply {
+            addProperty("game", vgGame)
+            if (b != null && vgNow() < iso(str(b, "closesAt"))) addProperty("roundId", str(b, "id"))
+            addProperty("requestId", vgReq)
+            addProperty("deviceCode", DeviceIdHelper.getDeviceId(this@ParyajActivity))
+            add("lines", JsonArray().apply { vgLines.forEach { l -> add(JsonObject().apply { addProperty("bet", l.spec); addProperty("stake", l.stake) }) } })
+        }
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(applicationContext).vgSell(body)
+                if (!res.isSuccessful) {
+                    MaterialAlertDialogBuilder(this@ParyajActivity).setTitle(Lang.tr("Tikè a pa pase"))
+                        .setMessage(errorOf(res.errorBody()?.string(), "Eseye ankò.")).setPositiveButton("OK", null).show()
+                    return@launch
+                }
+                val d = obj(res.body(), "data") ?: JsonObject()
+                printVirtual(d)
+                val money = Money.format()
+                MaterialAlertDialogBuilder(this@ParyajActivity)
+                    .setTitle("${Lang.tr("Tikè vann")} · ${str(d, "code")}")
+                    .setMessage("${str(d, "gameName")} #${str(d, "roundShort")}\n" +
+                        "${Lang.tr("Total miz")}: ${money.format(num(d, "stake"))} HTG\n" +
+                        "${Lang.tr("Gen posib (maks)")}: ${money.format(num(d, "potentialWin"))} HTG")
+                    .setPositiveButton("OK", null)
+                    .setNeutralButton(Lang.tr("Reenprime")) { _, _ -> printVirtual(d) }
+                    .show()
+                vgLines.clear()
+                vgReq = UUID.randomUUID().toString()
+                renderVirtual()
+            } catch (e: java.io.IOException) {
+                Toast.makeText(this@ParyajActivity, Lang.tr("Pa gen koneksyon. Peze VANN ankò: tikè a p ap double."), Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@ParyajActivity, "Erè: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun printVirtual(d: JsonObject) {
+        val money = Money.format()
+        lifecycleScope.launch {
+            TenantBranding.ensureCached(applicationContext)
+            val drawAt = iso(str(d, "drawAt"))
+            val drawTxt = if (drawAt > 0) SimpleDateFormat("dd/MM HH:mm", Locale.US).apply { timeZone = haiti }.format(Date(drawAt)) else ""
+            val label = "${str(d, "gameName") ?: ""} #${str(d, "roundShort") ?: ""}"
+            val lines = arr(d, "lines") ?: JsonArray()
+            val receipt = ParyajReceipt(
+                companyName = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP",
+                phone = TenantBranding.phone.orEmpty(),
+                agent = TenantBranding.vendeur ?: "—",
+                code = str(d, "code") ?: "—",
+                dateText = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.US).format(Date()),
+                typeText = "JWET VITYEL",
+                selections = lines.mapIndexed { i, el ->
+                    val l = el.asJsonObject
+                    val odds = num(l, "odds")
+                    ParyajSelection(
+                        eventLabel = if (i == 0) label else "",
+                        league = if (i == 0) "Tiraj $drawTxt" else "",
+                        whenText = "",
+                        pick = "${str(l, "label")} (${money.format(num(l, "stake"))})",
+                        odds = "x" + (if (odds % 1.0 == 0.0) odds.toInt().toString() else odds.toString()),
+                    )
+                },
+                stake = "${money.format(num(d, "stake"))} HTG",
+                totalOdds = "-",
+                potentialWin = "${money.format(num(d, "potentialWin"))} HTG",
+                footer = "Gade rezilta a sou ekran an. Touche ak kod la.",
+                shareCode = null,
+            )
+            printer.connect {
+                runOnUiThread {
+                    if (!printer.isReady()) {
+                        Toast.makeText(this@ParyajActivity, "Tikè a VANN, men enprimant lan pa konekte. Konekte l epi peze Reenprime.", Toast.LENGTH_LONG).show()
+                        return@runOnUiThread
+                    }
+                    printer.printParyajReceipt(receipt)
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() { stopVgTicker(); super.onDestroy() }
+
+    // ==================== KÒD PATAJ (sql/048) ====================
+    /** Kliyan an bay kòd pataj yon lòt pari → menm chwa yo monte sou tikè a ak kòt aktyèl yo. */
+    private fun askShareCode() {
+        val et = EditText(this).apply {
+            hint = "K7M2QX"
+            isSingleLine = true
+            textSize = 22f
+            gravity = Gravity.CENTER
+            filters = arrayOf(android.text.InputFilter.AllCaps(), android.text.InputFilter.LengthFilter(8))
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        }
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(4), dp(20), 0)
+            addView(text(Lang.tr("Antre kòd pataj ki sou tikè oswa sou telefòn kliyan an (6 karaktè)."), 14f, MUTED))
+            addView(et, lp(top = 8))
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(Lang.tr("Kòd pataj"))
+            .setView(box)
+            .setPositiveButton(Lang.tr("Chaje")) { _, _ -> loadShare(et.text.toString()) }
+            .setNegativeButton(Lang.tr("Anile"), null)
+            .show()
+        et.requestFocus()
+    }
+
+    private fun loadShare(raw: String) {
+        val code = raw.uppercase(Locale.US).replace(Regex("[^A-Z0-9]"), "")
+        if (code.length != 6) {
+            Toast.makeText(this, Lang.tr("Kòd pataj la gen 6 karaktè (egz. K7M2QX)."), Toast.LENGTH_LONG).show()
+            return
+        }
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.getService(applicationContext).paryeShare(code)
+                if (!res.isSuccessful) {
+                    Toast.makeText(this@ParyajActivity, errorOf(res.errorBody()?.string(), "Kòd pataj la pa jwenn."), Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                val d = obj(res.body(), "data") ?: JsonObject()
+                val sels = arr(d, "selections") ?: JsonArray()
+                val off = (arr(d, "unavailable") ?: JsonArray()).map { el -> el.asJsonObject.let { "• ${str(it, "eventLabel") ?: ""}: ${Lang.tr(str(it, "reason") ?: "")}" } }
+                if (sels.size() == 0) {
+                    MaterialAlertDialogBuilder(this@ParyajActivity)
+                        .setTitle(Lang.tr("Okenn chwa disponib"))
+                        .setMessage((listOf(Lang.tr("Okenn chwa nan kòd sa a pa disponib ankò.")) + off).joinToString("\n"))
+                        .setPositiveButton("OK", null).show()
+                    return@launch
+                }
+                slip.clear()
+                for (el in sels) {
+                    val x = el.asJsonObject
+                    slip.add(Sel(
+                        eventId = str(x, "eventId") ?: continue,
+                        market = str(x, "market") ?: continue,
+                        outcome = str(x, "outcome") ?: continue,
+                        point = x.get("point")?.takeIf { !it.isJsonNull }?.asDouble,
+                        odds = num(x, "odds"),
+                        label = str(x, "label") ?: "",
+                        eventLabel = str(x, "eventLabel") ?: "",
+                        commenceAt = str(x, "commenceAt"),
+                    ))
+                }
+                acceptChanges = false
+                requestId = UUID.randomUUID().toString()
+                refreshSlipBar()
+                if (tab <= 1) renderEvents()
+                if (off.isNotEmpty()) {
+                    MaterialAlertDialogBuilder(this@ParyajActivity)
+                        .setTitle(Lang.tr("{n} chwa chaje").replace("{n}", slip.size.toString()))
+                        .setMessage((listOf(Lang.tr("Chwa sa yo pa disponib ankò:")) + off).joinToString("\n"))
+                        .setPositiveButton("OK") { _, _ -> openSlip() }.show()
+                } else {
+                    Toast.makeText(this@ParyajActivity, Lang.tr("{n} chwa chaje").replace("{n}", slip.size.toString()), Toast.LENGTH_SHORT).show()
+                    openSlip()
+                }
+            } catch (e: java.io.IOException) {
+                Toast.makeText(this@ParyajActivity, Lang.tr("Pa gen koneksyon."), Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@ParyajActivity, "Erè: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -863,7 +1275,8 @@ class ParyajActivity : BaseActivity() {
             .setMessage(
                 "Miz: ${money.format(num(d, "stake"))} HTG\n" +
                     "Kòt total: ${String.format(Locale.US, "%.2f", num(d, "totalOdds"))}\n" +
-                    "Gen posib: ${money.format(num(d, "potentialWin"))} HTG\n\n" +
+                    "Gen posib: ${money.format(num(d, "potentialWin"))} HTG\n" +
+                    (str(d, "shareCode")?.let { "Kòd pataj: $it\n" } ?: "") + "\n" +
                     "Kliyan an dwe kenbe tikè a. Si l genyen, se ou ki peye l (VERIFYE → PEYE).",
             )
             .setPositiveButton("OK", null)
@@ -903,6 +1316,7 @@ class ParyajActivity : BaseActivity() {
                 stake = "${money.format(num(d, "stake"))} HTG",
                 totalOdds = String.format(Locale.US, "%.2f", num(d, "totalOdds")),
                 potentialWin = "${money.format(num(d, "potentialWin"))} HTG",
+                shareCode = str(d, "shareCode"),
             )
             printer.connect {
                 runOnUiThread {
@@ -994,6 +1408,9 @@ class ParyajActivity : BaseActivity() {
         val (st, color) = statusText(b)
         c.addView(text(str(b, "code") ?: "", 20f, INK, true))
         c.addView(text(st, 15f, color, true).apply { setPadding(0, dp(4), 0, dp(6)) })
+        str(b, "shareCode")?.let { sc ->
+            c.addView(text("${Lang.tr("Kòd pataj")}: $sc", 14f, BLUE, true).apply { setPadding(0, 0, 0, dp(6)) })
+        }
         if (str(b, "channel") == "online") {
             c.addView(text("Pari an liy: kòb la antre sou balans jwè a otomatikman.", 13f, MUTED))
         }

@@ -50,6 +50,8 @@ data class ParyajReceipt(
     val potentialWin: String,
     val footer: String = "Touche ak kod la oswa QR la",
     val qrData: String? = code,
+    /** KÒD PATAJ (sql/048): yon lòt moun ka jwe menm chwa yo. Se PA kòd tikè a. */
+    val shareCode: String? = null,
 )
 
 /** Yon liy resi: style = N (nòmal), B (gra), BIG (gwo + gra), PICK (sa kliyan an jwe a: gra + doub enpresyon → pi fonse). */
@@ -81,7 +83,8 @@ object ParyajReceiptFormat {
             val num = "${i + 1}) "
             val indent = " ".repeat(num.length)
             // Match la (nòmal) → sa kliyan an JWE a anba l, PI FONSE (PICK) ak "> " devan
-            wrap(s.eventLabel, width - num.length).forEachIndexed { k, part ->
+            // Jwèt vityèl: non tiraj la parèt yon sèl fwa (premye liy), lòt liy yo vid
+            if (s.eventLabel.isNotBlank()) wrap(s.eventLabel, width - num.length).forEachIndexed { k, part ->
                 l((if (k == 0) num else indent) + part)
             }
             val meta = listOf(if (s.live) "LIVE" else s.whenText, s.league).filter { it.isNotBlank() }.joinToString(" - ")
@@ -92,12 +95,12 @@ object ParyajReceiptFormat {
             val pick = wrap(s.pick, pickW.coerceAtLeast(8))
             pick.dropLast(1).forEachIndexed { k, part -> l(indent + (if (k == 0) mark else "  ") + part, ReceiptLine.Style.PICK) }
             l(pair(indent + (if (pick.size == 1) mark else "  ") + pick.lastOrNull().orEmpty(), s.odds, width), ReceiptLine.Style.PICK)
-            if (i < r.selections.size - 1) l("")
+            if (i < r.selections.size - 1 && r.selections[i + 1].eventLabel.isNotBlank()) l("")
         }
 
         l(dashes)
         l(pair("Miz", r.stake, width))
-        l(pair("Kot total", r.totalOdds, width))
+        if (r.totalOdds != "-") l(pair("Kot total", r.totalOdds, width))
         l(dashes)
         c("GEN POSIB", ReceiptLine.Style.B)
         c(r.potentialWin, ReceiptLine.Style.BIG)
@@ -105,10 +108,19 @@ object ParyajReceiptFormat {
     }
 
     /** Liy ki vin APRE QR la. */
-    fun after(r: ParyajReceipt, width: Int): List<ReceiptLine> =
-        listOf(ReceiptLine(r.code, ReceiptLine.Style.B, center = true)) +
+    fun after(r: ParyajReceipt, width: Int): List<ReceiptLine> {
+        val share = r.shareCode?.takeIf { it.isNotBlank() }?.let {
+            listOf(
+                ReceiptLine("-".repeat(width)),
+                ReceiptLine("KOD PATAJ (jwe menm chwa yo)", center = true),
+                ReceiptLine(it, ReceiptLine.Style.B, center = true),
+            )
+        } ?: emptyList()
+        return listOf(ReceiptLine(r.code, ReceiptLine.Style.B, center = true)) +
             wrap(r.footer, width).map { ReceiptLine(it, center = true) } +
+            share +
             ReceiptLine("Bon chans!", center = true)
+    }
 
     /** Etikèt agoch, valè adwat, SAN ":" — si pa gen plas, valè a desann sou liy pa l. */
     fun pair(left: String, right: String, width: Int): String {

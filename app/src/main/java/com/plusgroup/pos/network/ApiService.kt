@@ -184,6 +184,17 @@ interface ApiService {
     @GET("agent/parye/bets")
     suspend fun paryeBets(@Query("from") from: String? = null, @Query("to") to: String? = null): Response<com.google.gson.JsonObject>
 
+    /** JWÈT VITYÈL (sql/049): eta tiraj yo + vann yon tikè */
+    @GET("agent/vg/state")
+    suspend fun vgState(): Response<com.google.gson.JsonObject>
+
+    @POST("agent/vg/bets")
+    suspend fun vgSell(@Body body: com.google.gson.JsonObject): Response<com.google.gson.JsonObject>
+
+    /** KÒD PATAJ (sql/048): chwa yon lòt pari ak kòt aktyèl yo */
+    @GET("agent/parye/share/{code}")
+    suspend fun paryeShare(@Path("code") code: String): Response<com.google.gson.JsonObject>
+
     @GET("agent/parye/bets/{code}")
     suspend fun paryeVerify(@Path("code") code: String): Response<com.google.gson.JsonObject>
 
