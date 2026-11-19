@@ -562,6 +562,10 @@ class ParyajActivity : BaseActivity() {
     private var vgLoadedAt = 0L
     private var vgOffset = 0L
 
+    /** Mòd franchiz (super admin): "PARYE PLIS+" sèlman sou tikè yo, pa non antrepriz la */
+    private fun franchise(): Boolean = info?.get("franchise")?.takeIf { it.isJsonPrimitive }?.asBoolean == true
+    private fun brandName(): String = if (franchise()) "PARYE PLIS+" else (TenantBranding.companyName?.uppercase() ?: "PLUS GROUP")
+
     private fun vgEnabled(): Boolean = obj(info, "virtual")?.let { bool(it, "enabled") } == true
 
     private fun vgNow() = System.currentTimeMillis() + vgOffset
@@ -892,7 +896,8 @@ class ParyajActivity : BaseActivity() {
             val label = "${str(d, "gameName") ?: ""} #${str(d, "roundShort") ?: ""}"
             val lines = arr(d, "lines") ?: JsonArray()
             val receipt = ParyajReceipt(
-                companyName = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP",
+                franchise = franchise(),
+                companyName = brandName(),
                 phone = TenantBranding.phone.orEmpty(),
                 agent = TenantBranding.vendeur ?: "—",
                 code = str(d, "code") ?: "—",
@@ -1372,13 +1377,14 @@ class ParyajActivity : BaseActivity() {
         val money = Money.format()
         lifecycleScope.launch {
             TenantBranding.ensureCached(applicationContext)
-            val company = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP"
+            val company = brandName()
             val vendeur = TenantBranding.vendeur ?: "—"
             val phone = TenantBranding.phone.orEmpty()
             val code = str(d, "code") ?: "—"
             val dt = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.US).format(Date())
             val sels = arr(d, "selections") ?: JsonArray()
             val receipt = ParyajReceipt(
+                franchise = franchise(),
                 companyName = company,
                 phone = phone,
                 agent = vendeur,
@@ -1876,7 +1882,7 @@ class ParyajActivity : BaseActivity() {
                                     return@runOnUiThread
                                 }
                                 printer.printReportReceipt(
-                                    companyName = TenantBranding.companyName?.uppercase() ?: "PLUS GROUP",
+                                    companyName = brandName(),
                                     branchCode = "PARYE PLIS+",
                                     phone = TenantBranding.phone.orEmpty(),
                                     reportTitle = "RAPO PARYAJ",

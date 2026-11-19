@@ -38,6 +38,8 @@ data class ParyajSelection(
 )
 
 data class ParyajReceipt(
+    /** Mòd franchiz: pa logo/non antrepriz la, se "PARYE PLIS+" sèlman */
+    val franchise: Boolean = false,
     val companyName: String,
     val phone: String,
     val agent: String,
@@ -69,7 +71,7 @@ object ParyajReceiptFormat {
         fun l(t: String, s: ReceiptLine.Style = ReceiptLine.Style.N) { out += ReceiptLine(t, s) }
 
         c(r.companyName, ReceiptLine.Style.B)
-        c("PARYE PLIS+")
+        if (!r.franchise && !r.companyName.equals("PARYE PLIS+", ignoreCase = true)) c("PARYE PLIS+")
         if (r.phone.isNotBlank()) c("Tel ${r.phone}")
         c("TIKE PARYAJ", ReceiptLine.Style.B)
         c("KOD ${r.code}", ReceiptLine.Style.BIG)
