@@ -351,6 +351,36 @@ class NewFicheActivity : BaseActivity() {
         }
     }
 
+    // ==================== TIRAJ REPIBLIK DOMINIKÈN (RD) ====================
+    /** Omwen youn nan tiraj yo chwazi a se RD → bòlèt 2 chif + Pale sèlman */
+    private val rdMode: Boolean get() = selectedDraws.any { it.rd == true }
+
+    /** Non kategori a sou ekran an (Maryaj = "PALE" nan tiraj RD) */
+    private fun catLabel(category: String): String =
+        if (rdMode && category == "MARIAGE") "PALE" else category
+
+    /** Mete ekran an an mòd RD (oswa retounen nòmal) */
+    private fun applyRdMode() {
+        val rd = rdMode
+        fun vis(on: Boolean) = if (on) View.VISIBLE else View.GONE
+        binding.btnLoto4.visibility = vis(!rd)
+        binding.btnLoto5.visibility = vis(!rd)
+        binding.btnGrap.visibility = vis(!rd && TenantRules.showPairGrap)
+        binding.btnMariage.text = if (rd) "Pale" else "Mariage"
+        binding.btnChooseMariage.text = if (rd) "Pale" else "Maryaj"
+        binding.btnMAuto.text = if (rd) "Pale oto" else "MAuto"
+        listOf(binding.btnOpt1, binding.btnOpt2, binding.btnOpt3, binding.btnOptAll, binding.tvQuickPrefix)
+            .forEach { it.visibility = vis(!rd) }
+        if (rd) {
+            // Retire jwèt ki pa pèmèt nan tiraj RD (Loto 3/4/5)
+            val bad = lines.filter { it.category == "LOTO3" || it.category == "LOTO4" || it.category == "LOTO5" }
+            if (bad.isNotEmpty()) {
+                lines.removeAll(bad.toSet())
+                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Tiraj Repiblik Dominikèn: Loto 3/4/5 retire. Sèlman bòlèt 2 chif ak Pale."), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun categoryForNumero(numero: String): String = when {
         numero.contains("*") -> "MARIAGE"
         numero.length == 2 -> "BORLETTE"
@@ -365,7 +395,7 @@ class NewFicheActivity : BaseActivity() {
             Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen tiraj ouvè kounye a"), Toast.LENGTH_SHORT).show()
             return
         }
-        val names = openDraws.map { it.name ?: it.id }.toTypedArray()
+        val names = openDraws.map { (it.name ?: it.id) + if (it.rd == true) "  (RD)" else "" }.toTypedArray()
         if (!TenantRules.doubleDraw) {
             // Mon compte → "Double tiraj" fèmen: yon sèl tiraj pa fich
             val current = openDraws.indexOfFirst { d -> selectedDraws.firstOrNull()?.id == d.id }
@@ -417,6 +447,7 @@ class NewFicheActivity : BaseActivity() {
         }
         val label = drawsLabel()
         lines.forEach { it.drawName = label }
+        applyRdMode()
         refreshLinesList()
         refreshTotal()
     }
@@ -455,6 +486,10 @@ class NewFicheActivity : BaseActivity() {
     private fun addQuickCategory(category: QuickCategory) {
         if (!requireDrawSelected()) return
 
+        if (rdMode && category is QuickCategory.Grap) {
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen Loto 3 nan tiraj Repiblik Dominikèn"), Toast.LENGTH_SHORT).show()
+            return
+        }
         val numbers: List<String> = when (category) {
             is QuickCategory.BPaire -> (0..9).map { "$it$it" }
             is QuickCategory.Grap -> (0..9).map { "$it$it$it" }
@@ -507,11 +542,15 @@ class NewFicheActivity : BaseActivity() {
             return
         }
 
+        if (rdMode && numero.length != 2 && numero.length != 4) {
+            Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Tiraj Repiblik Dominikèn: tape 2 chif (bòlèt) oswa 4 chif epi klike \"Pale\"."), Toast.LENGTH_LONG).show()
+            return
+        }
         val category = when (numero.length) {
             2 -> "BORLETTE"
             3 -> "LOTO3"
             4 -> {
-                Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("4 chif: klike \"Maryaj\" oswa yon opsyon Loto4 (O1, O2, O3) anba a"), Toast.LENGTH_LONG).show()
+                Toast.makeText(this, if (rdMode) com.plusgroup.pos.util.Lang.tr("4 chif: klike \"Pale\" anba a") else com.plusgroup.pos.util.Lang.tr("4 chif: klike \"Maryaj\" oswa yon opsyon Loto4 (O1, O2, O3) anba a"), Toast.LENGTH_LONG).show()
                 return
             }
             5 -> {
@@ -548,7 +587,7 @@ class NewFicheActivity : BaseActivity() {
                 binding.btnChooseMariage.visibility = View.VISIBLE
                 binding.tvQuickPrefix.text = "L4"
             }
-            digits && typed.length == 5 -> {
+            digits && typed.length == 5 && !rdMode -> {
                 binding.llMariageLoto4Chooser.visibility = View.VISIBLE
                 binding.btnChooseMariage.visibility = View.GONE
                 binding.tvQuickPrefix.text = "L5"
@@ -560,6 +599,7 @@ class NewFicheActivity : BaseActivity() {
     /** Ajoute boul 4 oswa 5 chif la ak opsyon yo chwazi a (menm pri a pou chak). */
     private fun addLotoOptions(options: List<Int>) {
         if (!requireDrawSelected()) return
+        if (rdMode) { Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Pa gen Loto 4/5 nan tiraj Repiblik Dominikèn"), Toast.LENGTH_SHORT).show(); return }
         val numero = binding.etBoulLa.text.toString().trim()
         val category = when {
             numero.matches(Regex("^\\d{4}$")) -> "LOTO4"
@@ -664,6 +704,7 @@ class NewFicheActivity : BaseActivity() {
             onDrawsChanged()
             Toast.makeText(this, com.plusgroup.pos.util.Lang.tr("Yon sèl tiraj pa fich (Double tiraj fèmen)"), Toast.LENGTH_SHORT).show()
         }
+        applyRdMode() // tiraj Repiblik Dominikèn: kache Loto/Grap, "Pale"
         refreshLinesList() // kreyon pri + MAuto / L4Auto
     }
 
@@ -738,10 +779,13 @@ class NewFicheActivity : BaseActivity() {
     /** MAuto / L4Auto parèt sèlman lè gen 2 boul oswa plis. */
     private fun updateAutoRow() {
         val enough = baseBorlette().size >= 2
-        binding.btnMAuto.visibility = if (TenantRules.showMAuto) View.VISIBLE else View.GONE
-        binding.btnL4Auto.visibility = if (TenantRules.showL4Auto) View.VISIBLE else View.GONE
+        // Tiraj RD: "Pale oto" toujou disponib, pa gen L4Auto
+        val mAuto = TenantRules.showMAuto || rdMode
+        val l4Auto = TenantRules.showL4Auto && !rdMode
+        binding.btnMAuto.visibility = if (mAuto) View.VISIBLE else View.GONE
+        binding.btnL4Auto.visibility = if (l4Auto) View.VISIBLE else View.GONE
         binding.llAutoRow.visibility =
-            if (enough && (TenantRules.showMAuto || TenantRules.showL4Auto)) View.VISIBLE else View.GONE
+            if (enough && (mAuto || l4Auto)) View.VISIBLE else View.GONE
     }
 
     private fun defaultAutoPrice(): String =
@@ -1121,7 +1165,7 @@ class NewFicheActivity : BaseActivity() {
         "loto3" -> "LT"
         "loto4" -> "L4"
         "loto5" -> "L5"
-        "mariage" -> "MA"
+        "mariage" -> if (rdMode) "PA" else "MA"
         com.plusgroup.pos.util.FreeMariage.TYPE -> com.plusgroup.pos.util.FreeMariage.CODE
         else -> (gameType ?: "").take(2).uppercase()
     }
@@ -1222,7 +1266,7 @@ class NewFicheActivity : BaseActivity() {
 
         for (category in categoriesInOrder) {
             val headerText = TextView(this).apply {
-                text = category
+                text = catLabel(category)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 textSize = 14f
                 setTextColor(android.graphics.Color.BLACK)

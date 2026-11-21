@@ -96,6 +96,8 @@ data class Draw(
     val winningNumber2: String? = null,
     @com.google.gson.annotations.SerializedName("winning_number_3")
     val winningNumber3: String? = null,
+    /** Tiraj Repiblik Dominikèn (sql/066): bòlèt 2 chif + Pale sèlman, 3 lo 2 chif */
+    val rd: Boolean? = null,
 )
 
 data class LotteryGame(
