@@ -48,6 +48,12 @@ import java.util.concurrent.TimeUnit
  *
  * Tcheke otomatik: sou akèy la, pa plis pase yon fwa chak 3 è.
  * Tcheke alamen: Paramèt → MIZAJOU.
+ *
+ * SA KI NOUVO: chak APK pote pwòp nòt li (assets/release-notes.txt).
+ *  · Sit la li nòt sa yo DIRÈKTEMAN nan APK a (scripts/apk-version.mjs) →
+ *    mesaj "Nouvo mizajou" a toujou montre nòt vèsyon an menm.
+ *  · Apre mizajou a, premye fwa nouvo vèsyon an louvri, ajan an wè
+ *    "Sa ki nouvo" yon sèl fwa (showWhatsNew).
  */
 object AppUpdate {
     private const val TAG = "AppUpdate"
@@ -65,6 +71,7 @@ object AppUpdate {
     private const val KEY_DL_CODE = "dl_code"        // vèsyon nou te telechaje
     private const val KEY_DL_FROM = "dl_from_code"   // vèsyon ki te enstale lè sa a
     private const val KEY_DL_AT = "dl_at"
+    private const val KEY_SEEN_CODE = "seen_notes_code" // dènye vèsyon ajan an te wè "Sa ki nouvo"
     private const val STUCK_MS = 30 * 60 * 1000L     // 30 min apre telechajman
     // Tcheke otomatik sou TOUT ekran yo (BaseActivity), maks 1 fwa chak 20 min
     private const val AUTO_INTERVAL_MS = 20 * 60 * 1000L       // 20 min
@@ -74,11 +81,38 @@ object AppUpdate {
         val versionCode: Long,
         val versionName: String,
         val url: String,
-        val notes: String,
+        val notes: String,     // soti nan APK a menm (assets/release-notes.txt)
         val mandatory: Boolean,
     )
 
     @Volatile private var showing = false
+
+    /** Nòt vèsyon ki enstale a (assets/release-notes.txt), vid si pa genyen */
+    fun localNotes(ctx: Context): String = try {
+        ctx.assets.open("release-notes.txt").bufferedReader(Charsets.UTF_8).use { it.readText() }.trim()
+    } catch (_: Exception) { "" }
+
+    /**
+     * Premye fwa yon nouvo vèsyon louvri apre yon mizajou: montre "Sa ki nouvo"
+     * yon sèl fwa. Premye enstalasyon an: anrejistre l san deranje ajan an.
+     */
+    fun showWhatsNew(activity: Activity) {
+        val prefs = activity.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val current = installedCode(activity)
+        val seen = prefs.getLong(KEY_SEEN_CODE, -1L)
+        if (current <= 0 || seen == current) return
+        prefs.edit().putLong(KEY_SEEN_CODE, current).apply()
+        if (seen < 0 && prefs.getLong(KEY_DL_CODE, -1L) < 0) return // premye enstalasyon
+        val notes = localNotes(activity)
+        if (notes.isBlank() || showing) return
+        showing = true
+        AlertDialog.Builder(activity)
+            .setTitle(Lang.tr("Sa ki nouvo") + " — " + installedName(activity))
+            .setMessage(notes)
+            .setPositiveButton(Lang.tr("OK"), null)
+            .setOnDismissListener { showing = false }
+            .show()
+    }
 
     fun installedCode(ctx: Context): Long = try {
         PackageInfoCompat.getLongVersionCode(ctx.packageManager.getPackageInfo(ctx.packageName, 0))

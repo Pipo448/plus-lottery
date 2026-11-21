@@ -74,6 +74,25 @@ class SettingsActivity : BaseActivity() {
         v.root.isFocusable = true
         v.root.setOnClickListener { com.plusgroup.pos.util.AppUpdate.check(this, lifecycleScope, manual = true) }
         binding.llSettingsContainer.addView(v.root)
+
+        // Sa ki nouvo nan vèsyon sa a
+        val notes = com.plusgroup.pos.util.AppUpdate.localNotes(this)
+        if (notes.isNotBlank()) {
+            val n = ItemSettingsRowBinding.inflate(LayoutInflater.from(this), binding.llSettingsContainer, false)
+            n.tvLabel.text = Lang.tr("Sa ki nouvo")
+            n.tvValue.text = "›"
+            n.tvValue.setTextColor(ContextCompat.getColor(this, R.color.pos_blue))
+            n.root.isClickable = true
+            n.root.isFocusable = true
+            n.root.setOnClickListener {
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle(Lang.tr("Sa ki nouvo") + " — " + com.plusgroup.pos.util.AppUpdate.installedName(this))
+                    .setMessage(notes)
+                    .setPositiveButton(Lang.tr("OK"), null)
+                    .show()
+            }
+            binding.llSettingsContainer.addView(n.root)
+        }
     }
 
     // Resi an 2 kolòn (lokal sou aparèy la): mwens papye sou chak fich
